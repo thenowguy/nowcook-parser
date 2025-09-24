@@ -65,6 +65,7 @@ const CANONICAL_VERBS = [
   { name: "blend", attention: "attended" },
   { name: "knead", attention: "attended" },
   { name: "reduce", attention: "attended" },
+  { name: "drain",  attention: "attended" },
 
   // other compositional
   { name: "stuff", attention: "attended" },
@@ -86,7 +87,7 @@ const VERB_SYNONYMS = [
   { canon: "preheat_pan", patterns: ["preheat a pan", "preheat the pan", "heat a pan", "heat the pan"] },
   { canon: "heat_oil", patterns: ["heat the oil", "heat oil", "warm the oil", "warm oil", "add oil and heat", "add the oil and heat"] },
 
-  { canon: "bring_to_boil", patterns: ["bring to a boil", "bring to the boil", "bring up to a boil"] },
+  { canon: "bring_to_boil", patterns: ["bring to a boil", "bring to the boil", "bring up to a boil", "bring the water to a boil", "bring water to a boil", "bring a pot to a boil", "bring pot to a boil"] },
   { canon: "simmer", patterns: ["simmer", "gentle simmer", "vigorous simmer"] },
   { canon: "boil", patterns: ["boil ", "boil until", "boil rapidly", "boil the"] },
 
@@ -113,7 +114,7 @@ const VERB_SYNONYMS = [
   { canon: "stir", patterns: ["stir", "stir in", "stir through", "stir together", "mix in", "mix through", "fold in"] },
 
   // drain
-  { canon: "drain", patterns: ["drain", "drain well", "drain thoroughly", "drain the pasta", "drain the vegetables", "drain and return to pot", "drain off the liquid"] },
+  { canon: "drain", patterns: ["drain", "drain well", "drain thoroughly", "drain the pasta", "drain the vegetables", "drain and return to pot", "drain off the liquid", "drain well", "drain the pasta", "drain pasta"] },
 
   // whisk
   { canon: "whisk", patterns: ["whisk", "whisk together", "whisk until smooth", "whisk vigorously", "beat until combined", "beat together"] },
@@ -333,8 +334,15 @@ const findCanonVerb = (text) => {
 };
 
 // Attended minimum policy (>= 1 min for requires_driver)
+/* -------------------- Prior: attended min duration = 1m ------------------ */
 function applyAttendedDurationPolicy(task) {
-  if (!task.requires_driver) return { ...task, planned_min: task.planned_min ?? (task.duration_min?.value ?? null) };
+  if (!task.requires_driver) {
+    return { 
+      ...task, 
+      planned_min: task.planned_min ?? (task.duration_min?.value ?? null) 
+    };
+  }
+
   const d = task.duration_min;
 
   if (!d) return { ...task, duration_min: { value: 1 }, planned_min: 1 };
@@ -343,13 +351,22 @@ function applyAttendedDurationPolicy(task) {
     const v = Math.max(1, d.value);
     return { ...task, duration_min: { value: v }, planned_min: v };
   }
+
   if ("range" in d && Array.isArray(d.range)) {
     const [a, b] = d.range;
     const aa = Math.max(1, a ?? 1);
     const bb = Math.max(1, b ?? aa);
     return { ...task, duration_min: { range: [aa, bb] }, planned_min: aa };
   }
+
   return task;
+}
+
+  // policy pass (ensure attended ≥ 1m)
+tasks0 = tasks0.map(applyAttendedDurationPolicy);
+
+// advisory defaults so timeline has something sensible
+tasks0 = tasks0.map(applyAdvisoryPlannedDefaults);
 }
 
 // Advisory planned mins + readiness defaults if recipe omitted them
