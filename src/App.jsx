@@ -274,6 +274,63 @@ const toDurationObj = (dur) =>
   !dur ? null :
   Object.prototype.hasOwnProperty.call(dur, "value") ? { value: dur.value } : { range: dur.range };
 
+// ======================================================================
+// Coalescer: merge trivial "add pasta" → "boil" sequences into one task
+// ======================================================================
+function coalesceAddBoil(tasks) {
+  const merged = [];
+  let i = 0;
+  while (i < tasks.length) {
+    const t = tasks[i];
+    const n = tasks[i + 1];
+
+    if (
+      t.canonical_verb === "add" &&
+      n &&
+      n.canonical_verb === "boil" &&
+      (!t.depends_on || (t.depends_on.includes(t.id) === false))
+    ) {
+      // Merge the two into one
+      const combo = {
+        ...n,
+        id: `task_${t.id}_${n.id}`,
+        name: `${t.name} and then ${n.name}`,
+        duration_min: n.duration_min || { value: 10 },
+        planned_min: n.planned_min || 10,
+        requires_driver: true, // attended until boil is started
+        self_running_after_start: true, // then free
+        inputs: [...(t.inputs || []), ...(n.inputs || [])],
+        outputs: [...(t.outputs || []), ...(n.outputs || [])],
+        depends_on: t.depends_on || []
+      };
+      merged.push(combo);
+      i += 2; // skip both
+    } else {
+      merged.push(t);
+      i++;
+    }
+  }
+  return merged;
+}
+
+// ======================================================================
+// Rule: ensure "drain" tasks depend on the most recent "boil"
+// ======================================================================
+function attachDrainDependencies(tasks) {
+  let lastBoilId = null;
+  return tasks.map((t) => {
+    if (t.canonical_verb === "boil") {
+      lastBoilId = t.id;
+      return t;
+    }
+    if (t.canonical_verb === "drain" && lastBoilId) {
+      const deps = new Set([...(t.depends_on || []), lastBoilId]);
+      return { ...t, depends_on: Array.from(deps) };
+    }
+    return t;
+  });
+}
+
 /* ====================================================================== */
 /* Prior: attended min duration = 1m                                      */
 /* ====================================================================== */
@@ -547,6 +604,8 @@ function buildMealMap(raw) {
 
   // advisory defaults (planned + readiness) if omitted
   tasks0 = tasks0.map(applyVerbPlannedDefaults);
+  tasks0 = coalesceAddBoil(tasks0);
+  tasks0 = attachDrainDependencies(tasks0);
 
   // dependencies
   const withDeps = buildDependencies(tasks0);
