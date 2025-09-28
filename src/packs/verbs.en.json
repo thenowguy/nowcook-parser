@@ -1,0 +1,161 @@
+{
+  "schema_version": "1.0",
+  "locale": "en",
+  "verbs": [
+    {
+      "canon": "sauté",
+      "attention": "attended",
+      "patterns": ["sauté", "saute", "fry lightly", "cook over medium heat"],
+      "defaults": { "planned_min": 5 },
+      "examples": ["sauté onions"],
+      "negates": []
+    },
+    {
+      "canon": "boil",
+      "attention": "unattended_after_start",
+      "patterns": ["\\bboil\\b", "\\bbring\\s+to\\s+a\\s+boil\\b", "\\bboil\\s+until\\b"],
+      "defaults": { "planned_min": 10 },
+      "examples": ["boil water"],
+      "negates": []
+    },
+    {
+      "canon": "slice",
+      "attention": "attended",
+      "patterns": ["\\bslice\\b", "\\bthinly\\s+slice\\b", "\\bslice\\s+the\\b"],
+      "defaults": { "planned_min": 1 },
+      "examples": ["slice the garlic", "thinly slice onion"],
+      "negates": []
+    },
+    {
+      "canon": "heat_oil",
+      "attention": "attended",
+      "patterns": ["\\bheat\\s+(?:the\\s+)?(?:olive\\s+)?oil\\b", "\\bheat\\s+oil\\s+in\\s+(?:a|the)\\s+pan\\b"],
+      "defaults": { "planned_min": 5 },
+      "examples": ["heat the oil", "heat oil in a pan"],
+      "negates": []
+    },
+    {
+      "canon": "bring_to_boil",
+      "attention": "unattended_after_start",
+      "patterns": ["\\bbring\\s+to\\s+(?:a\\s+)?boil\\b", "\\bbring\\s+up\\s+to\\s+a\\s+boil\\b"],
+      "defaults": { "planned_min": 10 },
+      "examples": ["bring to a boil"],
+      "negates": []
+    },
+    {
+      "canon": "drain",
+      "attention": "attended",
+      "patterns": ["\\bdrain\\b", "\\bdrain\\s+well\\b"],
+      "defaults": { "planned_min": 1 },
+      "examples": ["drain the pasta well"],
+      "negates": []
+    },
+    {
+      "canon": "season",
+      "attention": "attended",
+      "patterns": ["\\bseason\\b", "\\bsprinkle\\s+with\\b", "\\bsprinkle\\s+over\\b"],
+      "defaults": { "planned_min": 1 },
+      "examples": ["season to taste"],
+      "negates": []
+    },
+    {
+      "canon": "drizzle",
+      "attention": "attended",
+      "patterns": ["\\bdrizzle\\b", "\\bdrizzle\\s+with\\b", "\\bdrizzle\\s+over\\b", "\\bpour\\s+lightly\\b"],
+      "defaults": { "planned_min": 1 },
+      "examples": ["drizzle with olive oil"],
+      "negates": []
+    },
+    {
+      "canon": "arrange",
+      "attention": "attended",
+      "patterns": ["\\barrange\\b", "\\bplace\\s+the\\b", "\\bplace\\s+on\\b", "\\bplace\\s+in\\b", "\\bset\\s+on\\s+top\\s+of\\b", "\\bspread\\s+the\\b"],
+      "defaults": { "planned_min": 1 },
+      "examples": ["arrange potatoes around the dish"],
+      "negates": []
+    },
+    {
+      "canon": "stuff",
+      "attention": "attended",
+      "patterns": ["\\bstuff\\b", "\\bfill\\s+cavity\\b", "\\binsert\\s+into\\s+the\\s+cavity\\b"],
+      "defaults": { "planned_min": 1 },
+      "examples": ["stuff the lemon into the cavity"],
+      "negates": []
+    },
+    {
+      "canon": "truss",
+      "attention": "attended",
+      "patterns": ["\\btruss\\b", "\\btie\\s+legs\\b", "\\bbind\\s+chicken\\b"],
+      "defaults": { "planned_min": 1 },
+      "examples": ["truss the chicken"],
+      "negates": []
+    },
+    {
+      "canon": "roast",
+      "attention": "unattended_after_start",
+      "patterns": ["\\broast\\b", "\\broast\\s+until\\b", "\\bplace\\s+in\\s+the\\s+oven\\b"],
+      "defaults": { "planned_min": 30 },
+      "examples": ["roast for 30 minutes"],
+      "negates": []
+    },
+    {
+      "canon": "bake",
+      "attention": "unattended_after_start",
+      "patterns": ["\\bbake\\b", "\\bbake\\s+for\\b", "\\bcook\\s+for\\s+a\\s+further\\b"],
+      "defaults": { "planned_min": 30 },
+      "examples": ["bake for 45 minutes"],
+      "negates": []
+    },
+    {
+      "canon": "rest_meat",
+      "attention": "unattended_after_start",
+      "patterns": ["\\brest\\s+(?:with\\s+the\\s+heat\\s+off|off\\s+the\\s+heat)\\b", "\\ballow\\s+to\\s+rest\\b", "\\blet\\s+rest\\b", "\\bleave\\s+to\\s+rest\\b"],
+      "defaults": { "planned_min": 15 },
+      "examples": ["rest with the heat off for 15 minutes"],
+      "negates": []
+    },
+    {
+      "canon": "whisk",
+      "attention": "attended",
+      "patterns": ["\\bwhisk\\b", "\\bbeat\\b", "\\bbeat\\s+together\\b"],
+      "defaults": { "planned_min": 1 },
+      "examples": ["whisk eggs and cheese"],
+      "negates": []
+    },
+    {
+      "canon": "stir",
+      "attention": "attended",
+      "patterns": ["\\bstir\\b", "\\bstir\\s+in\\b", "\\bstir\\s+until\\b"],
+      "defaults": { "planned_min": 1 },
+      "examples": ["stir in the garlic"],
+      "negates": []
+    },
+    {
+      "canon": "toss",
+      "attention": "attended",
+      "patterns": ["\\btoss\\b", "\\bshuffle\\s+the\\s+vegetables\\b", "\\bstir\\s+around\\b"],
+      "defaults": { "planned_min": 1 },
+      "examples": ["toss pasta with the sauce"],
+      "negates": []
+    },
+    {
+      "canon": "plate",
+      "attention": "attended",
+      "patterns": ["\\bplate\\b", "\\bserve\\b", "\\bdish\\s+up\\b"],
+      "defaults": { "planned_min": 5 },
+      "examples": ["plate and finish"],
+      "negates": []
+    },
+    {
+  "canon": "preheat_oven",
+  "attention": "unattended_after_start",
+  "patterns": [
+    "\\bpreheat\\s+the\\s+oven\\b",
+    "\\bpreheat\\s+oven\\b",
+    "\\bheat\\s+the\\s+oven\\b"
+  ],
+  "defaults": { "planned_min": 12 },
+  "examples": ["preheat the oven to 200°C"]
+}
+  ]
+}

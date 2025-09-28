@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0",
+  "locale": "en",
+  "readiness": [
+    { "type": "color",      "value": "golden",              "re": "until\\s+golden|lightly\\s+browned|deeply\\s+golden" },
+    { "type": "color",      "value": "browned",             "re": "until\\s+browned|brown\\s+on\\s+both\\s+sides" },
+    { "type": "texture",    "value": "translucent",         "re": "until\\s+translucent|soften\\s+without\\s+color|soften\\s+without\\s+colour" },
+    { "type": "texture",    "value": "al_dente",            "re": "until\\s+al\\s*dente" },
+    { "type": "texture",    "value": "tender",              "re": "until\\s+(knife|fork)?\\s*-?\\s*tender|until\\s+soft" },
+    { "type": "texture",    "value": "crisp_tender",        "re": "crisp-?tender" },
+
+    { "type": "reduction",  "value": "reduced_by_half",     "re": "reduced\\s+by\\s+half" },
+    { "type": "reduction",  "value": "reduced_by_third",    "re": "reduced\\s+by\\s+(?:a\\s+)?third" },
+    { "type": "viscosity",  "value": "nappe",               "re": "nappe|coats\\s+the\\s+back\\s+of\\s+a\\s+spoon" },
+
+    { "type": "activity",   "value": "bubbling",            "re": "bubbling|at\\s+a\\s+boil" },
+    { "type": "activity",   "value": "vigorous_simmer",     "re": "vigorous\\s+simmer" },
+    { "type": "activity",   "value": "shimmering_oil",      "re": "oil\\s+is\\s+shimmering|shimmering" },
+
+    { "type": "structure",  "value": "set_at_center",       "re": "set\\s+at\\s+the\\s+center|no\\s+jiggle|springs\\s+back" },
+
+    { "type": "doneness",   "value": "juices_run_clear",    "re": "juices\\s+run\\s+clear" },
+    { "type": "doneness",   "value": "no_pink",             "re": "no\\s+pink" },
+
+    { "type": "temperature","value": "internal_temp",       "re": "internal\\s+temp\\s+\\d{2,3}°[cf]" }
+  ]
+}

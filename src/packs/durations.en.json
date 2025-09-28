@@ -1,0 +1,49 @@
+{
+  "schema_version": "1.0",
+  "locale": "en",
+  "durations": {
+    "preheat_oven": 12,
+    "preheat_pan": 3,
+    "heat_oil": 5,
+
+    "bring_to_boil": 10,
+    "boil": 10,
+    "simmer": 12,
+
+    "sauté": 5,
+    "sweat": 5,
+    "sear": 3,
+    "brown": 4,
+
+    "toast_rice": 3,
+    "deglaze_wine": 2,
+    "emulsify_with_pasta_water": 2,
+    "finish_with_butter_and_cheese": 2,
+
+    "roast": 30,
+    "bake": 30,
+    "rest_meat": 10,
+
+    "wash": 1,
+    "trim": 1,
+    "peel": 2,
+    "chop": 2,
+    "dice": 2,
+    "mince": 1,
+    "slice": 1,
+    "grate": 2,
+    "whisk": 1,
+    "mix": 1,
+    "stir": 1,
+    "drain": 1,
+    "rinse": 1,
+    "arrange": 1,
+    "season": 1,
+    "drizzle": 1,
+    "toss": 1,
+    "stuff": 2,
+    "truss": 2,
+    "add": 1,
+    "plate": 5
+  }
+}
