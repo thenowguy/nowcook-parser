@@ -1,0 +1,9 @@
+{
+  "title": "Easy One-pan Roast Chicken and Vegetables",
+  "tasks": [
+    { "id": "r1", "name": "Preheat oven to 220°C / 425°F", "duration_min": { "value": 10 }, "requires_driver": false, "self_running_after_start": true, "edges": [] },
+    { "id": "r2", "name": "Prep vegetables and season chicken", "duration_min": { "value": 12 }, "requires_driver": true,  "self_running_after_start": false, "edges": [] },
+    { "id": "r3", "name": "Roast chicken and vegetables", "duration_min": { "value": 45 }, "requires_driver": false, "self_running_after_start": true,  "edges": [ { "from": "r1", "to": "r3", "type": "FS" }, { "from": "r2", "to": "r3", "type": "FS" } ] },
+    { "id": "r4", "name": "Rest chicken; make quick pan sauce (optional)", "duration_min": { "value": 10 }, "requires_driver": true, "self_running_after_start": false, "edges": [ { "from": "r3", "to": "r4", "type": "FF" } ] }
+  ]
+}
