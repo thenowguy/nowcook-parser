@@ -1,9 +1,10 @@
-// ============================== NowCook Parser — v1.7.8 ==============================
-// v1.7.9 = v1.7.8 + fixes + packs + move-only bars & manual completion
+// ============================== NowCook Parser — v1.8.0 ==============================
+// v1.8.0 = v1.7.9 + concurrency & UX polish
+//  - Running bars: move-only (left edge slides), fixed width = planned; freeze when time is up (right edge == Now)
+//  - Manual completion: nothing auto-completes; click Finish to unblock dependents
+//  - Concurrency: unattended tasks don't consume the driver; attended tasks do
 //  - Ghost bars: left edge at Now, width = planned
-//  - Running bars: move-only (no shrinking); freeze when right edge hits Now
-//  - Finished bars stop at Now (anchored to actual finish time)
-//  - Durations are integer minutes everywhere
+//  - Finished bars: right edge remains at their actual finish time
 // Packs live in: src/packs/{verbs.en.json,durations.en.json,readiness.en.json,synonyms.en.json}
 // Sample meals live in: src/meals/*.json
 
@@ -215,18 +216,17 @@ function useRuntime(tasks) {
   const [doneIds, setDoneIds] = useState(new Set());
   const [completed, setCompleted] = useState([]); // {id, startedAt, finishedAt, consumesDriver}
 
-  // Clock tick
+  // Clock
   useEffect(() => {
     if (!started) return;
     const t = setInterval(() => setNowMs((n) => n + 1000), 1000);
     return () => clearInterval(t);
   }, [started]);
 
-  // IMPORTANT: do not auto-complete when time is up.
-  // Keep bars visible and frozen at Now until the user clicks Finish.
+  // Manual completion: do NOT auto-move items to done when time is up.
   useEffect(() => {
     if (!started) return;
-    // no-op: we deliberately do not move tasks to "done" here
+    // no-op
   }, [nowMs, started]);
 
   const driverBusy = running.some((r) => r.consumesDriver);
@@ -262,6 +262,7 @@ function useRuntime(tasks) {
     setCompleted([]);
   };
 
+  // Ready vs Blocked
   const ready = [], blocked = [];
   const runningIds = new Set(running.map((r) => r.id));
   for (const t of tasks) {
@@ -300,39 +301,32 @@ function Timeline({ tasks, running, ready = [], completed = [], doneIds, nowMs }
 
   const byId  = new Map(tasks.map((t) => [t.id, t]));
 
-  // RUNNING: x drifts left with elapsed; width is fixed to planned.
-  // When time is up, bar freezes with right edge at Now (no shrinking).
-  const runningBars = running
-    .map((r) => {
-      const t = byId.get(r.id);
-      const lane = lanes.find((ln) => ln.id === r.id) || { y: 0 };
+  // RUNNING: left edge drifts left with elapsed; width stays fixed (planned).
+  // Clamping elapsed freezes the bar at Now when time is up.
+  const runningBars = running.map((r) => {
+    const t = byId.get(r.id);
+    const lane = lanes.find((ln) => ln.id === r.id) || { y: 0 };
 
-      const durMin   = getPlannedMinutes(t);
-      const durMs    = durMin * 60000;
+    const durMin = getPlannedMinutes(t);
+    const durMs  = durMin * 60000;
 
-      // Clamp elapsed to duration to freeze bar at Now when time is up
-      const elapsedMs  = clamp(nowMs - r.startedAt, 0, durMs);
-      const remainMs   = clamp(r.endsAt - nowMs, 0, durMs);
+    const elapsedMs = clamp(nowMs - r.startedAt, 0, durMs);
+    const remainMs  = clamp(r.endsAt - nowMs, 0, durMs);
 
-      const elapsedMin = elapsedMs / 60000;
+    const elapsedMin = elapsedMs / 60000;
+    const w = Math.max(10, durMin * PX_PER_MIN);
+    const x = MID - elapsedMin * PX_PER_MIN;
 
-      // Fixed width = planned duration
-      const w = Math.max(10, durMin * PX_PER_MIN);
+    return {
+      id: r.id,
+      x, y: lane.y + 8, w, h: ROW_H - 16,
+      attended: !!t?.requires_driver,
+      name: t?.name || "Task",
+      leftMs: remainMs,
+    };
+  });
 
-      // Left edge slides left; right edge is x + w
-      const x = MID - elapsedMin * PX_PER_MIN;
-
-      // If the bar would "overshoot" after duration, clamping keeps it frozen.
-      return {
-        id: r.id,
-        x, y: lane.y + 8, w, h: ROW_H - 16,
-        attended: !!t?.requires_driver,
-        name: t?.name || "Task",
-        leftMs: remainMs,
-      };
-    });
-
-  // GHOST: preview if started now (left edge at Now, fixed width = planned)
+  // GHOST: preview if started now (left at Now, width = planned)
   const ghostBars = (ready || []).map((t) => {
     const pMin = getPlannedMinutes(t);
     const lane = lanes.find((ln) => ln.id === t.id) || { y: 0 };
@@ -347,7 +341,7 @@ function Timeline({ tasks, running, ready = [], completed = [], doneIds, nowMs }
     };
   });
 
-  // DONE: right edge anchored to true finish time
+  // DONE: right edge stays anchored to true finish time
   const doneBars = (completed || []).map((d) => {
     const t = byId.get(d.id);
     const durMin = getPlannedMinutes(t);
@@ -616,7 +610,7 @@ export default function App() {
     .filter((c) => (query ? c.title.toLowerCase().includes(query.toLowerCase()) : true))
     .filter((c) => (onlyFits ? c.fits : true));
 
-  // Helper to explain why a task is blocked
+  // Explain blocked reasons
   const byId = useMemo(() => new Map(state.meal.tasks.map((t) => [t.id, t])), [state.meal.tasks]);
   const runningIds = useMemo(() => new Set(rt.running.map((r) => r.id)), [rt.running]);
   const isStarted = (id) => runningIds.has(id) || rt.doneIds.has(id);
