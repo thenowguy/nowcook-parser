@@ -329,10 +329,7 @@ function Timeline({ tasks, running, ready = [], completed = [], doneIds, nowMs }
     .map((r) => {
       const t = byId.get(r.id);
       const lane = lanes.find((ln) => ln.id === r.id) || { y: 0 };
-      const durMs     = getPlannedMinutes(t) * 60000;
-      const elapsedMs = clamp(nowMs - r.startedAt, 0, durMs);
       const remainMs  = clamp(r.endsAt - nowMs, 0, durMs);
-      const elapsedMin = elapsedMs / 60000;
       const remainMin  = remainMs / 60000;
 
       const x = MID - elapsedMin * PX_PER_MIN;       // left edge slides left
