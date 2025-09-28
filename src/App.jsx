@@ -1,5 +1,6 @@
 // ============================== NowCook Parser — v1.7.8 ==============================
-// v1.7.8 = v1.7.7 + fixes
+// v1.7.8 = v1.7.7 + fixes + packs
+
 //  - Running bars move again: x = Now - elapsed, width = remaining
 //  - Finished bars still stop at Now (right edge = real finish time)
 //  - Durations are integer minutes everywhere (no float speck/21.0099)
