@@ -1,10 +1,9 @@
 // ============================== NowCook Parser — v1.7.8 ==============================
-// v1.7.8 = v1.7.7 + fixes + packs
-
-//  - Running bars move again: x = Now - elapsed, width = remaining
-//  - Finished bars still stop at Now (right edge = real finish time)
-//  - Durations are integer minutes everywhere (no float speck/21.0099)
-//  - Ghost/finished/running use the same duration helper
+// v1.7.9 = v1.7.8 + fixes + packs + move-only bars & manual completion
+//  - Ghost bars: left edge at Now, width = planned
+//  - Running bars: move-only (no shrinking); freeze when right edge hits Now
+//  - Finished bars stop at Now (anchored to actual finish time)
+//  - Durations are integer minutes everywhere
 // Packs live in: src/packs/{verbs.en.json,durations.en.json,readiness.en.json,synonyms.en.json}
 // Sample meals live in: src/meals/*.json
 
@@ -216,42 +215,19 @@ function useRuntime(tasks) {
   const [doneIds, setDoneIds] = useState(new Set());
   const [completed, setCompleted] = useState([]); // {id, startedAt, finishedAt, consumesDriver}
 
+  // Clock tick
   useEffect(() => {
     if (!started) return;
     const t = setInterval(() => setNowMs((n) => n + 1000), 1000);
     return () => clearInterval(t);
   }, [started]);
 
+  // IMPORTANT: do not auto-complete when time is up.
+  // Keep bars visible and frozen at Now until the user clicks Finish.
   useEffect(() => {
-    if (!started || running.length === 0) return;
-    const now = nowMs;
-    const finishedIds = running
-      .filter((r) => r.endsAt != null && r.endsAt <= now)
-      .map((r) => r.id);
-    if (finishedIds.length === 0) return;
-
-    setRunning((prev) => {
-      const justFinished = prev.filter((r) => finishedIds.includes(r.id));
-      if (justFinished.length) {
-        setCompleted((c) => [
-          ...c,
-          ...justFinished.map((r) => ({
-            id: r.id,
-            startedAt: r.startedAt,
-            finishedAt: nowMs,
-            consumesDriver: r.consumesDriver,
-          })),
-        ]);
-      }
-      return prev.filter((r) => !finishedIds.includes(r.id));
-    });
-    setDoneIds((prev) => new Set([...prev, ...finishedIds]));
-  }, [nowMs, started, running]);
-
-  const status = (id) => {
-    const r = running.find((x) => x.id === id);
-    return { started: !!r, done: doneIds.has(id) };
-  };
+    if (!started) return;
+    // no-op: we deliberately do not move tasks to "done" here
+  }, [nowMs, started]);
 
   const driverBusy = running.some((r) => r.consumesDriver);
 
@@ -324,18 +300,29 @@ function Timeline({ tasks, running, ready = [], completed = [], doneIds, nowMs }
 
   const byId  = new Map(tasks.map((t) => [t.id, t]));
 
-  // RUNNING: x drifts left with elapsed, width = remaining, right edge stops at Now
+  // RUNNING: x drifts left with elapsed; width is fixed to planned.
+  // When time is up, bar freezes with right edge at Now (no shrinking).
   const runningBars = running
     .map((r) => {
       const t = byId.get(r.id);
       const lane = lanes.find((ln) => ln.id === r.id) || { y: 0 };
-      const remainMs  = clamp(r.endsAt - nowMs, 0, durMs);
-      const remainMin  = remainMs / 60000;
 
-      const x = MID - elapsedMin * PX_PER_MIN;       // left edge slides left
-      const w = Math.max(0, remainMin * PX_PER_MIN); // right edge ≥ Now
-      if (w <= 0) return null;
+      const durMin   = getPlannedMinutes(t);
+      const durMs    = durMin * 60000;
 
+      // Clamp elapsed to duration to freeze bar at Now when time is up
+      const elapsedMs  = clamp(nowMs - r.startedAt, 0, durMs);
+      const remainMs   = clamp(r.endsAt - nowMs, 0, durMs);
+
+      const elapsedMin = elapsedMs / 60000;
+
+      // Fixed width = planned duration
+      const w = Math.max(10, durMin * PX_PER_MIN);
+
+      // Left edge slides left; right edge is x + w
+      const x = MID - elapsedMin * PX_PER_MIN;
+
+      // If the bar would "overshoot" after duration, clamping keeps it frozen.
       return {
         id: r.id,
         x, y: lane.y + 8, w, h: ROW_H - 16,
@@ -343,10 +330,9 @@ function Timeline({ tasks, running, ready = [], completed = [], doneIds, nowMs }
         name: t?.name || "Task",
         leftMs: remainMs,
       };
-    })
-    .filter(Boolean);
+    });
 
-  // GHOST: preview if started now
+  // GHOST: preview if started now (left edge at Now, fixed width = planned)
   const ghostBars = (ready || []).map((t) => {
     const pMin = getPlannedMinutes(t);
     const lane = lanes.find((ln) => ln.id === t.id) || { y: 0 };
@@ -456,25 +442,29 @@ function Timeline({ tasks, running, ready = [], completed = [], doneIds, nowMs }
         ))}
 
         {/* Running bars */}
-        {runningBars.map((b) => (
-          <g key={b.id}>
-            <rect
-              x={b.x} y={b.y}
-              width={b.w} height={b.h}
-              rx="12" ry="12"
-              fill={b.attended ? "#bfdbfe" : "#d1fae5"}
-              stroke={b.attended ? "#60a5fa" : "#34d399"}
-              strokeWidth="2"
-            />
-            <text x={b.x + 10} y={b.y + b.h / 2 + 5} fontSize="14" fill="#111827">
-              {b.attended ? "attended" : "unattended"} • {fmt(b.leftMs)}
-            </text>
-          </g>
-        ))}
+        {runningBars.map((b) => {
+          const timeUp = b.leftMs <= 0;
+          return (
+            <g key={b.id}>
+              <rect
+                x={b.x} y={b.y}
+                width={b.w} height={b.h}
+                rx="12" ry="12"
+                fill={b.attended ? "#bfdbfe" : "#d1fae5"}
+                stroke={b.attended ? "#60a5fa" : "#34d399"}
+                strokeWidth="2"
+              />
+              <text x={b.x + 10} y={b.y + b.h / 2 + 5} fontSize="14" fill="#111827">
+                {b.attended ? "attended" : "unattended"} • {fmt(b.leftMs)}
+                {timeUp ? " • time up — click Finish" : ""}
+              </text>
+            </g>
+          );
+        })}
       </svg>
 
       <div style={{ fontSize: 12, color: "#6b7280", marginTop: 8 }}>
-        Tip: finished bars anchor at their actual finish; ghost bars show where a ready task would land if started now.
+        Tip: tasks don’t auto-complete; click <b>Finish</b> to unblock dependents when real-world work is done.
       </div>
     </div>
   );
@@ -743,12 +733,13 @@ export default function App() {
               {rt.running.map((r) => {
                 const t = state.meal.tasks.find((x) => x.id === r.id);
                 const left = Math.max(0, r.endsAt - rt.nowMs);
+                const timeUp = left <= 0;
                 return (
                   <li key={r.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
                     <div>
                       <b>{t?.name}</b>{" "}
                       <span style={{ opacity: 0.8 }}>
-                        ({t?.requires_driver ? "attended" : "unattended"}) ({mmss(left)} left)
+                        ({t?.requires_driver ? "attended" : "unattended"}) ({mmss(left)} left{timeUp ? " • time up — click Finish" : ""})
                       </span>
                     </div>
                     <button onClick={() => rt.finishTask(r.id)}>Finish now</button>
