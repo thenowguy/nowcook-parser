@@ -10,7 +10,6 @@
 /* eslint-disable */
 import React, { useEffect, useMemo, useState } from "react";
 
-<<<<<<< HEAD
 // ----------------------------------------------------------------------
 // Packs (src/packs)
 // ----------------------------------------------------------------------
@@ -35,156 +34,6 @@ const mmss = (ms) => {
   const m = Math.floor(sec / 60);
   const s = sec % 60;
   return `${m}:${s.toString().padStart(2, "0")}`;
-=======
-/**
- * NowCook Parser + Mini Runtime — App.jsx (v1.6.2)
- * - Stand-alone, but optionally loads Packs from /packs/*.json at runtime
- * - If packs missing -> uses built-in defaults (no errors)
- * - Typed edges (FS, SS)
- * - Oven rule: preheat_oven must FINISH before bake/roast
- * - Driver mutex: only one attended task may run at a time
- * - Attended minimum duration = 1 min
- */
-
-/* ============================ Canon & Defaults ============================ */
-const CANONICAL_VERBS = [
-  // prep
-  { name: "wash", attention: "attended" },
-  { name: "trim", attention: "attended" },
-  { name: "peel", attention: "attended" },
-  { name: "chop", attention: "attended" },
-  { name: "dice", attention: "attended" },
-  { name: "mince", attention: "attended" },
-  { name: "slice", attention: "attended" },
-  { name: "grate", attention: "attended" },
-  { name: "whisk", attention: "attended" },
-
-  // heat
-  { name: "preheat_oven", attention: "unattended_after_start" },
-  { name: "preheat_pan", attention: "attended" },
-  { name: "heat_oil", attention: "attended" },
-  { name: "bring_to_boil", attention: "unattended_after_start" },
-  { name: "boil", attention: "unattended_after_start" },
-  { name: "simmer", attention: "unattended_after_start" },
-  { name: "sauté", attention: "attended" },
-  { name: "sweat", attention: "attended" },
-  { name: "sear", attention: "attended" },
-  { name: "brown", attention: "attended" },
-
-  // oven
-  { name: "roast", attention: "unattended_after_start" },
-  { name: "bake", attention: "unattended_after_start" },
-  { name: "rest_meat", attention: "unattended_after_start" },
-
-  // compositional
-  { name: "arrange", attention: "attended" },
-  { name: "season", attention: "attended" },
-  { name: "drizzle", attention: "attended" },
-  { name: "toss", attention: "attended" },
-  { name: "stuff", attention: "attended" },
-  { name: "truss", attention: "attended" },
-  { name: "add", attention: "attended" },
-
-  // finish
-  { name: "plate", attention: "attended" },
-];
-
-/** Built-in verb synonyms (BASE). Packs will be merged on top at runtime. */
-const VERB_SYNONYMS_BASE = [
-  { canon: "sweat", patterns: ["sweat", "soften without color", "soften without colour", "cook until translucent"] },
-  { canon: "sauté", patterns: ["saute", "sauté", "fry lightly", "brown lightly", "cook over medium heat"] },
-  { canon: "sear", patterns: ["sear", "brown hard", "sear until browned"] },
-
-  { canon: "preheat_oven", patterns: ["preheat the oven", "heat the oven"] },
-  { canon: "preheat_pan", patterns: ["preheat the pan", "heat a pan", "heat a large pan"] },
-  { canon: "heat_oil", patterns: ["heat the oil", "add oil and heat", "oil shimmering"] },
-
-  { canon: "bring_to_boil", patterns: ["bring to a boil", "bring to the boil", "bring up to a boil"] },
-  { canon: "simmer", patterns: ["simmer", "gentle simmer", "vigorous simmer"] },
-  { canon: "boil", patterns: ["boil", "boil until tender", "boil rapidly"] },
-
-  { canon: "roast", patterns: ["roast ", "roast until", "place in the oven"] },
-  { canon: "bake", patterns: ["bake for", "bake until", "cook for a further", "cook for "] },
-  { canon: "rest_meat", patterns: ["rest with the heat off", "allow to rest", "let rest", "leave to rest"] },
-
-  { canon: "plate", patterns: ["serve", "plate", "dish up"] },
-
-  { canon: "arrange", patterns: ["arrange", "place the", "set on top", "spread the", "put the"] },
-  { canon: "season", patterns: ["season with", "sprinkle with", "sprinkle over"] },
-  { canon: "drizzle", patterns: ["drizzle with", "drizzle over", "coat with oil", "toss with oil"] },
-  { canon: "toss", patterns: ["toss the", "stir around", "turn the vegetables"] },
-  { canon: "stuff", patterns: ["stuff the", "fill cavity", "insert into the cavity", "stuff with"] },
-  { canon: "truss", patterns: ["truss the", "tie legs", "bind chicken"] },
-
-  // Add-water family
-  { canon: "add", patterns: [
-    "add the water", "slowly add the water", "add all the water",
-    "add the water quickly", "pour the water over", "stir in the water",
-    "mix in the water", "add water"
-  ]},
-
-  // common prep (fallbacks)
-  { canon: "peel", patterns: ["peel"] },
-  { canon: "chop", patterns: ["chop", "finely chop", "roughly chop"] },
-  { canon: "slice", patterns: ["slice", "thinly slice", "thickly slice"] },
-  { canon: "dice", patterns: ["dice"] },
-  { canon: "mince", patterns: ["mince"] },
-  { canon: "grate", patterns: ["grate"] },
-  { canon: "whisk", patterns: ["whisk"] },
-];
-
-/** Built-in readiness cues (BASE). Packs add more via pattern strings. */
-const READINESS_TABLE_BASE = [
-  { type: "color", value: "golden", pattern: "until\\s+golden|lightly\\s+browned|deeply\\s+golden" },
-  { type: "texture", value: "tender", pattern: "until\\s+(knife|fork)?-?\\s*tender|until\\s+soft" },
-  { type: "activity", value: "bubbling", pattern: "bubbling" },
-  { type: "texture", value: "al_dente", pattern: "until\\s+al\\s*dente" },
-  { type: "viscosity", value: "nappe", pattern: "coats\\s+the\\s+back\\s+of\\s+a\\s+spoon|nappe" },
-];
-
-/* ============================ Duration & Policies ============================ */
-const DURATION_REGEX = [
-  { kind: "minutes_range", re: /(\d+)\s*[-–—]\s*(\d+)\s*(?:min|minutes?)(?=[\s,.]|$)/i },
-  { kind: "minutes", re: /(\d+)\s*(?:min|minutes?)(?=[\s,.]|$)/i },
-  { kind: "hours_range", re: /(\d+)\s*[-–—]\s*(\d+)\s*hours?(?=[\s,.]|$)/i },
-  { kind: "hours", re: /(\d+)\s*hours?(?=[\s,.]|$)/i },
-];
-const EXTRA_DURATION_REGEX = [{ kind: "minutes_at_least", re: /at least\s+(\d+)\s*minutes?/i }];
-
-const DEFAULT_PLANNED_MIN = {
-  preheat_oven: 12,
-  preheat_pan: 3,
-  heat_oil: 5,
-  bring_to_boil: 10,
-  boil: 10,
-  simmer: 12,
-  roast: 30,
-  bake: 30,
-  whisk: 1, stir: 1, toss: 1, season: 1, drizzle: 1, add: 1,
-  plate: 5,
-};
-
-/* ============================ Utilities ============================ */
-const uid = (() => { let i = 0; return (p = "t") => `${p}_${++i}`; })();
-const trimLines = (txt) => txt.split(/\n+/).map((l) => l.trim()).filter(Boolean);
-const COOK_VERBS = new Set(["bake","boil","simmer","roast","sauté","sweat","sear","brown"]);
-const STOP = new Set(["of","and","or","a","the","with","to","in","for","large","small","medium","fresh","dried","finely","roughly"]);
-const singularize = (w) => w.replace(/ies$/,"y").replace(/s$/,"");
-const tokenize = (s) => s.toLowerCase().replace(/[^a-z0-9\s]/g," ").split(/\s+/).filter(t => t && !STOP.has(t)).map(singularize);
-
-/* advisory filter (keep actionable lines only) */
-const isAdvisory = (s) => {
-  const lower = s.toLowerCase();
-  const hasCanonVerb = CANONICAL_VERBS.some(v => lower.includes(v.name.replace(/_/g, " ")));
-  if (hasCanonVerb) return false;
-  if (/more than one chicken|two chickens|2 chickens/.test(lower)) return true;
-  if (/^(tip|chef.?s tip|note|make ahead|storage|substitutions|equipment|nutrition|serving suggestion|wine pairing)\s*:/.test(lower))
-    return true;
-  if (/see note|see notes|see tip|see sidebar|see footnote/.test(lower)) return true;
-  if (/^(if|when)\b/.test(lower)) return true;
-  if (/optional\)?$/.test(lower)) return true;
-  return false;
->>>>>>> c06e7e9 (1.6.2)
 };
 const minToMs = (m) => (m == null ? 0 : Math.max(0, Math.round(m))) * 60_000;
 const uuid = () =>
@@ -192,7 +41,6 @@ const uuid = () =>
     ? crypto.randomUUID()
     : `task_${Math.random().toString(36).slice(2, 10)}`);
 
-<<<<<<< HEAD
 // ----------------------------------------------------------------------
 // Canon & defaults from packs (shape-agnostic)
 // ----------------------------------------------------------------------
@@ -224,26 +72,6 @@ function extractDurationEntries(pack) {
   if (pack && typeof pack === "object") {
     if (pack.defaults && typeof pack.defaults === "object") {
       return Object.entries(pack.defaults).filter(([, v]) => Number.isFinite(v));
-=======
-/* ============================ Parsers (parametric tables) ============================ */
-const compileReadiness = (items) => items.map(({ type, value, pattern }) => ({
-  type, value, re: new RegExp(pattern, "i")
-}));
-
-const findVerbHits = (text, verbSynonyms) => {
-  const lower = text.toLowerCase();
-  const hits = [];
-  for (const { canon, patterns } of verbSynonyms) {
-    for (const p of patterns) {
-      const needle = p.toLowerCase();
-      let from = 0;
-      while (true) {
-        const i = lower.indexOf(needle, from);
-        if (i === -1) break;
-        hits.push({ canon, idx: i, len: needle.length });
-        from = i + needle.length;
-      }
->>>>>>> c06e7e9 (1.6.2)
     }
     const numKeys = Object.keys(pack).filter((k) => Number.isFinite(pack[k]));
     if (numKeys.length) return numKeys.map((k) => [k, pack[k]]);
@@ -252,7 +80,6 @@ const findVerbHits = (text, verbSynonyms) => {
 }
 const DEFAULTS_BY_VERB = Object.fromEntries(extractDurationEntries(DURATIONS_PACK));
 
-<<<<<<< HEAD
 // ----------------------------------------------------------------------
 // Synonyms (optional; exposed on meal.meta for later use)
 // ----------------------------------------------------------------------
@@ -266,27 +93,6 @@ const SYNONYMS = (() => {
           .filter((t) => Array.isArray(t) && t.length === 2 && typeof t[0] === "string")
           .map(([head, aliases]) => [String(head).toLowerCase(), Array.isArray(aliases) ? aliases : []])
       );
-=======
-const splitIntoActions = (line, verbSynonyms) => {
-  const coarse = line
-    .split(/(?<=[.;])\s+/)
-    .flatMap(s => s.split(/\s+(?:then|and then|after that|next)\s+/i))
-    .map(s => s.trim())
-    .filter(Boolean);
-
-  const actions = [];
-  for (const piece of coarse) {
-    if (isAdvisory(piece)) continue;
-    const hits = findVerbHits(piece, verbSynonyms);
-    if (hits.length <= 1) actions.push(piece);
-    else {
-      for (let i = 0; i < hits.length; i++) {
-        const start = hits[i].idx;
-        const end = i + 1 < hits.length ? hits[i+1].idx : piece.length;
-        const chunk = piece.slice(start, end).trim();
-        if (chunk) actions.push(chunk);
-      }
->>>>>>> c06e7e9 (1.6.2)
     }
     return Object.fromEntries(
       pack
@@ -302,7 +108,6 @@ const splitIntoActions = (line, verbSynonyms) => {
   return {};
 })();
 
-<<<<<<< HEAD
 // ----------------------------------------------------------------------
 // Parse helpers (kept for future paste-mode)
 // ----------------------------------------------------------------------
@@ -315,52 +120,12 @@ function findVerb(text) {
   for (const v of CANONICAL) {
     for (const re of v.patterns) {
       if (re.test(text)) return v;
-=======
-const findCanonVerb = (text, verbSynonyms) => {
-  const lower = text.toLowerCase();
-  let best = { canon: null, idx: Infinity };
-  for (const { canon, patterns } of verbSynonyms) {
-    for (const p of patterns) {
-      const i = lower.indexOf(p.toLowerCase());
-      if (i >= 0 && i < best.idx) best = { canon, idx: i };
->>>>>>> c06e7e9 (1.6.2)
     }
   }
   return null;
-<<<<<<< HEAD
-=======
-};
-
-const parseReadiness = (text, readinessTable) => {
-  for (const r of readinessTable) if (r.re.test(text)) return { type: r.type, value: r.value };
-  return null;
-};
-
-const toDurationObj = (dur) =>
-  !dur ? null :
-  Object.prototype.hasOwnProperty.call(dur, "value") ? { value: dur.value } : { range: dur.range };
-
-/* ============================ Policies ============================ */
-function applyAttendedDurationPolicy(task) {
-  if (!task.requires_driver) return { ...task, planned_min: task.planned_min ?? (task.duration_min?.value ?? null) };
-  const d = task.duration_min;
-  if (!d) return { ...task, duration_min: { value: 1 }, planned_min: 1 };
-  if ("value" in d && typeof d.value === "number") {
-    const v = Math.max(1, d.value);
-    return { ...task, duration_min: { value: v }, planned_min: v };
-  }
-  if ("range" in d && Array.isArray(d.range)) {
-    const [a,b] = d.range;
-    const aa = Math.max(1, a ?? 1);
-    const bb = Math.max(1, b ?? aa);
-    return { ...task, duration_min: { range: [aa, bb] }, planned_min: aa };
-  }
-  return task;
->>>>>>> c06e7e9 (1.6.2)
 }
 const toDurationObj = (min) => (min == null ? null : { value: min });
 
-<<<<<<< HEAD
 // Prefer explicit per-task duration over planned/defaults; return integer minutes >= 1
 const getPlannedMinutes = (t) => {
   if (!t) return 1;
@@ -415,74 +180,6 @@ function computeCriticalPathMin(tasks) {
     const fin = start + planned(tasks[i]);
     memo[i] = fin;
     return fin;
-=======
-function applyAdvisoryPlannedDefaults(task) {
-  let planned = task.planned_min;
-  if (planned == null) {
-    const hint = DEFAULT_PLANNED_MIN[task.canonical_verb];
-    if (hint != null) planned = hint;
-  }
-  if (task.requires_driver && (planned == null || planned < 1)) planned = 1;
-  return { ...task, planned_min: planned };
-}
-
-/* ============================ Task + Edges ============================ */
-const EDGE_TYPES = ["FS","SS"];
-
-const lineToTask = (text, tables) => {
-  const { verbSynonyms, readinessTable } = tables;
-  const verb = findCanonVerb(text, verbSynonyms);
-  const dur = toDurationObj(parseDuration(text));
-  const ready = parseReadiness(text, readinessTable);
-  const vMeta = CANONICAL_VERBS.find((v) => v.name === verb);
-
-  const base = {
-    id: uid("t"),
-    name: text.replace(/\.$/, ""),
-    canonical_verb: verb,
-    duration_min: dur,
-    planned_min: dur?.value ?? null,
-    readiness_signal: ready,
-    requires_driver: vMeta ? vMeta.attention === "attended" : true,
-    self_running_after_start: vMeta ? vMeta.attention === "unattended_after_start" : false,
-    edges: [],
-  };
-  return applyAttendedDurationPolicy(base);
-};
-
-function addIfMissingEdge(cur, fromId, type, lag = null) {
-  if (!EDGE_TYPES.includes(type)) type = "FS";
-  if (!cur.edges) cur.edges = [];
-  const has = cur.edges.some(
-    (e) => e.from === fromId && e.type === type && (e.lag_min ?? null) === (lag ?? null)
-  );
-  if (!has) {
-    const e = { from: fromId, type };
-    if (lag != null && Number.isFinite(lag)) e.lag_min = Math.round(lag);
-    cur.edges.push(e);
-  }
-}
-
-/* ============================ Parser (tables passed in) ============================ */
-function buildMealMap(raw, tables) {
-  const title = (raw.match(/Title:\s*(.*)/i) || [])[1]?.trim() || "Untitled";
-  const author = (raw.match(/Author:\s*(.*)/i) || [])[1]?.trim() || "Unknown";
-  const instrBlock = (raw.split(/Instructions:/i)[1] || raw).trim();
-
-  const rawLines = trimLines(instrBlock).map(l => l.replace(/^\d+\.\s*/, "").trim());
-  const stepLines = rawLines.flatMap(line => splitIntoActions(line, tables.verbSynonyms));
-
-  // steps → tasks
-  let tasks = stepLines.map(line => lineToTask(line, tables));
-
-  // sequential fallback: prev -> cur (SS if prev unattended-after-start, else FS)
-  for (let i = 1; i < tasks.length; i++) {
-    const prev = tasks[i - 1];
-    const cur = tasks[i];
-    if (cur.edges.some(e => e.from === prev.id)) continue;
-    const unattended = !!prev.self_running_after_start || prev.canonical_verb === "preheat_oven";
-    addIfMissingEdge(cur, prev.id, unattended ? "SS" : "FS", null);
->>>>>>> c06e7e9 (1.6.2)
   }
   let makespan = 0;
   for (let i = 0; i < tasks.length; i++) {
@@ -508,20 +205,6 @@ function depsSatisfied(task, status) {
       case "SF":
       default:   return pred.done; // conservative finish-gate
     }
-<<<<<<< HEAD
-=======
-  }
-
-  // Planned mins & policy pass
-  tasks = tasks.map(applyAdvisoryPlannedDefaults).map(applyAttendedDurationPolicy);
-
-  // warnings
-  const warnings = [];
-  tasks.forEach((t, i) => {
-    const hasTime = (t.duration_min && t.duration_min.value != null) || t.planned_min != null;
-    const hasReadiness = !!t.readiness_signal;
-    if (!hasTime && !hasReadiness) warnings.push({ i, msg: "No duration or readiness signal detected." });
->>>>>>> c06e7e9 (1.6.2)
   });
 }
 
@@ -616,15 +299,10 @@ function useRuntime(tasks) {
   }
 
   return {
-<<<<<<< HEAD
     started, setStarted, nowMs,
     running, doneIds, completed,
     driverBusy, ready, blocked,
     startTask, finishTask, reset
-=======
-    meal: { title, author: { name: author }, tasks, meta: { notes: [] } },
-    warnings,
->>>>>>> c06e7e9 (1.6.2)
   };
 }
 
@@ -846,7 +524,6 @@ function DurationEditor({ duration, onChangeMinutes, disabled = false }) {
     </select>
   );
 }
-<<<<<<< HEAD
 function VerbEditor({ value, onChange }) {
   const options = ["free_text", ...CANONICAL.map((v) => v.name)];
   return (
@@ -856,23 +533,6 @@ function VerbEditor({ value, onChange }) {
       ))}
     </select>
   );
-=======
-
-/* ============================ Runtime helpers ============================ */
-function gateAllowsStart(task, byId, status) {
-  const incoming = task.edges || [];
-  for (const e of incoming) {
-    const st = status[e.from] || "pending";
-    if (e.type === "FS") {
-      if (st !== "done") return false;
-    } else if (e.type === "SS") {
-      if (!(st === "running" || st === "done")) return false;
-    } else {
-      return false;
-    }
-  }
-  return true;
->>>>>>> c06e7e9 (1.6.2)
 }
 
 // ----------------------------------------------------------------------
@@ -886,69 +546,11 @@ function computeMealMinTime(meal) {
 // App
 // ----------------------------------------------------------------------
 export default function App() {
-<<<<<<< HEAD
   const MEALS = useMemo(() => ([
     { id: "pasta", title: "Quick Pasta with Garlic Oil", author: "Sample", data: MEAL_PASTA },
     { id: "roast", title: "Easy One-pan Roast Chicken and Vegetables", author: "Nicole Maquire", data: MEAL_ROAST },
     { id: "stew",  title: "Slow Beef Stew", author: "Sample", data: MEAL_STEW },
   ]), []);
-=======
-  // Base tables
-  const [verbSynonyms, setVerbSynonyms] = useState(VERB_SYNONYMS_BASE);
-  const [readinessTable, setReadinessTable] = useState(compileReadiness(READINESS_TABLE_BASE));
-  const [packsInfo, setPacksInfo] = useState("none"); // "none" | "loaded"
-
-  // Optional PACK loader (from /public/packs)
-  useEffect(() => {
-    let cancelled = false;
-    async function loadPacks() {
-      try {
-        // fetch packs; if not found -> keep defaults
-        const [verbsRes, readyRes] = await Promise.allSettled([
-          fetch("/packs/verbs.en.json"),
-          fetch("/packs/readiness.en.json"),
-        ]);
-
-        let mergedVerbs = [...VERB_SYNONYMS_BASE];
-        let mergedReady = [...READINESS_TABLE_BASE];
-
-        let anyLoaded = false;
-
-        if (verbsRes.status === "fulfilled" && verbsRes.value.ok) {
-          const data = await verbsRes.value.json(); // { synonyms: [{canon, patterns: [...]}, ...]}
-          if (Array.isArray(data?.synonyms)) {
-            mergedVerbs = mergedVerbs.concat(
-              data.synonyms.filter(x => x && x.canon && Array.isArray(x.patterns))
-            );
-            anyLoaded = true;
-          }
-        }
-        if (readyRes.status === "fulfilled" && readyRes.value.ok) {
-          const data = await readyRes.value.json(); // { items: [{type,value,pattern}, ...]}
-          if (Array.isArray(data?.items)) {
-            mergedReady = mergedReady.concat(
-              data.items.filter(x => x && x.type && x.value && x.pattern)
-            );
-            anyLoaded = true;
-          }
-        }
-
-        if (!cancelled) {
-          setVerbSynonyms(mergedVerbs);
-          setReadinessTable(compileReadiness(mergedReady));
-          setPacksInfo(anyLoaded ? "loaded" : "none");
-        }
-      } catch {
-        if (!cancelled) setPacksInfo("none");
-      }
-    }
-    loadPacks();
-    return () => { cancelled = true; };
-  }, []);
-
-  const defaultSample = `Title: Easy One-pan Roast Chicken and Vegetables
-Author: Nicole Maquire
->>>>>>> c06e7e9 (1.6.2)
 
   const [mealIdx, setMealIdx] = useState(0);
   const [state, setState] = useState(() => ({
@@ -956,7 +558,6 @@ Author: Nicole Maquire
     warnings: [],
   }));
 
-<<<<<<< HEAD
   // Serve-at input (15-min step)
   const [serveAt, setServeAt] = useState(() => {
     const now = new Date();
@@ -979,51 +580,6 @@ Author: Nicole Maquire
     () => computeCriticalPathMin(state.meal.tasks),
     [state.meal.tasks]
   );
-=======
-  const [raw, setRaw] = useState(defaultSample);
-  const [parse, setParse] = useState(() => buildMealMap(defaultSample, { verbSynonyms, readinessTable }));
-
-  // runtime: per-task status: pending | running | done
-  const [status, setStatus] = useState({});
-  const [driverBusy, setDriverBusy] = useState(false);
-
-  const tables = useMemo(() => ({ verbSynonyms, readinessTable }), [verbSynonyms, readinessTable]);
-
-  const rebuild = (nextRaw) => {
-    const p = buildMealMap(nextRaw ?? raw, tables);
-    setParse(p);
-    setStatus({});
-    setDriverBusy(false);
-  };
-
-  // reparse when packs load
-  useEffect(() => {
-    setParse(buildMealMap(raw, tables));
-    setStatus({});
-    setDriverBusy(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [verbSynonyms, readinessTable]);
-
-  const tasks = parse.meal.tasks;
-  const byId = useMemo(() => Object.fromEntries(tasks.map(t => [t.id, t])), [tasks]);
-
-  const running = tasks.filter(t => status[t.id] === "running");
-  const done = tasks.filter(t => status[t.id] === "done");
-  const canDoNow = tasks.filter(t => {
-    if (status[t.id]) return false;
-    if (t.requires_driver && driverBusy) return false;
-    return gateAllowsStart(t, byId, status);
-  });
-
-  const startTask = (id) => {
-    const t = byId[id];
-    if (!t) return;
-    if (t.requires_driver && driverBusy) return;
-    if (!gateAllowsStart(t, byId, status)) return;
-    setStatus(prev => ({ ...prev, [id]: "running" }));
-    if (t.requires_driver) setDriverBusy(true);
-  };
->>>>>>> c06e7e9 (1.6.2)
 
   const fits = minBudget <= windowMin;
   const earliestServe = useMemo(() => {
@@ -1105,7 +661,6 @@ Author: Nicole Maquire
   }
 
   return (
-<<<<<<< HEAD
     <div style={{ minHeight: "100vh", padding: 16, display: "grid", gap: 14 }}>
       {/* Top: Meals & Time Budget */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
@@ -1284,141 +839,6 @@ Author: Nicole Maquire
 
         <div style={{ marginTop: 10 }}>
           <button onClick={exportJson}>Export JSON</button>
-=======
-    <div style={{ minHeight: "100vh", display: "grid", gap: 16, padding: 16 }}>
-      {/* Header / Packs status */}
-      <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-        <h2 style={{ margin: 0 }}>Parsed MealMap (stub)</h2>
-        <span style={{
-          fontSize: 12, padding: "4px 8px", borderRadius: 999,
-          border: "1px solid #ddd", background: packsInfo === "loaded" ? "#ecfdf5" : "#f8fafc"
-        }}>
-          Packs: {packsInfo === "loaded" ? "loaded ✓" : "none (using defaults)"}
-        </span>
-        <button onClick={exportJson} style={{ marginLeft: "auto" }}>Export JSON</button>
-      </div>
-
-      {/* Input */}
-      <div style={{ border: "1px solid #ddd", borderRadius: 12, padding: 12 }}>
-        <h3>Paste Recipe (Prose)</h3>
-        <textarea
-          style={{ width: "100%", minHeight: 260, resize: "vertical" }}
-          value={raw}
-          onChange={(e) => setRaw(e.target.value)}
-          onBlur={() => rebuild(raw)}
-          placeholder="Paste title/author and Instructions:"
-        />
-        <div style={{ fontSize: 12, color: "#555" }}>Tip: edit then click outside the box to re-parse.</div>
-      </div>
-
-      {/* Meta */}
-      <div style={{ border: "1px solid #eee", borderRadius: 8, padding: 8 }}>
-        <div><b>Title:</b> {parse.meal.title}</div>
-        <div><b>Author:</b> {parse.meal.author?.name}</div>
-      </div>
-
-      {/* Tasks */}
-      <div style={{ border: "1px solid #eee", borderRadius: 8, padding: 8 }}>
-        <h3>Tasks</h3>
-        <ol style={{ paddingLeft: 16 }}>
-          {parse.meal.tasks.map((t, idx) => (
-            <li key={t.id} style={{ border: "1px solid #eee", borderRadius: 8, padding: 8, margin: "8px 0" }}>
-              <div><b>Step {idx + 1}:</b> {t.name}</div>
-              <div style={{ marginTop: 6, display: "flex", flexWrap: "wrap" }}>
-                <Chip>verb: <EditableVerb value={t.canonical_verb} onChange={(v) => updateVerb(t.id, v)} /></Chip>
-                <Chip>driver: {t.requires_driver ? "attended" : (t.self_running_after_start ? "self-running after start" : "unattended")}</Chip>
-                <Chip>
-                  duration:&nbsp;
-                  <DurationEditor
-                    duration={t.duration_min}
-                    onChangeMinutes={(mins) => updateDurationMinutes(t.id, mins)}
-                  />
-                </Chip>
-                <Chip>planned: {t.planned_min ?? "—"} min</Chip>
-                <Chip>readiness: {t.readiness_signal ? `${t.readiness_signal.type}:${t.readiness_signal.value}` : "—"}</Chip>
-                <Chip>
-                  deps:&nbsp;
-                  {(t.edges||[]).length ? (t.edges||[]).map((e,i)=>(
-                    <span key={i}>{e.from}:{e.type}{e.lag_min!=null?`(${e.lag_min}m)`:""}{i<(t.edges.length-1)?", ":""}</span>
-                  )) : "—"}
-                </Chip>
-              </div>
-            </li>
-          ))}
-        </ol>
-      </div>
-
-      {/* Warnings */}
-      <div style={{ border: "1px solid #f3c98b", background: "#fff7ed", borderRadius: 8, padding: 8 }}>
-        <h3>Warnings</h3>
-        {parse.warnings.length === 0 ? (
-          <div>No warnings for this stub parse.</div>
-        ) : (
-          <ul style={{ paddingLeft: 18 }}>
-            {parse.warnings.map((w, i) => (
-              <li key={i}><b>Step {w.i + 1}:</b> {w.msg}</li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      {/* Mini runtime (NowLine) */}
-      <div style={{ border: "1px solid #ddd", borderRadius: 12, padding: 12 }}>
-        <h3>Run (NowLine)</h3>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-          <div style={{ border: "1px solid #eee", borderRadius: 8, padding: 8 }}>
-            <h4>Can do now</h4>
-            {(() => {
-              const tasks = parse.meal.tasks;
-              const running = tasks.filter(t => status[t.id] === "running");
-              const byId = Object.fromEntries(tasks.map(t => [t.id, t]));
-              const canDoNow = tasks.filter(t => !status[t.id] && gateAllowsStart(t, byId, status))
-                .filter(t => !(t.requires_driver && driverBusy));
-              return canDoNow.length === 0 ? <div>—</div> : (
-                <ul style={{ paddingLeft: 16 }}>
-                  {canDoNow.map(t => (
-                    <li key={t.id} style={{ marginBottom: 6 }}>
-                      {t.name} {t.requires_driver ? "(attended)" : "(driver free)"}
-                      <div><button onClick={()=>startTask(t.id)} style={{ marginTop: 4 }}>Start</button></div>
-                    </li>
-                  ))}
-                </ul>
-              );
-            })()}
-          </div>
-
-          <div style={{ border: "1px solid #eee", borderRadius: 8, padding: 8 }}>
-            <h4>Running</h4>
-            {(() => {
-              const running = parse.meal.tasks.filter(t => status[t.id] === "running");
-              return running.length === 0 ? <div>—</div> : (
-                <ul style={{ paddingLeft: 16 }}>
-                  {running.map(t => (
-                    <li key={t.id} style={{ marginBottom: 6 }}>
-                      {t.name} {t.requires_driver ? "(attended)" : "(driver free)"}
-                      <div><button onClick={()=>finishTask(t.id)} style={{ marginTop: 4 }}>Finish now</button></div>
-                    </li>
-                  ))}
-                </ul>
-              );
-            })()}
-            <div style={{ marginTop: 8, fontSize: 12, color: driverBusy ? "#b91c1c" : "#166534" }}>
-              Driver: {driverBusy ? "busy (one attended task running)" : "free"}
-            </div>
-          </div>
-
-          <div style={{ border: "1px solid #eee", borderRadius: 8, padding: 8 }}>
-            <h4>Done</h4>
-            {(() => {
-              const done = parse.meal.tasks.filter(t => status[t.id] === "done");
-              return done.length === 0 ? <div>—</div> : (
-                <ul style={{ paddingLeft: 16 }}>
-                  {done.map(t => <li key={t.id}>{t.name}</li>)}
-                </ul>
-              );
-            })()}
-          </div>
->>>>>>> c06e7e9 (1.6.2)
         </div>
       </div>
     </div>
