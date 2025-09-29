@@ -445,12 +445,16 @@ function Timeline({ tasks, running, ready = [], completed = [], doneIds, nowMs }
           <line key={i} x1={t.x} x2={t.x} y1={0} y2={height} stroke="#f3f4f6" />
         ))}
 
-        {/* Lane labels */}
-        {orderedTasks.map((t, i) => (
-          <text key={t.id} x={12} y={PADDING + i * ROW_H + ROW_H * 0.55} fontSize="14" fill="#374151">
-            {i + 1}. {t.name}
-          </text>
-        ))}
+        {/* Lane labels (hide labels for finished-in-grace lanes) */}
+{orderedTasks.map((t, i) => {
+  if (doneIds.has(t.id)) return null; // no label once task is done
+  const y = PADDING + i * ROW_H + ROW_H * 0.55;
+  return (
+    <text key={t.id} x={12} y={y} fontSize="14" fill="#374151">
+      {i + 1}. {t.name}
+    </text>
+  );
+})}
 
         {/* Ghost bars */}
         {ghostBars.map((b) => (
