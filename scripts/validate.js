@@ -2,22 +2,25 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import fg from "fast-glob";
-import Ajv from "ajv";
+import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
 
 const root = process.cwd();
 
-const ajv = new Ajv({ allErrors: true, strict: false });
+// Use the 2020-12 build of Ajv to match "$schema": ".../draft/2020-12/schema"
+const ajv = new Ajv2020({ allErrors: true, strict: false });
 addFormats(ajv);
 
+// Where the schemas live (relative to project root)
 const schemaPaths = {
   meal: "schemas/meal.schema.json",
   verbs: "schemas/verbs.schema.json",
   durations: "schemas/durations.schema.json",
   synonyms: "schemas/synonyms.schema.json",
-  readiness: "schemas/readiness.schema.json"
+  readiness: "schemas/readiness.schema.json",
 };
 
+// Compile schemas
 const schemas = {};
 for (const [key, relPath] of Object.entries(schemaPaths)) {
   const abs = path.join(root, relPath);

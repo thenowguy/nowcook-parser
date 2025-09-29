@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Verb Pack",
+  "type": "object",
+  "properties": {
+    "verbs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["canon"],
+        "properties": {
+          "canon": { "type": "string" },
+          "attention": { "enum": ["attended", "unattended_after_start"] },
+          "patterns": { "type": "array", "items": { "type": "string" } },
+          "defaults": {
+            "type": "object",
+            "properties": {
+              "planned_min": { "type": "number", "minimum": 1 }
+            }
+          }
+        }
+      }
+    }
+  }
+}
