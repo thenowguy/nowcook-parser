@@ -4,12 +4,13 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "lint": "eslint .",
-    "preview": "vite preview",
-    "validate": "node scripts/validate.js"
-  },
+  "dev": "vite",
+  "build": "vite build",
+  "lint": "eslint .",
+  "preview": "vite preview",
+  "validate": "node scripts/validate.js",
+  "scaffold:meal": "node scripts/scaffold-meal.js"
+},
   "dependencies": {
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
