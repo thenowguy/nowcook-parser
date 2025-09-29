@@ -1,33 +1,43 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://nowcook.local/schemas/durations.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nowcook.local/schemas/packs/durations.schema.json",
   "title": "Durations Pack",
   "anyOf": [
     {
       "type": "object",
-      "additionalProperties": false,
-      "required": ["durations"],
-      "properties": {
-        "durations": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": ["verb", "planned_min"],
-            "properties": {
-              "verb": { "type": "string", "minLength": 1 },
-              "planned_min": { "type": "integer", "minimum": 1 }
-            }
-          }
-        }
+      "additionalProperties": {
+        "type": "number",
+        "minimum": 0
       }
     },
     {
       "type": "object",
-      "patternProperties": {
-        "^.*$": { "type": "integer", "minimum": 1 }
+      "properties": {
+        "defaults": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number",
+            "minimum": 0
+          }
+        }
       },
       "additionalProperties": false
+    },
+    {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["verb"],
+        "properties": {
+          "verb": { "type": "string" },
+          "canon": { "type": "string" },
+          "name": { "type": "string" },
+          "planned_min": { "type": "number", "minimum": 0 },
+          "min": { "type": "number", "minimum": 0 },
+          "value": { "type": "number", "minimum": 0 }
+        },
+        "additionalProperties": true
+      }
     }
   ]
 }

@@ -1,7 +1,10 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema"
-  "$id": "https://nowcook.local/schemas/readiness.schema.json",
-  "title": "Readiness Pack (placeholder)",
-  "type": ["object", "array"],
-  "additionalProperties": true
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nowcook.local/schemas/packs/readiness.schema.json",
+  "title": "Readiness Pack",
+  "type": ["object", "array", "null"],
+  "description": "Optional readiness definitions — intentionally permissive. If object, keys map to signals.",
+  "additionalProperties": {
+    "type": ["string", "number", "boolean", "object", "array", "null"]
+  }
 }
