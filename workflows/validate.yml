@@ -2,18 +2,40 @@ name: Validate packs & meals
 
 on:
   push:
-    paths: ["src/packs/**", "src/meals/**", "schemas/**", "scripts/validate.js", "package.json", "package-lock.json"]
+    paths:
+      - "src/packs/**"
+      - "src/meals/**"
+      - "schemas/**"
+      - "scripts/**"
+      - "package.json"
+      - "package-lock.json"
   pull_request:
-    paths: ["src/packs/**", "src/meals/**", "schemas/**", "scripts/validate.js", "package.json", "package-lock.json"]
+    paths:
+      - "src/packs/**"
+      - "src/meals/**"
+      - "schemas/**"
+      - "scripts/**"
+      - "package.json"
+      - "package-lock.json"
+  workflow_dispatch: {}
 
 jobs:
   validate:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
-      - run: npm run validate
+
+      - name: Install deps (clean)
+        run: npm ci
+
+      - name: Validate JSON (Ajv)
+        run: npm run validate
