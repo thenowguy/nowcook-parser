@@ -10,13 +10,12 @@ const root = process.cwd();
 const ajv = new Ajv({ allErrors: true, strict: false });
 addFormats(ajv);
 
-// Load schemas
 const schemaPaths = {
   meal: "schemas/meal.schema.json",
   verbs: "schemas/packs/verbs.schema.json",
-  durations: "schemas/packs/durations.schema.json",
-  synonyms: "schemas/packs/synonyms.schema.json",
-  readiness: "schemas/packs/readiness.schema.json",
+  durations: "schemas/durations.schema.json",
+  synonyms: "schemas/synonyms.schema.json",
+  readiness: "schemas/readiness.schema.json"
 };
 
 const schemas = {};
