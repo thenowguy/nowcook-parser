@@ -1,12 +1,8 @@
-// ============================== NowCook Parser — v1.8.1 ==============================
-// v1.8.1 = v1.8.0 + lane reordering + unattended queue hint + export log
-//  - Lanes: the currently running task(s) and their dependent chain(s) float to the top
-//  - Queue hint: while any unattended timer is running, suggest ready attended tasks (shortest first)
-//  - Export runtime log: JSON/CSV with actual start/finish timestamps (relative to run)
-//  - Preserves: move-only bars; manual completion; integer-minute durations
-// Packs live in: src/packs/{verbs.en.json,durations.en.json,readiness.en.json,synonyms.en.json}
-// Sample meals live in: src/meals/*.json
-
+// ============================== NowCook Parser — v1.8.3 ==============================
+// v1.8.3 = v1.8.2 + grace fade for finished tasks (keeps lane briefly, then disappears)
+//  - Finished bars stay in-place for GRACE_MS and fade out; after that, lanes compact.
+//  - Running lanes remain stable (ordered by startedAt).
+//  - Concurrency, manual completion, queue hint, exports unchanged.
 /* eslint-disable */
 import React, { useEffect, useMemo, useState } from "react";
 
@@ -284,67 +280,44 @@ function useRuntime(tasks) {
 }
 
 // ----------------------------------------------------------------------
-// Ordering helpers (lane reordering + queue suggestion)
+// Ordering helpers (stable lanes + grace fade)
+//  - Lane set = running tasks + recently finished (within GRACE_MS), ordered by startedAt
+//  - After grace, finished disappear and lanes compact
 // ----------------------------------------------------------------------
-function buildDependentsMap(tasks) {
+const GRACE_MS = 4000;
+
+function orderForLanes(tasks, running, completed, nowMs, doneIds) {
   const byId = new Map(tasks.map(t => [t.id, t]));
-  const deps = new Map(); // fromId -> [toIds...]
-  for (const t of tasks) {
-    for (const e of (t.edges || [])) {
-      if (!e?.from || !byId.has(e.from)) continue;
-      if (!deps.has(e.from)) deps.set(e.from, []);
-      deps.get(e.from).push(t.id);
-    }
-  }
-  return deps;
-}
+  const recentFinished = completed
+    .filter(c => nowMs - c.finishedAt < GRACE_MS)
+    .map(c => ({ ...c, _kind: "finished" }));
 
-function orderTasksForLanes(tasks, running) {
-  if (!Array.isArray(tasks) || tasks.length === 0) return tasks;
-  const byId = new Map(tasks.map(t => [t.id, t]));
-  const dependents = buildDependentsMap(tasks);
-  const placed = new Set();
-  const order = [];
+  const laneStackIds = [
+    ...running.map(r => ({ id: r.id, startedAt: r.startedAt, _kind: "running" })),
+    ...recentFinished.map(f => ({ id: f.id, startedAt: f.startedAt, _kind: "finished", finishedAt: f.finishedAt })),
+  ]
+    .sort((a, b) => a.startedAt - b.startedAt)
+    .map(x => x.id);
 
-  // Depth-first append: each running task followed by its dependent chain
-  const dfs = (id) => {
-    if (placed.has(id) || !byId.has(id)) return;
-    placed.add(id);
-    order.push(byId.get(id));
-    const kids = dependents.get(id) || [];
-    for (const kid of kids) dfs(kid);
-  };
+  const laneSet = new Set(laneStackIds);
 
-  // Seed with running (driver-attended first to anchor that thread)
-  const runningIds = [...running]
-    .sort((a, b) => {
-      const ta = byId.get(a.id), tb = byId.get(b.id);
-      const A = ta?.requires_driver ? 0 : 1;
-      const B = tb?.requires_driver ? 0 : 1;
-      return A - B;
-    })
-    .map(r => r.id);
-
-  for (const id of runningIds) dfs(id);
-
-  // Append anything not yet placed in original order to remain stable
-  for (const t of tasks) if (!placed.has(t.id)) order.push(t);
-
-  return order;
+  // Start with lanes (running + recent finished), then the rest (not started, not done)
+  const head = laneStackIds.map(id => byId.get(id)).filter(Boolean);
+  const tail = tasks.filter(t => !laneSet.has(t.id) && !doneIds.has(t.id));
+  return [...head, ...tail];
 }
 
 function suggestQueue(ready, running, byId) {
-  // If any unattended timer is running, prefer ready attended tasks (keep driver productive)
   const hasUnattended = running.some(r => byId.get(r.id) && !byId.get(r.id).requires_driver);
   if (!hasUnattended) return [];
   return [...ready]
     .filter(t => t.requires_driver)
     .sort((a, b) => getPlannedMinutes(a) - getPlannedMinutes(b))
-    .slice(0, 4); // tiny hint
+    .slice(0, 4);
 }
 
 // ----------------------------------------------------------------------
-// Timeline (SVG)
+// Timeline (SVG) — move-only bars; stable lanes; grace fade for finished
 // ----------------------------------------------------------------------
 function Timeline({ tasks, running, ready = [], completed = [], doneIds, nowMs }) {
   const PX_PER_MIN = 100;
@@ -354,14 +327,19 @@ function Timeline({ tasks, running, ready = [], completed = [], doneIds, nowMs }
   const FUTURE_MIN = 35;
 
   const byId  = useMemo(() => new Map(tasks.map((t) => [t.id, t])), [tasks]);
-  const orderedTasks = useMemo(() => orderTasksForLanes(tasks, running), [tasks, running]);
+
+  // Stable ordering with grace-finished included
+  const orderedTasks = useMemo(
+    () => orderForLanes(tasks, running, completed, nowMs, doneIds),
+    [tasks, running, completed, nowMs, doneIds]
+  );
 
   const lanes  = orderedTasks.map((t, i) => ({ id: t.id, y: PADDING + i * ROW_H }));
   const height = PADDING * 2 + lanes.length * ROW_H;
   const width  = Math.max(960, (PAST_MIN + FUTURE_MIN) * PX_PER_MIN + 160);
   const MID    = Math.round(PAST_MIN * PX_PER_MIN) + 80;
 
-  // RUNNING: left edge drifts with elapsed; width fixed to planned. Clamp keeps right edge at Now at time-up.
+  // Running bars: left drifts; width fixed; freeze at Now when time is up
   const runningBars = running.map((r) => {
     const t = byId.get(r.id);
     const lane = lanes.find((ln) => ln.id === r.id) || { y: 0 };
@@ -385,10 +363,39 @@ function Timeline({ tasks, running, ready = [], completed = [], doneIds, nowMs }
     };
   });
 
-  // GHOST: preview if started now (left at Now, width = planned)
+  // Finished-in-grace bars: keep lane; right edge anchored to true finish; fade out
+  const finishedBars = completed
+    .map((c) => {
+      const t = byId.get(c.id);
+      if (!t) return null;
+      const age = nowMs - c.finishedAt;
+      if (age >= GRACE_MS) return null; // out of grace -> not drawn
+      const lane = lanes.find((ln) => ln.id === c.id) || { y: 0 };
+
+      const durMin = getPlannedMinutes(t);
+      const w = Math.max(10, durMin * PX_PER_MIN);
+
+      const minutesSinceFinish = age / 60000;
+      const rightX = MID - minutesSinceFinish * PX_PER_MIN; // Now minus age
+      const x = rightX - w;
+
+      // Fade from 0.8 -> 0 over GRACE_MS
+      const opacity = clamp(0.8 * (1 - age / GRACE_MS), 0, 0.8);
+
+      return {
+        id: c.id, x, y: lane.y + 8, w, h: ROW_H - 16,
+        attended: !!t?.requires_driver,
+        name: t?.name || "Task",
+        opacity,
+      };
+    })
+    .filter(Boolean);
+
+  // Ghost bars: preview at Now
   const ghostBars = (ready || []).map((t) => {
     const pMin = getPlannedMinutes(t);
     const lane = lanes.find((ln) => ln.id === t.id) || { y: 0 };
+    if (!lane) return null;
     return {
       id: t.id,
       x: MID,
@@ -398,24 +405,7 @@ function Timeline({ tasks, running, ready = [], completed = [], doneIds, nowMs }
       attended: !!t.requires_driver,
       name: t.name || "Task",
     };
-  });
-
-  // DONE: right edge stays anchored to true finish time
-  const doneBars = (completed || []).map((d) => {
-    const t = byId.get(d.id);
-    const durMin = getPlannedMinutes(t);
-    const w = Math.max(10, durMin * PX_PER_MIN);
-    const minutesSinceFinish = (nowMs - d.finishedAt) / 60000;
-    const rightX = MID - minutesSinceFinish * PX_PER_MIN;
-    const x = rightX - w;
-    const lane = lanes.find((ln) => ln.id === d.id) || { y: 0 };
-    return {
-      id: d.id,
-      x, y: lane.y + 8, w, h: ROW_H - 16,
-      attended: !!t?.requires_driver,
-      name: t?.name || "Task",
-    };
-  });
+  }).filter(Boolean);
 
   // Axis ticks
   const ticks = [];
@@ -480,9 +470,9 @@ function Timeline({ tasks, running, ready = [], completed = [], doneIds, nowMs }
           </g>
         ))}
 
-        {/* Finished bars */}
-        {doneBars.map((b) => (
-          <g key={`done_${b.id}`} opacity={0.4}>
+        {/* Finished (grace) bars */}
+        {finishedBars.map((b) => (
+          <g key={`done_${b.id}`} opacity={b.opacity}>
             <rect
               x={b.x} y={b.y}
               width={b.w} height={b.h}
@@ -517,7 +507,7 @@ function Timeline({ tasks, running, ready = [], completed = [], doneIds, nowMs }
       </svg>
 
       <div style={{ fontSize: 12, color: "#6b7280", marginTop: 8 }}>
-        Tip: tasks don’t auto-complete; click <b>Finish</b> to unblock dependents when real-world work is done.
+        Tip: when you click <b>Finish</b>, the bar lingers ~4s (fading) in the same lane, then disappears.
       </div>
     </div>
   );
@@ -851,22 +841,25 @@ export default function App() {
             <div>Nothing running.</div>
           ) : (
             <ul style={{ margin: 0, paddingLeft: 18 }}>
-              {rt.running.map((r) => {
-                const t = state.meal.tasks.find((x) => x.id === r.id);
-                const left = Math.max(0, r.endsAt - rt.nowMs);
-                const timeUp = left <= 0;
-                return (
-                  <li key={r.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-                    <div>
-                      <b>{t?.name}</b>{" "}
-                      <span style={{ opacity: 0.8 }}>
-                        ({t?.requires_driver ? "attended" : "unattended"}) ({mmss(left)} left{timeUp ? " • time up — click Finish" : ""})
-                      </span>
-                    </div>
-                    <button onClick={() => rt.finishTask(r.id)}>Finish now</button>
-                  </li>
-                );
-              })}
+              {rt.running
+                .slice()
+                .sort((a, b) => a.startedAt - b.startedAt) // match lane order
+                .map((r) => {
+                  const t = state.meal.tasks.find((x) => x.id === r.id);
+                  const left = Math.max(0, r.endsAt - rt.nowMs);
+                  const timeUp = left <= 0;
+                  return (
+                    <li key={r.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                      <div>
+                        <b>{t?.name}</b>{" "}
+                        <span style={{ opacity: 0.8 }}>
+                          ({t?.requires_driver ? "attended" : "unattended"}) ({mmss(left)} left{timeUp ? " • time up — click Finish" : ""})
+                        </span>
+                      </div>
+                      <button onClick={() => rt.finishTask(r.id)}>Finish now</button>
+                    </li>
+                  );
+                })}
             </ul>
           )}
         </div>
