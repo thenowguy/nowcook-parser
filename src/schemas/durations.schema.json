@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://nowcook.local/schemas/durations.schema.json",
+  "title": "Durations Pack",
+  "anyOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["durations"],
+      "properties": {
+        "durations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["verb", "planned_min"],
+            "properties": {
+              "verb": { "type": "string", "minLength": 1 },
+              "planned_min": { "type": "integer", "minimum": 1 }
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "patternProperties": {
+        "^.*$": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    }
+  ]
+}
