@@ -1,10 +1,9 @@
-// ============================== NowCook Parser — v1.8.0 ==============================
-// v1.8.0 = v1.7.9 + concurrency & UX polish
-//  - Running bars: move-only (left edge slides), fixed width = planned; freeze when time is up (right edge == Now)
-//  - Manual completion: nothing auto-completes; click Finish to unblock dependents
-//  - Concurrency: unattended tasks don't consume the driver; attended tasks do
-//  - Ghost bars: left edge at Now, width = planned
-//  - Finished bars: right edge remains at their actual finish time
+// ============================== NowCook Parser — v1.8.1 ==============================
+// v1.8.1 = v1.8.0 + lane reordering + unattended queue hint + export log
+//  - Lanes: the currently running task(s) and their dependent chain(s) float to the top
+//  - Queue hint: while any unattended timer is running, suggest ready attended tasks (shortest first)
+//  - Export runtime log: JSON/CSV with actual start/finish timestamps (relative to run)
+//  - Preserves: move-only bars; manual completion; integer-minute durations
 // Packs live in: src/packs/{verbs.en.json,durations.en.json,readiness.en.json,synonyms.en.json}
 // Sample meals live in: src/meals/*.json
 
@@ -285,7 +284,67 @@ function useRuntime(tasks) {
 }
 
 // ----------------------------------------------------------------------
-// Timeline (SVG) — zoomed preview (1m = 100px; 100px lanes; fixed NowLine)
+// Ordering helpers (lane reordering + queue suggestion)
+// ----------------------------------------------------------------------
+function buildDependentsMap(tasks) {
+  const byId = new Map(tasks.map(t => [t.id, t]));
+  const deps = new Map(); // fromId -> [toIds...]
+  for (const t of tasks) {
+    for (const e of (t.edges || [])) {
+      if (!e?.from || !byId.has(e.from)) continue;
+      if (!deps.has(e.from)) deps.set(e.from, []);
+      deps.get(e.from).push(t.id);
+    }
+  }
+  return deps;
+}
+
+function orderTasksForLanes(tasks, running) {
+  if (!Array.isArray(tasks) || tasks.length === 0) return tasks;
+  const byId = new Map(tasks.map(t => [t.id, t]));
+  const dependents = buildDependentsMap(tasks);
+  const placed = new Set();
+  const order = [];
+
+  // Depth-first append: each running task followed by its dependent chain
+  const dfs = (id) => {
+    if (placed.has(id) || !byId.has(id)) return;
+    placed.add(id);
+    order.push(byId.get(id));
+    const kids = dependents.get(id) || [];
+    for (const kid of kids) dfs(kid);
+  };
+
+  // Seed with running (driver-attended first to anchor that thread)
+  const runningIds = [...running]
+    .sort((a, b) => {
+      const ta = byId.get(a.id), tb = byId.get(b.id);
+      const A = ta?.requires_driver ? 0 : 1;
+      const B = tb?.requires_driver ? 0 : 1;
+      return A - B;
+    })
+    .map(r => r.id);
+
+  for (const id of runningIds) dfs(id);
+
+  // Append anything not yet placed in original order to remain stable
+  for (const t of tasks) if (!placed.has(t.id)) order.push(t);
+
+  return order;
+}
+
+function suggestQueue(ready, running, byId) {
+  // If any unattended timer is running, prefer ready attended tasks (keep driver productive)
+  const hasUnattended = running.some(r => byId.get(r.id) && !byId.get(r.id).requires_driver);
+  if (!hasUnattended) return [];
+  return [...ready]
+    .filter(t => t.requires_driver)
+    .sort((a, b) => getPlannedMinutes(a) - getPlannedMinutes(b))
+    .slice(0, 4); // tiny hint
+}
+
+// ----------------------------------------------------------------------
+// Timeline (SVG)
 // ----------------------------------------------------------------------
 function Timeline({ tasks, running, ready = [], completed = [], doneIds, nowMs }) {
   const PX_PER_MIN = 100;
@@ -294,15 +353,15 @@ function Timeline({ tasks, running, ready = [], completed = [], doneIds, nowMs }
   const PAST_MIN = 3;
   const FUTURE_MIN = 35;
 
-  const lanes  = tasks.map((t, i) => ({ id: t.id, y: PADDING + i * ROW_H }));
+  const byId  = useMemo(() => new Map(tasks.map((t) => [t.id, t])), [tasks]);
+  const orderedTasks = useMemo(() => orderTasksForLanes(tasks, running), [tasks, running]);
+
+  const lanes  = orderedTasks.map((t, i) => ({ id: t.id, y: PADDING + i * ROW_H }));
   const height = PADDING * 2 + lanes.length * ROW_H;
   const width  = Math.max(960, (PAST_MIN + FUTURE_MIN) * PX_PER_MIN + 160);
   const MID    = Math.round(PAST_MIN * PX_PER_MIN) + 80;
 
-  const byId  = new Map(tasks.map((t) => [t.id, t]));
-
-  // RUNNING: left edge drifts left with elapsed; width stays fixed (planned).
-  // Clamping elapsed freezes the bar at Now when time is up.
+  // RUNNING: left edge drifts with elapsed; width fixed to planned. Clamp keeps right edge at Now at time-up.
   const runningBars = running.map((r) => {
     const t = byId.get(r.id);
     const lane = lanes.find((ln) => ln.id === r.id) || { y: 0 };
@@ -397,7 +456,7 @@ function Timeline({ tasks, running, ready = [], completed = [], doneIds, nowMs }
         ))}
 
         {/* Lane labels */}
-        {tasks.map((t, i) => (
+        {orderedTasks.map((t, i) => (
           <text key={t.id} x={12} y={PADDING + i * ROW_H + ROW_H * 0.55} fontSize="14" fill="#374151">
             {i + 1}. {t.name}
           </text>
@@ -573,13 +632,59 @@ export default function App() {
   // runtime
   const rt = useRuntime(state.meal.tasks);
 
-  // export json
+  // export json/log
   const exportJson = () => {
     const blob = new Blob([JSON.stringify(state.meal, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
     a.download = `${state.meal.title.replace(/\s+/g, "_")}.mealmap.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const byId = useMemo(() => new Map(state.meal.tasks.map((t) => [t.id, t])), [state.meal.tasks]);
+
+  const exportLogJSON = () => {
+    const data = {
+      started: rt.started,
+      nowMs: rt.nowMs,
+      running: rt.running.map(r => ({
+        id: r.id,
+        name: byId.get(r.id)?.name || "Task",
+        startedAtMs: r.startedAt,
+        plannedMin: getPlannedMinutes(byId.get(r.id)),
+        attended: !!byId.get(r.id)?.requires_driver,
+      })),
+      completed: rt.completed.map(c => ({
+        id: c.id,
+        name: byId.get(c.id)?.name || "Task",
+        startedAtMs: c.startedAt,
+        finishedAtMs: c.finishedAt,
+        plannedMin: getPlannedMinutes(byId.get(c.id)),
+        attended: !!byId.get(c.id)?.requires_driver,
+      })),
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `runtime_log.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportLogCSV = () => {
+    const rows = [
+      ["phase","id","name","startedAtMs","finishedAtMs","plannedMin","attended"].join(","),
+      ...rt.running.map(r => ["running", r.id, (byId.get(r.id)?.name || "Task").replace(/,/g," "), r.startedAt, "", getPlannedMinutes(byId.get(r.id)), !!byId.get(r.id)?.requires_driver].join(",")),
+      ...rt.completed.map(c => ["completed", c.id, (byId.get(c.id)?.name || "Task").replace(/,/g," "), c.startedAt, c.finishedAt, getPlannedMinutes(byId.get(c.id)), !!byId.get(c.id)?.requires_driver].join(",")),
+    ].join("\n");
+    const blob = new Blob([rows], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `runtime_log.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -611,7 +716,6 @@ export default function App() {
     .filter((c) => (onlyFits ? c.fits : true));
 
   // Explain blocked reasons
-  const byId = useMemo(() => new Map(state.meal.tasks.map((t) => [t.id, t])), [state.meal.tasks]);
   const runningIds = useMemo(() => new Set(rt.running.map((r) => r.id)), [rt.running]);
   const isStarted = (id) => runningIds.has(id) || rt.doneIds.has(id);
   const isDone = (id) => rt.doneIds.has(id);
@@ -641,6 +745,12 @@ export default function App() {
     }
     return false;
   }
+
+  // Queue hint (during unattended)
+  const queueHint = useMemo(
+    () => suggestQueue(rt.ready, rt.running, byId),
+    [rt.ready, rt.running, byId]
+  );
 
   return (
     <div style={{ minHeight: "100vh", padding: 16, display: "grid", gap: 14 }}>
@@ -716,6 +826,23 @@ export default function App() {
             <button onClick={rt.reset}>Reset</button>
           </div>
         </div>
+
+        {/* Queue hint (during unattended) */}
+        {queueHint.length > 0 && (
+          <div style={{ marginTop: 8, padding: 8, border: "1px dashed #eab308", borderRadius: 8, background: "#fffbeb" }}>
+            <div style={{ fontWeight: 600, marginBottom: 6 }}>While the unattended timer runs, consider:</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {queueHint.map((t) => (
+                <Chip key={`q_${t.id}`} style={{ background: "#fff7ed", borderColor: "#fdba74" }}>
+                  {t.name} — {getPlannedMinutes(t)}m&nbsp;
+                  <button onClick={() => rt.startTask(t)} disabled={t.requires_driver && rt.driverBusy} style={{ marginLeft: 8 }}>
+                    Start
+                  </button>
+                </Chip>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Running */}
         <div style={{ marginTop: 8 }}>
@@ -820,8 +947,10 @@ export default function App() {
           />
         </div>
 
-        <div style={{ marginTop: 10 }}>
+        <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
           <button onClick={exportJson}>Export JSON</button>
+          <button onClick={exportLogJSON}>Export runtime log (JSON)</button>
+          <button onClick={exportLogCSV}>Export runtime log (CSV)</button>
         </div>
       </div>
     </div>
