@@ -5,6 +5,22 @@
   "anyOf": [
     {
       "type": "object",
+      "properties": {
+        "schema_version": { "type": ["number", "string"] },
+        "locale": { "type": "string" },
+        "aliases": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      },
+      "required": ["aliases"],
+      "additionalProperties": true
+    },
+    {
+      "type": "object",
       "additionalProperties": {
         "type": "array",
         "items": { "type": "string" }
@@ -14,12 +30,12 @@
       "type": "array",
       "items": {
         "type": "object",
-        "additionalProperties": false,
         "required": ["head", "aliases"],
         "properties": {
           "head": { "type": "string" },
           "aliases": { "type": "array", "items": { "type": "string" } }
-        }
+        },
+        "additionalProperties": true
       }
     }
   ]

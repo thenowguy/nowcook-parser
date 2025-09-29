@@ -5,6 +5,30 @@
   "anyOf": [
     {
       "type": "object",
+      "properties": {
+        "schema_version": { "type": ["number", "string"] },
+        "locale": { "type": "string" },
+        "durations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "verb": { "type": "string" },
+              "canon": { "type": "string" },
+              "name": { "type": "string" },
+              "planned_min": { "type": "number", "minimum": 0 },
+              "min": { "type": "number", "minimum": 0 },
+              "value": { "type": "number", "minimum": 0 }
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "required": ["durations"],
+      "additionalProperties": true
+    },
+    {
+      "type": "object",
       "additionalProperties": {
         "type": "number",
         "minimum": 0
@@ -21,13 +45,13 @@
           }
         }
       },
-      "additionalProperties": false
+      "required": ["defaults"],
+      "additionalProperties": true
     },
     {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["verb"],
         "properties": {
           "verb": { "type": "string" },
           "canon": { "type": "string" },
