@@ -1,11 +1,10 @@
-// ============================== NowCook Parser — v1.8.3 ==============================
-// v1.8.3 = v1.8.2 + grace fade for finished tasks (keeps lane briefly, then disappears)
-//  - Finished bars stay in-place for GRACE_MS and fade out; after that, lanes compact.
-//  - Running lanes remain stable (ordered by startedAt).
-//  - Concurrency, manual completion, queue hint, exports unchanged.
+// ============================== NowCook Parser — v1.8.4 ==============================
+// v1.8.4 = v1.8.3 + AuthoringPanel hook-up
+//  - Adds AuthoringPanel above Meals/Time Budget
+//  - loadMealFromIngest(meal) resets runtime and loads parsed meal
 /* eslint-disable */
 import React, { useEffect, useMemo, useState } from "react";
-import AuthorIngestPanel from "./components/AuthorIngestPanel.jsx";
+import AuthoringPanel from "./components/AuthoringPanel.jsx"; // <- your file name
 
 // ----------------------------------------------------------------------
 // Packs (src/packs)
@@ -282,8 +281,6 @@ function useRuntime(tasks) {
 
 // ----------------------------------------------------------------------
 // Ordering helpers (stable lanes + grace fade)
-//  - Lane set = running tasks + recently finished (within GRACE_MS), ordered by startedAt
-//  - After grace, finished disappear and lanes compact
 // ----------------------------------------------------------------------
 const GRACE_MS = 4000;
 
@@ -302,7 +299,6 @@ function orderForLanes(tasks, running, completed, nowMs, doneIds) {
 
   const laneSet = new Set(laneStackIds);
 
-  // Start with lanes (running + recent finished), then the rest (not started, not done)
   const head = laneStackIds.map(id => byId.get(id)).filter(Boolean);
   const tail = tasks.filter(t => !laneSet.has(t.id) && !doneIds.has(t.id));
   return [...head, ...tail];
@@ -329,7 +325,6 @@ function Timeline({ tasks, running, ready = [], completed = [], doneIds, nowMs }
 
   const byId  = useMemo(() => new Map(tasks.map((t) => [t.id, t])), [tasks]);
 
-  // Stable ordering with grace-finished included
   const orderedTasks = useMemo(
     () => orderForLanes(tasks, running, completed, nowMs, doneIds),
     [tasks, running, completed, nowMs, doneIds]
@@ -340,7 +335,6 @@ function Timeline({ tasks, running, ready = [], completed = [], doneIds, nowMs }
   const width  = Math.max(960, (PAST_MIN + FUTURE_MIN) * PX_PER_MIN + 160);
   const MID    = Math.round(PAST_MIN * PX_PER_MIN) + 80;
 
-  // Running bars: left drifts; width fixed; freeze at Now when time is up
   const runningBars = running.map((r) => {
     const t = byId.get(r.id);
     const lane = lanes.find((ln) => ln.id === r.id) || { y: 0 };
@@ -364,23 +358,21 @@ function Timeline({ tasks, running, ready = [], completed = [], doneIds, nowMs }
     };
   });
 
-  // Finished-in-grace bars: keep lane; right edge anchored to true finish; fade out
   const finishedBars = completed
     .map((c) => {
       const t = byId.get(c.id);
       if (!t) return null;
       const age = nowMs - c.finishedAt;
-      if (age >= GRACE_MS) return null; // out of grace -> not drawn
+      if (age >= GRACE_MS) return null;
       const lane = lanes.find((ln) => ln.id === c.id) || { y: 0 };
 
       const durMin = getPlannedMinutes(t);
       const w = Math.max(10, durMin * PX_PER_MIN);
 
       const minutesSinceFinish = age / 60000;
-      const rightX = MID - minutesSinceFinish * PX_PER_MIN; // Now minus age
+      const rightX = MID - minutesSinceFinish * PX_PER_MIN;
       const x = rightX - w;
 
-      // Fade from 0.8 -> 0 over GRACE_MS
       const opacity = clamp(0.8 * (1 - age / GRACE_MS), 0, 0.8);
 
       return {
@@ -392,7 +384,6 @@ function Timeline({ tasks, running, ready = [], completed = [], doneIds, nowMs }
     })
     .filter(Boolean);
 
-  // Ghost bars: preview at Now
   const ghostBars = (ready || []).map((t) => {
     const pMin = getPlannedMinutes(t);
     const lane = lanes.find((ln) => ln.id === t.id) || { y: 0 };
@@ -408,7 +399,6 @@ function Timeline({ tasks, running, ready = [], completed = [], doneIds, nowMs }
     };
   }).filter(Boolean);
 
-  // Axis ticks
   const ticks = [];
   for (let m = 0; m <= FUTURE_MIN; m += 1) {
     ticks.push({ x: MID + m * PX_PER_MIN, label: m % 5 === 0 ? `${m}m` : null, major: m % 5 === 0 });
@@ -422,14 +412,10 @@ function Timeline({ tasks, running, ready = [], completed = [], doneIds, nowMs }
     <div style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: 12, overflowX: "auto", overflowY: "visible", maxWidth: 1600, marginInline: "auto" }}>
       <div style={{ fontWeight: 700, marginBottom: 8 }}>Timeline (zoomed preview)</div>
       <svg width={width} height={height}>
-        {/* Past shading */}
         <rect x={0} y={0} width={MID} height={height} fill="#fafafa" />
-
-        {/* NowLine */}
         <line x1={MID} x2={MID} y1={0} y2={height} stroke="#ef4444" strokeWidth="3" />
         <text x={MID + 8} y={18} fontSize="14" fill="#ef4444">Now</text>
 
-        {/* Future ticks */}
         {ticks.map((t, i) => (
           <g key={i}>
             <line x1={t.x} x2={t.x} y1={0} y2={height} stroke={t.major ? "#e5e7eb" : "#f1f5f9"} strokeWidth={t.major ? 2 : 1} />
@@ -441,23 +427,21 @@ function Timeline({ tasks, running, ready = [], completed = [], doneIds, nowMs }
           </g>
         ))}
 
-        {/* Past ticks */}
         {pastTicks.map((t, i) => (
           <line key={i} x1={t.x} x2={t.x} y1={0} y2={height} stroke="#f3f4f6" />
         ))}
 
         {/* Lane labels (hide labels for finished-in-grace lanes) */}
-{orderedTasks.map((t, i) => {
-  if (doneIds.has(t.id)) return null; // no label once task is done
-  const y = PADDING + i * ROW_H + ROW_H * 0.55;
-  return (
-    <text key={t.id} x={12} y={y} fontSize="14" fill="#374151">
-      {i + 1}. {t.name}
-    </text>
-  );
-})}
+        {orderedTasks.map((t, i) => {
+          if (doneIds.has(t.id)) return null;
+          const y = PADDING + i * ROW_H + ROW_H * 0.55;
+          return (
+            <text key={t.id} x={12} y={y} fontSize="14" fill="#374151">
+              {i + 1}. {t.name}
+            </text>
+          );
+        })}
 
-        {/* Ghost bars */}
         {ghostBars.map((b) => (
           <g key={`ghost_${b.id}`} opacity={0.55}>
             <rect
@@ -475,7 +459,6 @@ function Timeline({ tasks, running, ready = [], completed = [], doneIds, nowMs }
           </g>
         ))}
 
-        {/* Finished (grace) bars */}
         {finishedBars.map((b) => (
           <g key={`done_${b.id}`} opacity={b.opacity}>
             <rect
@@ -489,7 +472,6 @@ function Timeline({ tasks, running, ready = [], completed = [], doneIds, nowMs }
           </g>
         ))}
 
-        {/* Running bars */}
         {runningBars.map((b) => {
           const timeUp = b.leftMs <= 0;
           return (
@@ -684,7 +666,7 @@ export default function App() {
     URL.revokeObjectURL(url);
   };
 
-  // Load a meal from catalog
+  // Load a meal from the catalog
   const loadMeal = (idx) => {
     const m = MEALS[idx];
     setMealIdx(idx);
@@ -692,6 +674,12 @@ export default function App() {
       meal: { ...(m.data || {}), title: m.title, author: { name: m.author }, packs_meta: { synonyms: SYNONYMS } },
       warnings: [],
     });
+    rt.reset();
+  };
+
+  // NEW: accept a parsed meal from AuthoringPanel
+  const loadMealFromIngest = (meal) => {
+    setState({ meal, warnings: [] });
     rt.reset();
   };
 
@@ -722,7 +710,7 @@ export default function App() {
       .filter((e) => {
         if (!e || !byId.has(e.from)) return false;
         if (e.type === "SS") return !(isStarted(e.from));
-        return !(isDone(e.from)); // FS / FF / SF wait for finish
+        return !(isDone(e.from));
       })
       .map((e) => byId.get(e.from)?.name || "previous step");
 
@@ -749,6 +737,9 @@ export default function App() {
 
   return (
     <div style={{ minHeight: "100vh", padding: 16, display: "grid", gap: 14 }}>
+      {/* NEW: Author Ingestion / Authoring Panel */}
+      <AuthoringPanel onLoadMeal={loadMealFromIngest} />
+
       {/* Top: Meals & Time Budget */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
         {/* Meals browser */}
@@ -848,7 +839,7 @@ export default function App() {
             <ul style={{ margin: 0, paddingLeft: 18 }}>
               {rt.running
                 .slice()
-                .sort((a, b) => a.startedAt - b.startedAt) // match lane order
+                .sort((a, b) => a.startedAt - b.startedAt)
                 .map((r) => {
                   const t = state.meal.tasks.find((x) => x.id === r.id);
                   const left = Math.max(0, r.endsAt - rt.nowMs);
