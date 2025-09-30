@@ -1,11 +1,13 @@
-/* AuthoringPanel.jsx — v1.0.3
-   - Adds Phase 1 importer button: paste a URL or HTML in the textarea → Import from URL/HTML
-   - Everything else unchanged from v1.0.2
+/* AuthoringPanel.jsx — v1.1.0 (Phase 1.1)
+   - Adds pre-ingestion heuristics:
+     * Skip INGREDIENTS section and ingredient-like lines
+     * Ignore common meta (Author/Serves/Prep/Cook/Notes)
+     * Normalize bullets/dashes; strip "Step X" prefixes
+     * Coerce "for 5 minutes" → "— 5 min" (and hours)
+   - Preserves URL/HTML import hook and existing layout/colors
 */
 /* eslint-disable */
 import React, { useMemo, useState } from "react";
-
-// NEW: Phase 1 ingestion helpers
 import { ingestFromUrlOrHtml } from "../ingestion/url_or_text";
 import { getPacks } from "../ingestion/packs_bridge";
 
@@ -70,6 +72,91 @@ const getPlannedMinutes = (t) => {
   return Math.max(1, Math.round(val));
 };
 
+/* -------------------------- Phase 1.1 helpers -------------------------- */
+
+// Basic unicode cleanup
+function normalizeText(s) {
+  return s
+    .replace(/\u2013|\u2014/g, "—")              // en/em dash → em dash
+    .replace(/\u2022|\u25CF|\u2219|\*/g, "•")    // bullets → •
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// Strip "Step 1:" / "Step 1." / "STEP 1 –"
+function stripStepPrefix(s) {
+  return s.replace(/^\s*step\s*\d+\s*[:.\-\u2013\u2014]\s*/i, "");
+}
+
+// Coerce "for 5 minutes" / "about 1 hour" → append "— X min"
+function coerceDurationSuffix(s) {
+  let line = s;
+  let min = null;
+
+  const hr = line.match(/(\d+(?:\.\d+)?)\s*(?:hours?|hrs?)\b/i);
+  const mn = line.match(/(\d+(?:\.\d+)?)\s*(?:minutes?|mins?)\b/i);
+
+  if (hr) min = Math.round(parseFloat(hr[1]) * 60);
+  if (mn) min = (min ?? 0) + Math.round(parseFloat(mn[1]));
+
+  if (min && !/—\s*\d+\s*min/i.test(line)) {
+    line = `${line} — ${min} min`;
+  }
+  return line;
+}
+
+const SECTION_START_ING = /^(ingredients?|what you need)\b/i;
+const SECTION_START_DIRS = /^(directions?|method|instructions?)\b/i;
+
+// Rough ingredient detector (amount + unit OR bullet + food-y thing)
+const UNIT = "(cups?|cup|tbsp|tablespoons?|tsp|teaspoons?|oz|ounce|ounces|g|gram|grams|kg|ml|l|liters?|pounds?|lbs?|cloves?|sticks?|slices?|dash|pinch|sprigs?|leaves?)";
+const AMOUNT = "(?:\\d+\\/\\d+|\\d+(?:\\.\\d+)?)";
+const ING_LIKE_RE = new RegExp(
+  `^(?:•\\s*)?(?:${AMOUNT}\\s*(?:${UNIT})\\b|\\d+\\s*(?:${UNIT})\\b)`,
+  "i"
+);
+
+// Metadata we should skip
+const META_SKIP_RE = /^\s*(author:|serves?\b|yield\b|prep time\b|cook time\b|total time\b|notes?:?)\s*/i;
+
+function prefilterLines(rawText) {
+  const src = rawText.split(/\r?\n/);
+  let inIngredients = false;
+  let seenDirections = false;
+
+  const out = [];
+  for (let raw of src) {
+    let line = normalizeText(raw);
+
+    if (!line) continue;
+    if (META_SKIP_RE.test(line)) continue;
+
+    // Section toggles
+    if (SECTION_START_ING.test(line)) { inIngredients = true; continue; }
+    if (SECTION_START_DIRS.test(line)) { inIngredients = false; seenDirections = true; continue; }
+
+    // Skip ingredient lines while in ingredients (or pre-directions lists)
+    if (inIngredients || (!seenDirections && ING_LIKE_RE.test(line))) continue;
+
+    // Leading bullets and leftover commas look like ingredients
+    if (/^•\s+/.test(line) && ING_LIKE_RE.test(line)) continue;
+
+    // Step cleanup + duration coercion
+    line = stripStepPrefix(line);
+    line = coerceDurationSuffix(line);
+
+    // Ignore singleton headings like "Step 3" after stripping
+    if (!line || /^step\s*\d+\s*$/i.test(line)) continue;
+
+    out.push(line);
+  }
+
+  // If we filtered everything, fall back to original lines to avoid surprising empties
+  return out.length ? out : src.map((l) => l.trim()).filter(Boolean);
+}
+
+/* --------------------------------------------------------------------- */
+
 export default function AuthoringPanel({ onLoadMeal }) {
   const [text, setText] = useState(
     "Slice garlic and parsley; set out chili flakes — 3 min\nBring a large pot of water to a boil — 10 min\n…"
@@ -78,15 +165,15 @@ export default function AuthoringPanel({ onLoadMeal }) {
   const [autoDeps, setAutoDeps] = useState(true);
   const [preview, setPreview] = useState([]);
 
-  // NEW: importer busy flag
-  const [importBusy, setImportBusy] = useState(false);
+  // NEW: use prefilterLines (Phase 1.1). If it returns nothing, rows will still be safe.
+  const rows = useMemo(() => prefilterLines(text), [text]);
 
-  const rows = useMemo(() => {
-    return text
-      .split(/\r?\n/)
-      .map((l) => l.trim())
-      .filter(Boolean);
-  }, [text]);
+  async function importFromUrlOrHtml() {
+    const packs = await getPacks(); // future use; currently no-op passthrough
+    const draft = await ingestFromUrlOrHtml(text, packs);
+    // We simply replace the textarea content; the preview table will reflect it.
+    setText(draft);
+  }
 
   function parseLines() {
     const tasks = rows.map((line, idx) => {
@@ -128,22 +215,6 @@ export default function AuthoringPanel({ onLoadMeal }) {
     onLoadMeal?.(meal);
   }
 
-  // NEW: Phase 1 importer
-  async function handleImport() {
-    try {
-      setImportBusy(true);
-      const packs = getPacks();
-      const meal = await ingestFromUrlOrHtml(text, packs); // text may be a URL, HTML, or plain text
-      onLoadMeal?.(meal);
-      // Optionally populate title field if importer provided one
-      if (!title && meal?.title) setTitle(meal.title);
-    } catch (e) {
-      alert(`Import failed: ${e?.message || e}`);
-    } finally {
-      setImportBusy(false);
-    }
-  }
-
   return (
     <div
       style={{
@@ -154,14 +225,11 @@ export default function AuthoringPanel({ onLoadMeal }) {
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ fontWeight: 700 }}>Author Ingestion (v1.0)</div>
-        <button
-          onClick={loadAsMeal}
-          title="Load the parsed draft into the runtime preview below"
-          style={{ display: "none" }}
-        >
-          Load
-        </button>
+        <div style={{ fontWeight: 700 }}>Author Ingestion (v1.1)</div>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button onClick={parseLines}>Parse → Draft</button>
+          <button onClick={loadAsMeal}>Load into Preview</button>
+        </div>
       </div>
 
       {/* TOP ROW — responsive 2-column grid (stacks on narrow widths) */}
@@ -180,7 +248,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Paste a recipe URL, HTML, or type one step per line…"
+            placeholder="One step per line… or paste a URL/HTML, then click “Import from URL/HTML”."
             style={{
               width: "100%",
               minHeight: 190,
@@ -193,7 +261,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
             }}
           />
           <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
-            Recipe text (one step per line) — or paste a URL/HTML and click “Import from URL/HTML”.
+            Recipe text (one step per line) — or paste a URL/HTML, and click “Import from URL/HTML”.
           </div>
         </div>
 
@@ -235,13 +303,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
               Auto-create sequential dependencies (FS)
             </label>
 
-            <button onClick={parseLines}>Parse → Draft</button>
-            <button onClick={loadAsMeal}>Load into Preview</button>
-
-            {/* NEW: importer button */}
-            <button onClick={handleImport} disabled={importBusy}>
-              {importBusy ? "Importing…" : "Import from URL/HTML"}
-            </button>
+            <button onClick={importFromUrlOrHtml}>Import from URL/HTML</button>
           </div>
         </div>
       </div>
