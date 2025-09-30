@@ -5,6 +5,7 @@
 //  - Concurrency, manual completion, queue hint, exports unchanged.
 /* eslint-disable */
 import React, { useEffect, useMemo, useState } from "react";
+import AuthorIngestPanel from "./components/AuthorIngestPanel.jsx";
 
 // ----------------------------------------------------------------------
 // Packs (src/packs)
@@ -592,6 +593,21 @@ export default function App() {
     meal: { ...(MEALS[0].data || {}), title: MEALS[0].title, author: { name: MEALS[0].author } },
     warnings: [],
   }));
+
+  // helper to accept a meal from the ingest panel
+  const loadMealFromIngest = (meal) => {
+    setState({ meal, warnings: [] });
+    rt.reset();
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", padding: 16, display: "grid", gap: 14 }}>
+      {/* NEW: Author Ingestion */}
+      <AuthorIngestPanel onLoadMeal={loadMealFromIngest} />
+
+      {/* existing: Meals & Time Budget */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        {/* ...the rest of your current UI... */}
 
   // Serve-at input (15-min step)
   const [serveAt, setServeAt] = useState(() => {
