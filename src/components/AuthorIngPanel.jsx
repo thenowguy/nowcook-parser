@@ -128,6 +128,37 @@ const ING_LIKE_RE = new RegExp(
   "i"
 );
 
+// Map a few very common phrases to canonical verbs when pack patterns miss.
+// Only verbs that actually exist in CANONICAL will be used.
+const HEUR_RULES = [
+  { re: /\b(sauté|saute|brown|cook\s+(?:until|till)\s+(?:soft|softened|translucent))\b/i, canon: "sauté" },
+  { re: /\b(stir|mix|combine|whisk)\b/i, canon: "stir" },
+  { re: /\b(add|stir\s+in|fold\s+in|pour\s+in)\b/i, canon: "add" },
+  { re: /\b(bring .* to a boil|boil)\b/i, canon: "boil" },
+  { re: /\b(simmer|reduce heat(?: to (?:low|medium-low))?)\b/i, canon: "simmer" },
+  { re: /\b(season(?:\s+to\s+taste)?)\b/i, canon: "season" },
+  { re: /\b(drain|strain)\b/i, canon: "drain" },
+  { re: /\b(serve|plate)\b/i, canon: "plate" },
+  { re: /\b(slice|chop|mince|dice)\b/i, canon: "slice" },
+  { re: /\b(preheat)\b/i, canon: "preheat" },
+  { re: /\b(bake|roast)\b/i, canon: "bake" },
+];
+
+// quick lookup of canonical verbs present in the pack
+const CANON_BY_NAME = new Map(CANONICAL.map(v => [String(v.name).toLowerCase(), v]));
+
+// Fallback verb guesser used only when pack patterns fail
+function guessVerbHeuristic(text) {
+  if (!text) return null;
+  for (const r of HEUR_RULES) {
+    if (r.re.test(text)) {
+      const v = CANON_BY_NAME.get(r.canon.toLowerCase());
+      if (v) return v; // only use if that canonical verb exists in the pack
+    }
+  }
+  return null;
+}
+
 // Metadata we should skip
 const META_SKIP_RE = /^\s*(author:|serves?\b|yield\b|prep time\b|cook time\b|total time\b|notes?:?)\s*/i;
 
