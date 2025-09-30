@@ -1,7 +1,8 @@
-// ============================== NowCook Parser — v1.8.4 ==============================
-// v1.8.4 = v1.8.3 + AuthoringPanel hook-up
-//  - Adds AuthoringPanel above Meals/Time Budget
-//  - loadMealFromIngest(meal) resets runtime and loads parsed meal
+// ============================== NowCook Parser — v1.8.5 ==============================
+// v1.8.5 = v1.8.4 + color wrappers for top panels
+//  - Author Ingestion panel: #ffe7b3
+//  - Meals panel:            #c0efff
+//  - Time Budget panel:      #b3ffb3
 /* eslint-disable */
 import React, { useEffect, useMemo, useState } from "react";
 import AuthoringPanel from "./components/AuthoringPanel.jsx"; // <- your file name
@@ -442,6 +443,7 @@ function Timeline({ tasks, running, ready = [], completed = [], doneIds, nowMs }
           );
         })}
 
+        {/* Ghost bars */}
         {ghostBars.map((b) => (
           <g key={`ghost_${b.id}`} opacity={0.55}>
             <rect
@@ -459,6 +461,7 @@ function Timeline({ tasks, running, ready = [], completed = [], doneIds, nowMs }
           </g>
         ))}
 
+        {/* Finished (grace) bars */}
         {finishedBars.map((b) => (
           <g key={`done_${b.id}`} opacity={b.opacity}>
             <rect
@@ -472,6 +475,7 @@ function Timeline({ tasks, running, ready = [], completed = [], doneIds, nowMs }
           </g>
         ))}
 
+        {/* Running bars */}
         {runningBars.map((b) => {
           const timeUp = b.leftMs <= 0;
           return (
@@ -738,12 +742,19 @@ export default function App() {
   return (
     <div style={{ minHeight: "100vh", padding: 16, display: "grid", gap: 14 }}>
       {/* NEW: Author Ingestion / Authoring Panel */}
-      <AuthoringPanel onLoadMeal={loadMealFromIngest} />
+      <div style={{
+        border: "1px solid #ddd",
+        borderRadius: 12,
+        padding: 12,
+        background: "#ffe7b3"
+      }}>
+        <AuthoringPanel onLoadMeal={loadMealFromIngest} />
+      </div>
 
       {/* Top: Meals & Time Budget */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
         {/* Meals browser */}
-        <div style={{ border: "1px solid #ddd", borderRadius: 12, padding: 12 }}>
+        <div style={{ border: "1px solid #ddd", borderRadius: 12, padding: 12, background: "#c0efff" }}>
           <div style={{ fontWeight: 700, marginBottom: 8 }}>Meals</div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
             <input
@@ -759,7 +770,7 @@ export default function App() {
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 12 }}>
             {cards.map((c) => (
-              <div key={c.idx} style={{ border: "1px solid #eee", borderRadius: 12, padding: 12 }}>
+              <div key={c.idx} style={{ border: "1px solid #eee", borderRadius: 12, padding: 12, background: "#ffffffcc" }}>
                 <div style={{ fontWeight: 600 }}>{c.title}</div>
                 <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>by {c.author}</div>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
@@ -776,7 +787,7 @@ export default function App() {
         </div>
 
         {/* Time Budget */}
-        <div style={{ border: "1px solid #ddd", borderRadius: 12, padding: 12 }}>
+        <div style={{ border: "1px solid #ddd", borderRadius: 12, padding: 12, background: "#b3ffb3" }}>
           <div style={{ fontWeight: 700, marginBottom: 8 }}>Time Budget</div>
           <div style={{ marginBottom: 8 }}>
             Need to serve at:&nbsp;
@@ -802,6 +813,7 @@ export default function App() {
           width: "100%",
           margin: "0 auto",
           boxSizing: "border-box",
+          background: "#fff"
         }}
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -839,7 +851,7 @@ export default function App() {
             <ul style={{ margin: 0, paddingLeft: 18 }}>
               {rt.running
                 .slice()
-                .sort((a, b) => a.startedAt - b.startedAt)
+                .sort((a, b) => a.startedAt - b.startedAt) // match lane order
                 .map((r) => {
                   const t = state.meal.tasks.find((x) => x.id === r.id);
                   const left = Math.max(0, r.endsAt - rt.nowMs);
