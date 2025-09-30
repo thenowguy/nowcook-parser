@@ -581,8 +581,19 @@ function computeMealMinTime(meal) {
 // ----------------------------------------------------------------------
 // App
 // ----------------------------------------------------------------------
+export default function App() {
+  const MEALS = useMemo(() => ([
+    { id: "pasta", title: "Quick Pasta with Garlic Oil", author: "Sample", data: MEAL_PASTA },
+    { id: "roast", title: "Easy One-pan Roast Chicken and Vegetables", author: "Nicole Maquire", data: MEAL_ROAST },
+    { id: "stew",  title: "Slow Beef Stew", author: "Sample", data: MEAL_STEW },
+  ]), []);
 
-// helper to accept a meal from the ingest panel
+  const [mealIdx, setMealIdx] = useState(0);
+  const [state, setState] = useState(() => ({
+    meal: { ...(MEALS[0].data || {}), title: MEALS[0].title, author: { name: MEALS[0].author } },
+    warnings: [],
+
+    // helper to accept a meal from the ingest panel
   const loadMealFromIngest = (meal) => {
     setState({ meal, warnings: [] });
     rt.reset();
@@ -596,18 +607,6 @@ function computeMealMinTime(meal) {
       {/* existing: Meals & Time Budget */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
         {/* ...the rest of your current UI... */}
-        
-export default function App() {
-  const MEALS = useMemo(() => ([
-    { id: "pasta", title: "Quick Pasta with Garlic Oil", author: "Sample", data: MEAL_PASTA },
-    { id: "roast", title: "Easy One-pan Roast Chicken and Vegetables", author: "Nicole Maquire", data: MEAL_ROAST },
-    { id: "stew",  title: "Slow Beef Stew", author: "Sample", data: MEAL_STEW },
-  ]), []);
-
-  const [mealIdx, setMealIdx] = useState(0);
-  const [state, setState] = useState(() => ({
-    meal: { ...(MEALS[0].data || {}), title: MEALS[0].title, author: { name: MEALS[0].author } },
-    warnings: [],
   }));
 
   // Serve-at input (15-min step)
