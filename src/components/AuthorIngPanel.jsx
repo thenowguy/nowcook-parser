@@ -59,17 +59,29 @@ const findVerb = (text) => {
 const toDurationObj = (min) => (min == null ? null : { value: min });
 
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
-const parseDurationMin = (s) => {
-  const m = s.match(/(\d+)\s*(?:min|minutes?)/i);
-  return m ? clamp(parseInt(m[1], 10), 1, 24 * 60) : null;
-};
-const getPlannedMinutes = (t) => {
-  if (!t) return 1;
-  const explicit = t?.duration_min?.value;
-  const planned = t?.planned_min;
-  const byVerb = DEFAULTS_BY_VERB?.[t?.canonical_verb];
-  const val = explicit ?? planned ?? byVerb ?? 1;
-  return Math.max(1, Math.round(val));
+const parseDurationMin = (input) => {
+  if (!input) return null;
+  const s = String(input).toLowerCase().replace(/[–—]/g, "-"); // normalize dashes
+
+  // 1) Range: "3-5 min", "3 to 5 minutes"
+  const range = s.match(
+    /(?:~|about|approx(?:\.|imately)?|around)?\s*(\d{1,4})\s*(?:-|to)\s*(\d{1,4})\s*(?:m(?:in(?:ute)?s?)?)\b/
+  );
+  if (range) {
+    const hi = parseInt(range[2], 10);
+    return clamp(isNaN(hi) ? 0 : hi, 1, 24 * 60);
+  }
+
+  // 2) Single value: "~3 min", "about 10 minutes", "5m"
+  const single = s.match(
+    /(?:~|about|approx(?:\.|imately)?|around)?\s*(\d{1,4})\s*(?:m(?:in(?:ute)?s?)?)\b/
+  );
+  if (single) {
+    const v = parseInt(single[1], 10);
+    return clamp(isNaN(v) ? 0 : v, 1, 24 * 60);
+  }
+
+  return null;
 };
 
 /* -------------------------- Phase 1.1 helpers -------------------------- */
