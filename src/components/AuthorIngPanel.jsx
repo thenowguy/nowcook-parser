@@ -1,17 +1,14 @@
-/* eslint-disable react/prop-types */
-/* eslint-disable no-console */
+/* AuthoringPanel.jsx — v1.0.2
+   - Fixes overlap by using a responsive two-column grid (no absolute positioning)
+   - Left: recipe textarea. Right: meal title + tips + controls.
+   - Stacks to one column automatically on narrow widths.
+*/
+/* eslint-disable */
 import React, { useMemo, useState } from "react";
 
-// Packs (so preview uses the same defaults you run-time with)
+// Packs (reuse like App)
 import VERB_PACK from "../packs/verbs.en.json";
 import DURATIONS_PACK from "../packs/durations.en.json";
-
-// --- tiny local helpers (duplicated from App on purpose to keep this file standalone)
-const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
-const uuid = () =>
-  (typeof crypto !== "undefined" && crypto.randomUUID
-    ? crypto.randomUUID()
-    : `task_${Math.random().toString(36).slice(2, 10)}`);
 
 const VERBS_ARRAY = Array.isArray(VERB_PACK)
   ? VERB_PACK
@@ -27,6 +24,7 @@ const CANONICAL =
     default_planned: v?.defaults?.planned_min ?? null,
   })) ?? [];
 
+// duration defaults
 function extractDurationEntries(pack) {
   const asEntryList = (arr) =>
     (arr || [])
@@ -49,202 +47,241 @@ function extractDurationEntries(pack) {
 }
 const DEFAULTS_BY_VERB = Object.fromEntries(extractDurationEntries(DURATIONS_PACK));
 
-function parseDurationMin(s) {
-  const m = s.match(/(?:—|-|–)\s*(\d+)\s*(?:min|minutes?)/i) || s.match(/(\d+)\s*(?:min|minutes?)/i);
-  return m ? clamp(parseInt(m[1], 10), 1, 24 * 60) : null;
-}
-function findVerb(text) {
-  for (const v of CANONICAL) {
-    for (const re of v.patterns) {
-      if (re.test(text)) return v;
-    }
-  }
+const findVerb = (text) => {
+  for (const v of CANONICAL) for (const re of v.patterns) if (re.test(text)) return v;
   return null;
-}
+};
 const toDurationObj = (min) => (min == null ? null : { value: min });
+
+const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
+const parseDurationMin = (s) => {
+  const m = s.match(/(\d+)\s*(?:min|minutes?)/i);
+  return m ? clamp(parseInt(m[1], 10), 1, 24 * 60) : null;
+};
 const getPlannedMinutes = (t) => {
   if (!t) return 1;
   const explicit = t?.duration_min?.value;
-  const planned  = t?.planned_min;
-  const byVerb   = DEFAULTS_BY_VERB?.[t?.canonical_verb];
+  const planned = t?.planned_min;
+  const byVerb = DEFAULTS_BY_VERB?.[t?.canonical_verb];
   const val = explicit ?? planned ?? byVerb ?? 1;
   return Math.max(1, Math.round(val));
 };
 
-// ----------------------------------------------------------------------------
-
 export default function AuthoringPanel({ onLoadMeal }) {
-  const [open, setOpen] = useState(true);
-  const [autoChainFS, setAutoChainFS] = useState(true);
-
-  const [raw, setRaw] = useState(
-    // tiny starter to make the panel feel alive
+  const [text, setText] = useState(
     "Slice garlic and parsley; set out chili flakes — 3 min\nBring a large pot of water to a boil — 10 min\n…"
   );
   const [title, setTitle] = useState("");
+  const [autoDeps, setAutoDeps] = useState(true);
+  const [preview, setPreview] = useState([]);
 
-  // Live parse (preview only)
-  const previewTasks = useMemo(() => {
-    const lines = String(raw || "")
+  const rows = useMemo(() => {
+    return text
       .split(/\r?\n/)
-      .map((s) => s.trim())
-      .filter((s) => s && s !== "…" && s !== "...")
-      .slice(0, 200);
+      .map((l) => l.trim())
+      .filter(Boolean);
+  }, [text]);
 
-    const tasks = [];
-    for (const line of lines) {
-      const verbMeta = findVerb(line);
-      const verb = verbMeta?.name || "free_text";
+  function parseLines() {
+    const tasks = rows.map((line, idx) => {
+      const vMeta = findVerb(line);
+      const verb = vMeta?.name || "free_text";
       const durMin = parseDurationMin(line);
-      const planned_min =
-        durMin ??
-        verbMeta?.default_planned ??
-        DEFAULTS_BY_VERB[verb] ??
-        null;
+      const planned_min = durMin ?? vMeta?.default_planned ?? DEFAULTS_BY_VERB[verb] ?? null;
 
-      const requires_driver = verbMeta ? verbMeta.attention === "attended" : true;
-
-      tasks.push({
-        id: uuid(),
-        name: line.replace(/\s*(?:—|-|–)\s*\d+\s*(?:min|minutes?)\s*$/i, "").replace(/\.$/, ""),
+      return {
+        id: `draft_${idx + 1}`,
+        name: line.replace(/\s*—\s*\d+\s*min(?:utes?)?$/i, ""),
         canonical_verb: verb,
         duration_min: toDurationObj(durMin),
         planned_min,
-        readiness_signal: null,
-        requires_driver,
-        self_running_after_start: !requires_driver,
+        requires_driver: vMeta ? vMeta.attention === "attended" : true,
+        self_running_after_start: vMeta ? vMeta.attention === "unattended_after_start" : false,
         inputs: [],
         outputs: [],
         edges: [],
-      });
-    }
+      };
+    });
 
-    // simple FS chain for preview
-    if (autoChainFS) {
+    if (autoDeps) {
       for (let i = 1; i < tasks.length; i++) {
-        tasks[i].edges.push({ type: "FS", from: tasks[i - 1].id });
+        tasks[i].edges.push({ from: tasks[i - 1].id, type: "FS" });
       }
     }
+    setPreview(tasks);
+  }
 
-    return tasks;
-  }, [raw, autoChainFS]);
-
-  const minWidthCell = { minWidth: 60 };
-
-  const doParseToDraft = () => {
-    const tasks = previewTasks;
+  function loadAsMeal() {
+    if (preview.length === 0) parseLines();
     const meal = {
-      title: title?.trim() || "Untitled meal",
-      author: { name: "Author" },
-      tasks,
-      meta: { createdAt: new Date().toISOString() },
+      title: title || "Untitled Meal",
+      author: { name: "Draft" },
+      tasks: preview.length ? preview : [],
+      packs_meta: {},
     };
-    if (typeof onLoadMeal === "function") onLoadMeal(meal);
-  };
-
-  if (!open) {
-    return (
-      <div style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: 10, background: "#fafafa", marginBottom: 12 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ fontWeight: 700 }}>Author Ingestion (v1.0)</div>
-          <button onClick={() => setOpen(true)}>Show</button>
-        </div>
-      </div>
-    );
+    onLoadMeal?.(meal);
   }
 
   return (
-    <div style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: 12, marginBottom: 12 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 700, marginBottom: 6 }}>Author Ingestion (v1.0)</div>
+    <div
+      style={{
+        border: "1px solid #ddd",
+        borderRadius: 12,
+        padding: 12,
+        background: "#ffe7b3", // authoring panel color
+      }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ fontWeight: 700 }}>Author Ingestion (v1.0)</div>
+        <button
+          onClick={loadAsMeal}
+          title="Load the parsed draft into the runtime preview below"
+          style={{ display: "none" }}
+        >
+          Load
+        </button>
+      </div>
+
+      {/* TOP ROW — responsive 2-column grid (stacks on narrow widths) */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))",
+          gap: 12,
+          alignItems: "start",
+          marginTop: 8,
+          marginBottom: 8,
+        }}
+      >
+        {/* Left: textarea */}
+        <div>
           <textarea
-            value={raw}
-            onChange={(e) => setRaw(e.target.value)}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
             placeholder="One step per line…"
-            rows={8}
-            style={{ width: "100%", border: "1px solid #e5e7eb", borderRadius: 8, padding: 10, fontFamily: "system-ui, sans-serif" }}
+            style={{
+              width: "100%",
+              minHeight: 190,
+              border: "1px solid #e5e7eb",
+              borderRadius: 8,
+              padding: "10px 12px",
+              boxSizing: "border-box",
+              resize: "vertical",
+              background: "#fff",
+            }}
           />
-          <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>Recipe text (one step per line)</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10, flexWrap: "wrap" }}>
-            <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 14 }}>
-              <input type="checkbox" checked={autoChainFS} onChange={(e) => setAutoChainFS(e.target.checked)} />
-              Auto-create sequential dependencies (FS)
-            </label>
-            <button onClick={doParseToDraft}>Parse → Draft</button>
+          <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
+            Recipe text (one step per line)
           </div>
         </div>
 
-        <div style={{ width: 360 }}>
-          <div style={{ fontSize: 12, color: "#374151", marginBottom: 6 }}>Meal title</div>
+        {/* Right: title + tip + actions */}
+        <div>
+          <div style={{ fontWeight: 600, fontSize: 20, marginBottom: 6 }}>Meal title</div>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="e.g., Quick Pasta with Garlic Oil"
-            style={{ width: "100%", border: "1px solid #e5e7eb", borderRadius: 8, padding: "6px 10px" }}
+            style={{
+              width: "100%",
+              border: "1px solid #e5e7eb",
+              borderRadius: 10,
+              padding: "10px 12px",
+              marginBottom: 8,
+              boxSizing: "border-box",
+              background: "#fff",
+            }}
           />
-          <div style={{ fontSize: 12, color: "#6b7280", marginTop: 8 }}>
+          <div
+            style={{
+              fontSize: 14,
+              color: "#4b5563",
+              lineHeight: 1.5,
+              marginBottom: 10,
+            }}
+          >
             Tip: durations like “— 3 min” are optional — packs provide sensible defaults per verb.
           </div>
-          <div style={{ textAlign: "right", marginTop: 8 }}>
-            <button onClick={() => setOpen(false)}>Hide</button>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <input
+                type="checkbox"
+                checked={autoDeps}
+                onChange={(e) => setAutoDeps(e.target.checked)}
+              />
+              Auto-create sequential dependencies (FS)
+            </label>
+
+            <button onClick={parseLines}>Parse → Draft</button>
+            <button onClick={loadAsMeal}>Load into Preview</button>
           </div>
         </div>
       </div>
 
-      {/* Inline parse preview */}
-      <div style={{ marginTop: 14 }}>
-        <div style={{ fontWeight: 600, marginBottom: 6 }}>Preview</div>
-        {previewTasks.length === 0 ? (
-          <div style={{ fontSize: 14, color: "#6b7280" }}>Nothing to preview yet.</div>
-        ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ borderCollapse: "collapse", width: "100%" }}>
-              <thead>
-                <tr style={{ background: "#f9fafb" }}>
-                  <th style={{ textAlign: "left", padding: "8px 10px" }}>#</th>
-                  <th style={{ textAlign: "left", padding: "8px 10px" }}>Step</th>
-                  <th style={{ textAlign: "left", padding: "8px 10px" }}>Verb</th>
-                  <th style={{ textAlign: "left", padding: "8px 10px", ...minWidthCell }}>Planned (min)</th>
-                  <th style={{ textAlign: "left", padding: "8px 10px", ...minWidthCell }}>Attention</th>
-                  <th style={{ textAlign: "left", padding: "8px 10px" }}>Depends on</th>
+      {/* Preview table */}
+      <div style={{ fontWeight: 700, marginTop: 8, marginBottom: 6 }}>Preview</div>
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr style={{ background: "rgba(255,255,255,0.6)" }}>
+              <th style={th}>#</th>
+              <th style={th}>Step</th>
+              <th style={th}>Verb</th>
+              <th style={th}>Planned (min)</th>
+              <th style={th}>Attention</th>
+              <th style={th}>Depends on</th>
+            </tr>
+          </thead>
+          <tbody>
+            {(preview.length ? preview : rows.map((line, i) => ({ name: line, _row: i })) ).map((t, i) => {
+              const idx = i + 1;
+              const verb = t.canonical_verb || findVerb(t.name)?.name || "free_text";
+              const planned = t.planned_min ?? DEFAULTS_BY_VERB[verb] ?? "";
+              const attention =
+                t.requires_driver != null
+                  ? t.requires_driver
+                    ? "attended"
+                    : "unattended"
+                  : (findVerb(t.name)?.attention === "unattended_after_start" ? "unattended" : "attended");
+              const dep = t.edges?.[0]?.from ? `#${Number(String(t.edges[0].from).split("_").pop())}` : "—";
+              return (
+                <tr key={idx} style={{ background: i % 2 ? "rgba(255,255,255,0.45)" : "transparent" }}>
+                  <td style={td}>{idx}</td>
+                  <td style={td}>{t.name || t}</td>
+                  <td style={td}>{verb}</td>
+                  <td style={td}>{planned || "—"}</td>
+                  <td style={td}>
+                    <span
+                      style={{
+                        padding: "2px 8px",
+                        borderRadius: 999,
+                        border: "1px solid #d1d5db",
+                        background: attention === "attended" ? "#eef5ff" : "#ecfdf5",
+                        fontSize: 12,
+                      }}
+                    >
+                      {attention}
+                    </span>
+                  </td>
+                  <td style={td}>{dep}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {previewTasks.map((t, i) => {
-                  const planned = getPlannedMinutes(t);
-                  const depends = (t.edges || [])
-                    .filter((e) => e?.type === "FS")
-                    .map((e) => {
-                      const idx = previewTasks.findIndex((x) => x.id === e.from);
-                      return idx >= 0 ? `#${idx + 1}` : "";
-                    })
-                    .filter(Boolean)
-                    .join(", ");
-                  return (
-                    <tr key={t.id} style={{ borderTop: "1px solid #e5e7eb" }}>
-                      <td style={{ padding: "6px 10px", color: "#6b7280" }}>{i + 1}</td>
-                      <td style={{ padding: "6px 10px" }}>{t.name}</td>
-                      <td style={{ padding: "6px 10px", color: "#334155" }}>{t.canonical_verb}</td>
-                      <td style={{ padding: "6px 10px" }}>{planned}</td>
-                      <td style={{ padding: "6px 10px" }}>
-                        {t.requires_driver ? (
-                          <span style={{ padding: "2px 8px", borderRadius: 999, border: "1px solid #cbd5e1" }}>attended</span>
-                        ) : (
-                          <span style={{ padding: "2px 8px", borderRadius: 999, border: "1px solid #cbd5e1", background: "#f0fdf4" }}>
-                            unattended
-                          </span>
-                        )}
-                      </td>
-                      <td style={{ padding: "6px 10px", color: "#64748b" }}>{depends || "—"}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+              );
+            })}
+          </tbody>
+        </table>
       </div>
     </div>
   );
 }
+
+const th = {
+  textAlign: "left",
+  padding: "8px 10px",
+  borderBottom: "1px solid #e5e7eb",
+  fontWeight: 600,
+};
+const td = {
+  padding: "8px 10px",
+  borderBottom: "1px solid #f1f5f9",
+};
