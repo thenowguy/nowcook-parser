@@ -1,9 +1,10 @@
-/* AuthoringPanel.jsx — v1.1.0 (Phase 1.1)
-   - Adds pre-ingestion heuristics:
+/* AuthoringPanel.jsx — v1.1.1 (Phase 1.1a)
+   - Pre-ingestion heuristics:
      * Skip INGREDIENTS section and ingredient-like lines
      * Ignore common meta (Author/Serves/Prep/Cook/Notes)
      * Normalize bullets/dashes; strip "Step X" prefixes
-     * Coerce "for 5 minutes" → "— 5 min" (and hours)
+     * Coerce "for 5 minutes" / "about 1 hour" → append "— X min"
+   - Safe verb detection: pack patterns first, then light heuristics
    - Preserves URL/HTML import hook and existing layout/colors
 */
 /* eslint-disable */
@@ -52,18 +53,55 @@ function extractDurationEntries(pack) {
 }
 const DEFAULTS_BY_VERB = Object.fromEntries(extractDurationEntries(DURATIONS_PACK));
 
+// --- verb matching helpers ---
 const findVerb = (text) => {
   for (const v of CANONICAL) for (const re of v.patterns) if (re.test(text)) return v;
   return null;
 };
-const toDurationObj = (min) => (min == null ? null : { value: min });
 
+// quick lookup of canonical verbs present in the pack
+const CANON_BY_NAME = new Map(CANONICAL.map((v) => [String(v.name).toLowerCase(), v]));
+
+// Minimal heuristics used only if pack patterns miss
+const HEUR_RULES = [
+  { re: /\b(sauté|saute|brown|cook\s+(?:until|till)\s+(?:soft|softened|translucent))\b/i, canon: "sauté" },
+  { re: /\b(stir|mix|combine|whisk)\b/i, canon: "stir" },
+  { re: /\b(add|stir\s+in|fold\s+in|pour\s+in)\b/i, canon: "add" },
+  { re: /\b(bring .* to a boil|boil)\b/i, canon: "boil" },
+  { re: /\b(simmer|reduce heat(?: to (?:low|medium-low))?)\b/i, canon: "simmer" },
+  { re: /\b(season(?:\s+to\s+taste)?)\b/i, canon: "season" },
+  { re: /\b(drain|strain)\b/i, canon: "drain" },
+  { re: /\b(serve|plate)\b/i, canon: "plate" },
+  { re: /\b(slice|chop|mince|dice)\b/i, canon: "slice" },
+  { re: /\b(preheat)\b/i, canon: "preheat" },
+  { re: /\b(bake|roast)\b/i, canon: "bake" },
+];
+
+function guessVerbHeuristic(text) {
+  if (!text) return null;
+  for (const r of HEUR_RULES) {
+    if (r.re.test(text)) {
+      const v = CANON_BY_NAME.get(r.canon.toLowerCase());
+      if (v) return v;
+    }
+  }
+  return null;
+}
+
+function findVerbSmart(text) {
+  return findVerb(text) || guessVerbHeuristic(text);
+}
+
+// small helpers
+const toDurationObj = (min) => (min == null ? null : { value: min });
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
-const parseDurationMin = (input) => {
+
+// Parse explicit "— 5 min" / "3-5 minutes" / "~10 min" suffixes
+function parseDurationMin(input) {
   if (!input) return null;
   const s = String(input).toLowerCase().replace(/[–—]/g, "-"); // normalize dashes
 
-  // 1) Range: "3-5 min", "3 to 5 minutes"
+  // Range: "3-5 min", "3 to 5 minutes"
   const range = s.match(
     /(?:~|about|approx(?:\.|imately)?|around)?\s*(\d{1,4})\s*(?:-|to)\s*(\d{1,4})\s*(?:m(?:in(?:ute)?s?)?)\b/
   );
@@ -72,7 +110,7 @@ const parseDurationMin = (input) => {
     return clamp(isNaN(hi) ? 0 : hi, 1, 24 * 60);
   }
 
-  // 2) Single value: "~3 min", "about 10 minutes", "5m"
+  // Single value: "~3 min", "about 10 minutes", "5m"
   const single = s.match(
     /(?:~|about|approx(?:\.|imately)?|around)?\s*(\d{1,4})\s*(?:m(?:in(?:ute)?s?)?)\b/
   );
@@ -82,7 +120,7 @@ const parseDurationMin = (input) => {
   }
 
   return null;
-};
+}
 
 /* -------------------------- Phase 1.1 helpers -------------------------- */
 
@@ -128,39 +166,20 @@ const ING_LIKE_RE = new RegExp(
   "i"
 );
 
-// Map a few very common phrases to canonical verbs when pack patterns miss.
-// Only verbs that actually exist in CANONICAL will be used.
-const HEUR_RULES = [
-  { re: /\b(sauté|saute|brown|cook\s+(?:until|till)\s+(?:soft|softened|translucent))\b/i, canon: "sauté" },
-  { re: /\b(stir|mix|combine|whisk)\b/i, canon: "stir" },
-  { re: /\b(add|stir\s+in|fold\s+in|pour\s+in)\b/i, canon: "add" },
-  { re: /\b(bring .* to a boil|boil)\b/i, canon: "boil" },
-  { re: /\b(simmer|reduce heat(?: to (?:low|medium-low))?)\b/i, canon: "simmer" },
-  { re: /\b(season(?:\s+to\s+taste)?)\b/i, canon: "season" },
-  { re: /\b(drain|strain)\b/i, canon: "drain" },
-  { re: /\b(serve|plate)\b/i, canon: "plate" },
-  { re: /\b(slice|chop|mince|dice)\b/i, canon: "slice" },
-  { re: /\b(preheat)\b/i, canon: "preheat" },
-  { re: /\b(bake|roast)\b/i, canon: "bake" },
-];
-
-// quick lookup of canonical verbs present in the pack
-const CANON_BY_NAME = new Map(CANONICAL.map(v => [String(v.name).toLowerCase(), v]));
-
-// Fallback verb guesser used only when pack patterns fail
-function guessVerbHeuristic(text) {
-  if (!text) return null;
-  for (const r of HEUR_RULES) {
-    if (r.re.test(text)) {
-      const v = CANON_BY_NAME.get(r.canon.toLowerCase());
-      if (v) return v; // only use if that canonical verb exists in the pack
-    }
-  }
-  return null;
-}
-
 // Metadata we should skip
 const META_SKIP_RE = /^\s*(author:|serves?\b|yield\b|prep time\b|cook time\b|total time\b|notes?:?)\s*/i;
+
+function cleanLine(line) {
+  return line
+    // drop section headers
+    .replace(/^ingredients[:]?$/i, "")
+    .replace(/^For the .*?:\s*/i, "")
+    // drop "Step X" markers
+    .replace(/^Step\s*\d+[:.]?\s*/i, "")
+    // downgrade "Note:" → keep text but remove the label
+    .replace(/^[-*]?\s*Note[:.]?\s*/i, "")
+    .trim();
+}
 
 function prefilterLines(rawText) {
   const src = rawText.split(/\r?\n/);
@@ -191,6 +210,9 @@ function prefilterLines(rawText) {
     // Ignore singleton headings like "Step 3" after stripping
     if (!line || /^step\s*\d+\s*$/i.test(line)) continue;
 
+    // Final polish for preview
+    line = cleanLine(line);
+
     out.push(line);
   }
 
@@ -208,19 +230,19 @@ export default function AuthoringPanel({ onLoadMeal }) {
   const [autoDeps, setAutoDeps] = useState(true);
   const [preview, setPreview] = useState([]);
 
-  // NEW: use prefilterLines (Phase 1.1). If it returns nothing, rows will still be safe.
+  // Phase 1.1: prefilter lines for the preview/parser
   const rows = useMemo(() => prefilterLines(text), [text]);
 
   async function importFromUrlOrHtml() {
-    const packs = await getPacks(); // future use; currently no-op passthrough
+    const packs = await getPacks(); // reserved for future pack-aware transforms
     const draft = await ingestFromUrlOrHtml(text, packs);
-    // We simply replace the textarea content; the preview table will reflect it.
-    setText(draft);
+    setText(draft); // preview table reacts via rows
   }
 
   function parseLines() {
-    const tasks = rows.map((line, idx) => {
-      const vMeta = findVerb(line);
+    const tasks = rows.map((raw, idx) => {
+      const line = cleanLine(raw);
+      const vMeta = findVerbSmart(line);
       const verb = vMeta?.name || "free_text";
       const durMin = parseDurationMin(line);
       const planned_min = durMin ?? vMeta?.default_planned ?? DEFAULTS_BY_VERB[verb] ?? null;
@@ -246,40 +268,6 @@ export default function AuthoringPanel({ onLoadMeal }) {
     }
     setPreview(tasks);
   }
-
-  function cleanLine(line) {
-  return line
-    // drop section headers
-    .replace(/^For the .*?:\s*/i, "")
-    // drop "Step X" markers
-    .replace(/^Step\s*\d+[:.]?\s*/i, "")
-    // downgrade "Note:" → keep text but remove the label
-    .replace(/^[-*]?\s*Note[:.]?\s*/i, "")
-    .trim();
-}
-
-function parseLines() {
-  const tasks = rows.map((raw, idx) => {
-    const line = cleanLine(raw);   // <--- NEW
-    const vMeta = findVerbSmart(line);
-    const verb = vMeta?.name || "free_text";
-    const durMin = parseDurationMin(line);
-    const planned_min = durMin ?? vMeta?.default_planned ?? DEFAULTS_BY_VERB[verb] ?? null;
-
-    return {
-      id: `draft_${idx + 1}`,
-      name: line.replace(/\s*—\s*\d+\s*min(?:utes?)?$/i, ""),
-      canonical_verb: verb,
-      duration_min: toDurationObj(durMin),
-      planned_min,
-      requires_driver: vMeta ? vMeta.attention === "attended" : true,
-      self_running_after_start: vMeta ? vMeta.attention === "unattended_after_start" : false,
-      inputs: [],
-      outputs: [],
-      edges: [],
-    };
-  });
-}
 
   function loadAsMeal() {
     if (preview.length === 0) parseLines();
