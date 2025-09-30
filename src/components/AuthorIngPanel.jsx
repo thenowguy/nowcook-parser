@@ -1,10 +1,13 @@
-/* AuthoringPanel.jsx — v1.0.2
-   - Fixes overlap by using a responsive two-column grid (no absolute positioning)
-   - Left: recipe textarea. Right: meal title + tips + controls.
-   - Stacks to one column automatically on narrow widths.
+/* AuthoringPanel.jsx — v1.0.3
+   - Adds Phase 1 importer button: paste a URL or HTML in the textarea → Import from URL/HTML
+   - Everything else unchanged from v1.0.2
 */
 /* eslint-disable */
 import React, { useMemo, useState } from "react";
+
+// NEW: Phase 1 ingestion helpers
+import { ingestFromUrlOrHtml } from "../ingestion/url_or_text";
+import { getPacks } from "../ingestion/packs_bridge";
 
 // Packs (reuse like App)
 import VERB_PACK from "../packs/verbs.en.json";
@@ -75,6 +78,9 @@ export default function AuthoringPanel({ onLoadMeal }) {
   const [autoDeps, setAutoDeps] = useState(true);
   const [preview, setPreview] = useState([]);
 
+  // NEW: importer busy flag
+  const [importBusy, setImportBusy] = useState(false);
+
   const rows = useMemo(() => {
     return text
       .split(/\r?\n/)
@@ -122,6 +128,22 @@ export default function AuthoringPanel({ onLoadMeal }) {
     onLoadMeal?.(meal);
   }
 
+  // NEW: Phase 1 importer
+  async function handleImport() {
+    try {
+      setImportBusy(true);
+      const packs = getPacks();
+      const meal = await ingestFromUrlOrHtml(text, packs); // text may be a URL, HTML, or plain text
+      onLoadMeal?.(meal);
+      // Optionally populate title field if importer provided one
+      if (!title && meal?.title) setTitle(meal.title);
+    } catch (e) {
+      alert(`Import failed: ${e?.message || e}`);
+    } finally {
+      setImportBusy(false);
+    }
+  }
+
   return (
     <div
       style={{
@@ -158,7 +180,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="One step per line…"
+            placeholder="Paste a recipe URL, HTML, or type one step per line…"
             style={{
               width: "100%",
               minHeight: 190,
@@ -171,7 +193,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
             }}
           />
           <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
-            Recipe text (one step per line)
+            Recipe text (one step per line) — or paste a URL/HTML and click “Import from URL/HTML”.
           </div>
         </div>
 
@@ -215,6 +237,11 @@ export default function AuthoringPanel({ onLoadMeal }) {
 
             <button onClick={parseLines}>Parse → Draft</button>
             <button onClick={loadAsMeal}>Load into Preview</button>
+
+            {/* NEW: importer button */}
+            <button onClick={handleImport} disabled={importBusy}>
+              {importBusy ? "Importing…" : "Import from URL/HTML"}
+            </button>
           </div>
         </div>
       </div>
