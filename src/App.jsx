@@ -1,5 +1,6 @@
-// ============================== NowCook Parser — v1.8.5 ==============================
-// v1.8.5 = v1.8.4 + color wrappers for top panels
+// ============================== NowCook Parser — v1.8.6 ==============================
+// v1.8.6 = v1.8.5 + dark page background
+//  - Page (outside panels):  #4f5b66
 //  - Author Ingestion panel: #ffe7b3
 //  - Meals panel:            #c0efff
 //  - Time Budget panel:      #b3ffb3
@@ -740,7 +741,7 @@ export default function App() {
   );
 
   return (
-    <div style={{ minHeight: "100vh", padding: 16, display: "grid", gap: 14 }}>
+    <div style={{ minHeight: "100vh", padding: 16, display: "grid", gap: 14, background: "#4f5b66" }}>
       {/* NEW: Author Ingestion / Authoring Panel */}
       <div style={{
         border: "1px solid #ddd",
