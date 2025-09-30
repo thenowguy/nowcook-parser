@@ -1,19 +1,42 @@
-/* eslint-disable */
+/* eslint-disable no-console */
 import React, { useMemo, useState } from "react";
 
-// Packs (reuse same packs you ship with the app)
+// Packs (relative to /src/components)
 import VERB_PACK from "../packs/verbs.en.json";
 import DURATIONS_PACK from "../packs/durations.en.json";
-import SYNONYMS_PACK from "../packs/synonyms.en.json"; // optional
+import SYNONYMS_PACK from "../packs/synonyms.en.json"; // not used yet, kept for future
 
-// --------------------------- tiny helpers ---------------------------
+// ---------------- tiny helpers ----------------
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 const uuid = () =>
   (typeof crypto !== "undefined" && crypto.randomUUID
     ? crypto.randomUUID()
     : `task_${Math.random().toString(36).slice(2, 10)}`);
 
-// Canon from verbs pack (shape-agnostic)
+function extractDurationEntries(pack) {
+  const asEntryList = (arr) =>
+    (arr || [])
+      .filter((d) => d && (d.verb || d.canon || d.name))
+      .map((d) => [
+        d.verb ?? d.canon ?? d.name,
+        d.planned_min ?? d.default_planned ?? d.min ?? d.value,
+      ])
+      .filter(([, v]) => Number.isFinite(v));
+
+  if (Array.isArray(pack?.durations)) return asEntryList(pack.durations);
+  if (Array.isArray(pack)) return asEntryList(pack);
+  if (pack && typeof pack === "object") {
+    if (pack.defaults && typeof pack.defaults === "object") {
+      return Object.entries(pack.defaults).filter(([, v]) => Number.isFinite(v));
+    }
+    const numKeys = Object.keys(pack).filter((k) => Number.isFinite(pack[k]));
+    if (numKeys.length) return numKeys.map((k) => [k, pack[k]]);
+  }
+  return [];
+}
+
+const DUR_DEFAULTS = Object.fromEntries(extractDurationEntries(DURATIONS_PACK));
+
 const VERBS_ARRAY = Array.isArray(VERB_PACK)
   ? VERB_PACK
   : Array.isArray(VERB_PACK?.verbs)
@@ -28,28 +51,6 @@ const CANONICAL =
     default_planned: v?.defaults?.planned_min ?? null,
   })) ?? [];
 
-function extractDurationEntries(pack) {
-  const asEntryList = (arr) =>
-    (arr || [])
-      .filter((d) => d && (d.verb || d.canon || d.name))
-      .map((d) => [
-        d.verb ?? d.canon ?? d.name,
-        d.planned_min ?? d.default_planned ?? d.min ?? d.value,
-      ])
-      .filter(([, v]) => Number.isFinite(v));
-  if (Array.isArray(pack?.durations)) return asEntryList(pack.durations);
-  if (Array.isArray(pack)) return asEntryList(pack);
-  if (pack && typeof pack === "object") {
-    if (pack.defaults && typeof pack.defaults === "object") {
-      return Object.entries(pack.defaults).filter(([, v]) => Number.isFinite(v));
-    }
-    const numKeys = Object.keys(pack).filter((k) => Number.isFinite(pack[k]));
-    if (numKeys.length) return numKeys.map((k) => [k, pack[k]]);
-  }
-  return [];
-}
-const DEFAULTS_BY_VERB = Object.fromEntries(extractDurationEntries(DURATIONS_PACK));
-
 function findVerb(text) {
   for (const v of CANONICAL) {
     for (const re of v.patterns) {
@@ -58,63 +59,50 @@ function findVerb(text) {
   }
   return null;
 }
-const toDurationObj = (min) => (min == null ? null : { value: Math.max(1, Math.round(min)) });
-const getPlannedMinutes = (t) => {
-  if (!t) return 1;
-  const explicit = t?.duration_min?.value;
-  const planned  = t?.planned_min;
-  const byVerb   = DEFAULTS_BY_VERB?.[t?.canonical_verb];
+
+// Accept things like: "— 3 min", "- 3min", "(3 minutes)", "for 5 min", "... 8min"
+function parseDurationMin(s) {
+  const m = s.match(
+    /(?:-|—|\(|\bfor\s+)?\s*(\d+)\s*(?:min|mins|minutes?)\)?/i
+  );
+  return m ? clamp(parseInt(m[1], 10), 1, 24 * 60) : null;
+}
+
+const toDurationObj = (min) => (min == null ? null : { value: min });
+const plannedMinutes = (task) => {
+  const explicit = task?.duration_min?.value;
+  const planned = task?.planned_min;
+  const byVerb = DUR_DEFAULTS?.[task?.canonical_verb];
   const val = explicit ?? planned ?? byVerb ?? 1;
   return Math.max(1, Math.round(val));
 };
 
-function parseDurationMin(s) {
-  const m = s.match(/(\d+)\s*(?:min|minutes?)/i);
-  return m ? clamp(parseInt(m[1], 10), 1, 24 * 60) : null;
-}
-
-// --------------------------- mini editors ---------------------------
-const DURATION_PRESETS = [1,2,3,5,8,10,12,15,20,25,30,40,45,50,60];
-
-function DurationEditor({ valueMin, onChange, disabled }) {
-  const val = valueMin == null ? "" : String(valueMin);
-  return (
-    <select
-      disabled={disabled}
-      value={val}
-      onChange={(e) => {
-        const v = e.target.value === "" ? null : parseInt(e.target.value, 10);
-        onChange(v == null ? null : Math.max(1, v));
-      }}
-    >
-      <option value="">—</option>
-      {DURATION_PRESETS.map((m) => (<option key={m} value={m}>{m} min</option>))}
-    </select>
-  );
-}
-
-function VerbEditor({ value, onChange }) {
-  const options = ["free_text", ...CANONICAL.map((v) => v.name)];
-  return (
-    <select value={value} onChange={(e) => onChange(e.target.value)}>
-      {options.map((v) => (<option key={v} value={v}>{v}</option>))}
-    </select>
-  );
-}
-
-// --------------------------- core: line → task ---------------------------
-function lineToTask(text) {
-  const verbMeta = findVerb(text);
-  const verb = verbMeta?.name || "free_text";
+// ---------------- parser ----------------
+function lineToTask(line) {
+  const text = line.replace(/\s+—\s*$/, "").trim();
   const durMin = parseDurationMin(text);
-  const packDefault = verbMeta?.default_planned ?? DEFAULTS_BY_VERB[verb] ?? null;
-  const planned_min = durMin ?? packDefault ?? null;
-  const requires_driver = verbMeta ? verbMeta.attention === "attended" : true;
-  const self_running_after_start = verbMeta ? verbMeta.attention === "unattended_after_start" : false;
+
+  const verbMeta = findVerb(text);
+  const canonical = verbMeta?.name || "free_text";
+  const requires_driver = verbMeta
+    ? verbMeta.attention === "attended"
+    : true;
+  const self_running_after_start = verbMeta
+    ? verbMeta.attention === "unattended_after_start"
+    : false;
+
+  let planned_min = null;
+  if (durMin == null) {
+    planned_min =
+      verbMeta?.default_planned ??
+      DUR_DEFAULTS[canonical] ??
+      null;
+  }
+
   return {
     id: uuid(),
     name: text.replace(/\.$/, ""),
-    canonical_verb: verb,
+    canonical_verb: canonical,
     duration_min: toDurationObj(durMin),
     planned_min,
     readiness_signal: null,
@@ -126,171 +114,159 @@ function lineToTask(text) {
   };
 }
 
-// --------------------------- component ---------------------------
-export default function AuthorIngestPanel({ onLoadMeal }) {
+function parseRecipeToMeal({ title, raw, autoFS = true }) {
+  const warnings = [];
+  const lines = raw
+    .split(/\r?\n/)
+    .map((s) => s.trim())
+    .filter((s) => s && !s.startsWith("#"));
+
+  const tasks = lines.map(lineToTask);
+
+  // Warnings: unknown verb or no duration available anywhere
+  tasks.forEach((t, i) => {
+    if (t.canonical_verb === "free_text") {
+      warnings.push(`Line ${i + 1}: unknown verb → marked as attended/free_text`);
+    }
+    if (
+      t.duration_min == null &&
+      t.planned_min == null
+    ) {
+      warnings.push(
+        `Line ${i + 1}: no duration found and no default in packs (${t.name})`
+      );
+    }
+  });
+
+  // Edges: simple FS chain if requested
+  if (autoFS) {
+    for (let i = 1; i < tasks.length; i++) {
+      const from = tasks[i - 1].id;
+      tasks[i].edges.push({ from, type: "FS" });
+    }
+  }
+
+  // Fill any missing planned using pack/default at the end (safety)
+  tasks.forEach((t) => {
+    if (t.planned_min == null && t.duration_min == null) {
+      const byVerb = DUR_DEFAULTS?.[t.canonical_verb];
+      if (Number.isFinite(byVerb)) t.planned_min = byVerb;
+    }
+  });
+
+  const meal = {
+    title: title?.trim() || "Untitled Meal",
+    author: { name: "Draft (Author Panel)" },
+    tasks,
+    meta: {
+      packs: { synonyms: SYNONYMS_PACK || {} },
+      created_at: new Date().toISOString(),
+      source: "author_ingest_v1",
+    },
+  };
+
+  return { meal, warnings };
+}
+
+// ---------------- component ----------------
+export default function AuthoringPanel({ onLoadMeal }) {
   const [open, setOpen] = useState(true);
-  const [raw, setRaw] = useState("");
   const [title, setTitle] = useState("");
-  const [autoDeps, setAutoDeps] = useState(true);
+  const [raw, setRaw] = useState(
+    "Slice garlic and parsley; set out chili flakes — 3 min\nBring a large pot of water to a boil — 10 min"
+  );
+  const [autoFS, setAutoFS] = useState(true);
+  const [lastWarnings, setLastWarnings] = useState([]);
 
-  const [draft, setDraft] = useState(null); // {meta, tasks}
-
-  const parsedTasks = useMemo(() => {
-    if (!raw.trim()) return [];
-    return raw
-      .split(/\r?\n/)
-      .map((s) => s.trim())
-      .filter(Boolean)
-      .map(lineToTask);
-  }, [raw]);
-
-  function makeAutoDeps(tasks) {
-    if (!autoDeps) return tasks;
-    return tasks.map((t, i) => {
-      const edges = i === 0 ? [] : [{ from: tasks[i-1].id, type: "FS" }];
-      return { ...t, edges };
-    });
-  }
-
-  function createDraft() {
-    const tasks = makeAutoDeps(parsedTasks);
-    const meal = {
-      title: title || "Untitled Meal",
-      author: { name: "Author" },
-      tasks,
-      meta: { packs_meta: { synonyms: SYNONYMS_PACK || {} } }
-    };
-    setDraft(meal);
-  }
-
-  function updateTask(idx, patch) {
-    setDraft((prev) => {
-      if (!prev) return prev;
-      const tasks = prev.tasks.map((t, i) => i === idx ? { ...t, ...patch } : t);
-      return { ...prev, tasks };
-    });
-  }
-
-  function loadIntoPreview() {
-    if (!draft) return;
-    onLoadMeal?.(draft);
-  }
-
-  const warnings = useMemo(() => {
-    if (!draft) return [];
-    const w = [];
-    draft.tasks.forEach((t, i) => {
-      const p = getPlannedMinutes(t);
-      if (!Number.isFinite(p) || p <= 0) w.push(`Task ${i+1} has no duration.`);
-      if (!t.name?.trim()) w.push(`Task ${i+1} has no name.`);
-    });
-    return w;
-  }, [draft]);
+  const parseAndLoad = () => {
+    const { meal, warnings } = parseRecipeToMeal({ title, raw, autoFS });
+    setLastWarnings(warnings);
+    try {
+      onLoadMeal?.(meal);
+    } catch (e) {
+      console.error("onLoadMeal failed:", e);
+    }
+  };
 
   return (
-    <div style={{ border: "1px solid #ddd", borderRadius: 12, padding: 12, marginBottom: 16 }}>
+    <div style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: 12 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ fontWeight: 700 }}>Author Ingestion (v1.0)</div>
-        <button onClick={() => setOpen((o) => !o)}>{open ? "Hide" : "Show"}</button>
+        <button onClick={() => setOpen((v) => !v)}>{open ? "Hide" : "Show"}</button>
       </div>
 
       {open && (
         <>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 12, marginTop: 10 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 260px", gap: 10, marginTop: 8 }}>
             <div>
-              <label style={{ fontSize: 12, color: "#6b7280" }}>Recipe text (one step per line)</label>
               <textarea
                 value={raw}
                 onChange={(e) => setRaw(e.target.value)}
-                placeholder={`Slice garlic and parsley; set out chili flakes — 3 min\nBring a large pot of water to a boil — 10 min\n...`}
+                placeholder="One task per line…"
                 rows={8}
-                style={{ width: "100%", border: "1px solid #e5e7eb", borderRadius: 8, padding: 10, fontFamily: "system-ui, sans-serif" }}
+                style={{
+                  width: "100%",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: 8,
+                  padding: 10,
+                  fontFamily: "inherit",
+                }}
               />
-              <div style={{ marginTop: 8, display: "flex", gap: 10, alignItems: "center" }}>
-                <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 14 }}>
-                  <input type="checkbox" checked={autoDeps} onChange={(e) => setAutoDeps(e.target.checked)} />
-                  Auto-create sequential dependencies (FS)
-                </label>
-                <button onClick={createDraft} disabled={parsedTasks.length === 0}>Parse → Draft</button>
+              <div style={{ fontSize: 12, color: "#6b7280", marginTop: 6 }}>
+                Recipe text (one step per line)
               </div>
             </div>
-
             <div>
-              <label style={{ fontSize: 12, color: "#6b7280" }}>Meal title</label>
+              <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 4 }}>Meal title</div>
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g., Quick Pasta with Garlic Oil"
-                style={{ width: "100%", border: "1px solid #e5e7eb", borderRadius: 8, padding: "6px 10px" }}
+                style={{
+                  width: "100%",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: 8,
+                  padding: "6px 10px",
+                  marginBottom: 10,
+                }}
               />
-              <div style={{ marginTop: 8, fontSize: 12, color: "#6b7280" }}>
-                Tip: leave durations out and the parser will use defaults from packs (verbs/durations).
+              <div style={{ fontSize: 12, color: "#6b7280" }}>
+                Tip: durations like “— 3 min” or “(5 minutes)” are optional; packs will fill defaults.
               </div>
             </div>
           </div>
 
-          {/* Live parse preview (read-only) */}
-          {parsedTasks.length > 0 && !draft && (
-            <div style={{ marginTop: 10, borderTop: "1px dashed #e5e7eb", paddingTop: 10 }}>
-              <div style={{ fontWeight: 600, marginBottom: 6 }}>Quick parse preview</div>
-              <ol style={{ margin: 0, paddingLeft: 20 }}>
-                {parsedTasks.map((t) => (
-                  <li key={t.id} style={{ marginBottom: 4 }}>
-                    {t.name} <span style={{ opacity: 0.7 }}>({t.canonical_verb}; planned {getPlannedMinutes(t)}m)</span>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          )}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
+            <label style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 14 }}>
+              <input
+                type="checkbox"
+                checked={autoFS}
+                onChange={(e) => setAutoFS(e.target.checked)}
+              />
+              Auto-create sequential dependencies (FS)
+            </label>
+            <button onClick={parseAndLoad}>Parse → Draft</button>
+          </div>
 
-          {/* Draft editor */}
-          {draft && (
-            <div style={{ marginTop: 12, borderTop: "1px dashed #e5e7eb", paddingTop: 10 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={{ fontWeight: 600 }}>Draft editor</div>
-                <div>
-                  <button onClick={() => setDraft(null)} style={{ marginRight: 8 }}>Clear draft</button>
-                  <button onClick={loadIntoPreview} disabled={warnings.length > 0}>Load into preview</button>
-                </div>
+          {lastWarnings.length > 0 && (
+            <div
+              style={{
+                marginTop: 10,
+                padding: 10,
+                border: "1px solid #fde68a",
+                background: "#fffbeb",
+                borderRadius: 8,
+                fontSize: 14,
+              }}
+            >
+              <div style={{ fontWeight: 600, marginBottom: 6 }}>
+                Parsed with {lastWarnings.length} warning{lastWarnings.length > 1 ? "s" : ""}:
               </div>
-
-              {warnings.length > 0 && (
-                <div style={{ marginTop: 8, background: "#FFF7ED", border: "1px solid #FDBA74", color: "#9A3412", borderRadius: 8, padding: 8, fontSize: 14 }}>
-                  <b>Fix before loading:</b>
-                  <ul style={{ marginTop: 6, marginBottom: 0 }}>
-                    {warnings.map((w, i) => (<li key={i}>{w}</li>))}
-                  </ul>
-                </div>
-              )}
-
-              <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: "40px 1fr 180px 140px", gap: 8, alignItems: "center" }}>
-                <div style={{ fontSize: 12, color: "#6b7280" }}>#</div>
-                <div style={{ fontSize: 12, color: "#6b7280" }}>Task</div>
-                <div style={{ fontSize: 12, color: "#6b7280" }}>Verb</div>
-                <div style={{ fontSize: 12, color: "#6b7280" }}>Duration</div>
-
-                {draft.tasks.map((t, i) => (
-                  <React.Fragment key={t.id}>
-                    <div>{i + 1}</div>
-                    <input
-                      value={t.name}
-                      onChange={(e) => updateTask(i, { name: e.target.value })}
-                      style={{ width: "100%", border: "1px solid #e5e7eb", borderRadius: 8, padding: "6px 8px" }}
-                    />
-                    <VerbEditor
-                      value={t.canonical_verb}
-                      onChange={(v) => {
-                        const requires_driver = CANONICAL.find((x) => x.name === v)?.attention === "attended";
-                        updateTask(i, { canonical_verb: v, requires_driver });
-                      }}
-                    />
-                    <DurationEditor
-                      valueMin={t?.duration_min?.value ?? t?.planned_min ?? DEFAULTS_BY_VERB[t.canonical_verb] ?? null}
-                      onChange={(min) => updateTask(i, { duration_min: min == null ? null : { value: min }, planned_min: min })}
-                    />
-                  </React.Fragment>
+              <ul style={{ margin: 0, paddingLeft: 18 }}>
+                {lastWarnings.map((w, i) => (
+                  <li key={i} style={{ marginBottom: 2 }}>{w}</li>
                 ))}
-              </div>
+              </ul>
             </div>
           )}
         </>
