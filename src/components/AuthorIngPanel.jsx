@@ -247,6 +247,40 @@ export default function AuthoringPanel({ onLoadMeal }) {
     setPreview(tasks);
   }
 
+  function cleanLine(line) {
+  return line
+    // drop section headers
+    .replace(/^For the .*?:\s*/i, "")
+    // drop "Step X" markers
+    .replace(/^Step\s*\d+[:.]?\s*/i, "")
+    // downgrade "Note:" → keep text but remove the label
+    .replace(/^[-*]?\s*Note[:.]?\s*/i, "")
+    .trim();
+}
+
+function parseLines() {
+  const tasks = rows.map((raw, idx) => {
+    const line = cleanLine(raw);   // <--- NEW
+    const vMeta = findVerbSmart(line);
+    const verb = vMeta?.name || "free_text";
+    const durMin = parseDurationMin(line);
+    const planned_min = durMin ?? vMeta?.default_planned ?? DEFAULTS_BY_VERB[verb] ?? null;
+
+    return {
+      id: `draft_${idx + 1}`,
+      name: line.replace(/\s*—\s*\d+\s*min(?:utes?)?$/i, ""),
+      canonical_verb: verb,
+      duration_min: toDurationObj(durMin),
+      planned_min,
+      requires_driver: vMeta ? vMeta.attention === "attended" : true,
+      self_running_after_start: vMeta ? vMeta.attention === "unattended_after_start" : false,
+      inputs: [],
+      outputs: [],
+      edges: [],
+    };
+  });
+}
+
   function loadAsMeal() {
     if (preview.length === 0) parseLines();
     const meal = {
