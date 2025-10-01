@@ -1,10 +1,12 @@
-/* AuthoringPanel.jsx — v1.3.1 (Phase 1.3b)
-   - Auto-title detection from pasted text (safe, user-typed title always wins)
-   - Smarter duration hints for lines without explicit minutes (planned_min only)
-   - Keeps Phase 1.1 pre-ingestion heuristics and URL/HTML import hook
+/* AuthoringPanel.jsx — v1.4.0 (Phase 1.4)
+   - Builds on v1.3.1:
+     * Cleans inline ingredient parentheticals in steps, e.g. "(about 1/2 cup)", "(200 g)", "(2 tbsp)"
+       while preserving non-measurement notes like "(no longer chalky ...)".
+     * Normalizes unicode fractions (¼ ½ ¾ ⅓ ⅔ ⅛ ⅜ ⅝ ⅞ → ASCII).
+   - Keeps: pre-ingestion heuristics, smart verb detection, URL/HTML import hook, layout/colors.
 */
 /* eslint-disable */
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { ingestFromUrlOrHtml } from "../ingestion/url_or_text";
 import { getPacks } from "../ingestion/packs_bridge";
 
@@ -26,7 +28,7 @@ const CANONICAL =
     default_planned: v?.defaults?.planned_min ?? null,
   })) ?? [];
 
-// ----------------------- durations & defaults -----------------------
+// duration defaults
 function extractDurationEntries(pack) {
   const asEntryList = (arr) =>
     (arr || [])
@@ -49,12 +51,16 @@ function extractDurationEntries(pack) {
 }
 const DEFAULTS_BY_VERB = Object.fromEntries(extractDurationEntries(DURATIONS_PACK));
 
-// ----------------------- verb matching helpers -----------------------
+// --- verb matching helpers ---
 const findVerb = (text) => {
   for (const v of CANONICAL) for (const re of v.patterns) if (re.test(text)) return v;
   return null;
 };
+
+// quick lookup of canonical verbs present in the pack
 const CANON_BY_NAME = new Map(CANONICAL.map((v) => [String(v.name).toLowerCase(), v]));
+
+// Minimal heuristics used only if pack patterns miss
 const HEUR_RULES = [
   { re: /\b(sauté|saute|brown|cook\s+(?:until|till)\s+(?:soft|softened|translucent))\b/i, canon: "sauté" },
   { re: /\b(stir|mix|combine|whisk)\b/i, canon: "stir" },
@@ -68,6 +74,7 @@ const HEUR_RULES = [
   { re: /\b(preheat)\b/i, canon: "preheat" },
   { re: /\b(bake|roast)\b/i, canon: "bake" },
 ];
+
 function guessVerbHeuristic(text) {
   if (!text) return null;
   for (const r of HEUR_RULES) {
@@ -78,11 +85,12 @@ function guessVerbHeuristic(text) {
   }
   return null;
 }
+
 function findVerbSmart(text) {
   return findVerb(text) || guessVerbHeuristic(text);
 }
 
-// ----------------------- small helpers -----------------------
+// small helpers
 const toDurationObj = (min) => (min == null ? null : { value: min });
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 
@@ -91,6 +99,7 @@ function parseDurationMin(input) {
   if (!input) return null;
   const s = String(input).toLowerCase().replace(/[–—]/g, "-"); // normalize dashes
 
+  // Range: "3-5 min", "3 to 5 minutes"
   const range = s.match(
     /(?:~|about|approx(?:\.|imately)?|around)?\s*(\d{1,4})\s*(?:-|to)\s*(\d{1,4})\s*(?:m(?:in(?:ute)?s?)?)\b/
   );
@@ -98,6 +107,8 @@ function parseDurationMin(input) {
     const hi = parseInt(range[2], 10);
     return clamp(isNaN(hi) ? 0 : hi, 1, 24 * 60);
   }
+
+  // Single value: "~3 min", "about 10 minutes", "5m"
   const single = s.match(
     /(?:~|about|approx(?:\.|imately)?|around)?\s*(\d{1,4})\s*(?:m(?:in(?:ute)?s?)?)\b/
   );
@@ -105,50 +116,101 @@ function parseDurationMin(input) {
     const v = parseInt(single[1], 10);
     return clamp(isNaN(v) ? 0 : v, 1, 24 * 60);
   }
+
   return null;
 }
 
-/* -------------------------- Phase 1.1 helpers -------------------------- */
+/* -------------------------- Phase 1.4 helpers -------------------------- */
 
+// Basic unicode + bullets cleanup
 function normalizeText(s) {
   return s
-    .replace(/\u2013|\u2014/g, "—")
-    .replace(/\u2022|\u25CF|\u2219|\*/g, "•")
+    .replace(/\u2013|\u2014/g, "—")              // en/em dash → em dash
+    .replace(/\u2022|\u25CF|\u2219|\*/g, "•")    // bullets → •
     .replace(/\s+/g, " ")
     .trim();
 }
+
+// Unicode fractions → ASCII
+function normalizeFractions(s) {
+  return s
+    .replace(/¼/g, "1/4")
+    .replace(/½/g, "1/2")
+    .replace(/¾/g, "3/4")
+    .replace(/⅓/g, "1/3")
+    .replace(/⅔/g, "2/3")
+    .replace(/⅛/g, "1/8")
+    .replace(/⅜/g, "3/8")
+    .replace(/⅝/g, "5/8")
+    .replace(/⅞/g, "7/8");
+}
+
+// Strip "Step 1:" / "Step 1." / "STEP 1 –"
 function stripStepPrefix(s) {
   return s.replace(/^\s*step\s*\d+\s*[:.\-\u2013\u2014]\s*/i, "");
 }
+
+// Coerce "for 5 minutes" / "about 1 hour" → append "— X min"
 function coerceDurationSuffix(s) {
   let line = s;
   let min = null;
+
   const hr = line.match(/(\d+(?:\.\d+)?)\s*(?:hours?|hrs?)\b/i);
   const mn = line.match(/(\d+(?:\.\d+)?)\s*(?:minutes?|mins?)\b/i);
+
   if (hr) min = Math.round(parseFloat(hr[1]) * 60);
   if (mn) min = (min ?? 0) + Math.round(parseFloat(mn[1]));
-  if (min && !/—\s*\d+\s*min/i.test(line)) line = `${line} — ${min} min`;
+
+  if (min && !/—\s*\d+\s*min/i.test(line)) {
+    line = `${line} — ${min} min`;
+  }
   return line;
 }
 
 const SECTION_START_ING = /^(ingredients?|what you need)\b/i;
 const SECTION_START_DIRS = /^(directions?|method|instructions?)\b/i;
-const UNIT =
-  "(cups?|cup|tbsp|tablespoons?|tsp|teaspoons?|oz|ounce|ounces|g|gram|grams|kg|ml|l|liters?|pounds?|lbs?|cloves?|sticks?|slices?|dash|pinch|sprigs?|leaves?)";
+
+// Units for ingredient-y detection
+const UNIT = "(cups?|cup|tbsp|tablespoons?|tsp|teaspoons?|oz|ounce|ounces|g|gram|grams|kg|ml|l|liters?|pounds?|lbs?|cloves?|sticks?|slices?|dash|pinch|sprigs?|leaves?)";
 const AMOUNT = "(?:\\d+\\/\\d+|\\d+(?:\\.\\d+)?)";
 const ING_LIKE_RE = new RegExp(
   `^(?:•\\s*)?(?:${AMOUNT}\\s*(?:${UNIT})\\b|\\d+\\s*(?:${UNIT})\\b)`,
   "i"
 );
+
+// Remove inline parentheticals that are *just* quantities/units, e.g. "(about 1/2 cup)", "(200 g)", "(2 tbsp oil)"
+// but keep descriptive parentheticals.
+const PAREN_MEASURE_RE = new RegExp(
+  String.raw`$begin:math:text$(?:about|around|approx(?:\\.|imately)?\\s*)?(?:${AMOUNT})\\s*(?:${UNIT})(?:[^)]*)$end:math:text$`,
+  "i"
+);
+
+// Metadata to skip entirely
 const META_SKIP_RE = /^\s*(author:|serves?\b|yield\b|prep time\b|cook time\b|total time\b|notes?:?)\s*/i;
 
 function cleanLine(line) {
   return line
+    // drop section headers
     .replace(/^ingredients[:]?$/i, "")
     .replace(/^For the .*?:\s*/i, "")
+    // drop "Step X" markers
     .replace(/^Step\s*\d+[:.]?\s*/i, "")
+    // downgrade "Note:" → keep text but remove the label
     .replace(/^[-*]?\s*Note[:.]?\s*/i, "")
     .trim();
+}
+
+function stripMeasureParentheticals(s) {
+  let out = s;
+  // remove multiple measurement parens if present
+  for (let i = 0; i < 4; i++) { // conservative cap
+    const before = out;
+    out = out.replace(PAREN_MEASURE_RE, "").replace(/\s{2,}/g, " ").trim();
+    if (out === before) break;
+  }
+  // tidy stray spaces before punctuation
+  out = out.replace(/\s+([,.;:])\b/g, "$1");
+  return out;
 }
 
 function prefilterLines(rawText) {
@@ -158,64 +220,37 @@ function prefilterLines(rawText) {
 
   const out = [];
   for (let raw of src) {
-    let line = normalizeText(raw);
+    let line = normalizeText(normalizeFractions(raw));
+
     if (!line) continue;
     if (META_SKIP_RE.test(line)) continue;
 
+    // Section toggles
     if (SECTION_START_ING.test(line)) { inIngredients = true; continue; }
     if (SECTION_START_DIRS.test(line)) { inIngredients = false; seenDirections = true; continue; }
 
+    // Skip ingredient lines while in ingredients (or pre-directions lists)
     if (inIngredients || (!seenDirections && ING_LIKE_RE.test(line))) continue;
+
+    // Leading bullets and leftover commas look like ingredients
     if (/^•\s+/.test(line) && ING_LIKE_RE.test(line)) continue;
 
+    // Step cleanup + duration coercion
     line = stripStepPrefix(line);
     line = coerceDurationSuffix(line);
+    line = stripMeasureParentheticals(line);
+
+    // Ignore singleton headings like "Step 3" after stripping
     if (!line || /^step\s*\d+\s*$/i.test(line)) continue;
 
+    // Final polish for preview
     line = cleanLine(line);
+
     out.push(line);
   }
+
+  // If we filtered everything, fall back to original lines to avoid surprising empties
   return out.length ? out : src.map((l) => l.trim()).filter(Boolean);
-}
-
-/* --------------------- v1.3.1: auto-title detection --------------------- */
-// Choose the first plausible line that isn't meta/section/ingredient-y
-function detectTitle(rawText) {
-  const lines = rawText.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
-  for (let i = 0; i < Math.min(lines.length, 8); i++) {
-    const l = lines[i];
-    if (META_SKIP_RE.test(l)) continue;
-    if (SECTION_START_ING.test(l) || SECTION_START_DIRS.test(l)) continue;
-    if (ING_LIKE_RE.test(l)) continue;
-    if (/^step\s*\d+/i.test(l)) continue;
-    // Avoid obviously sentence-like steps and super long paragraphs
-    if (l.length > 80) continue;
-    // Titles often don't end with a period
-    if (/[.!?]$/.test(l)) continue;
-    return l;
-  }
-  return "";
-}
-
-/* -------- v1.3.1: heuristic planned_min when no explicit minutes -------- */
-function hintDurationMinutes(line, verbCanon) {
-  const s = String(line).toLowerCase();
-
-  // Texture/appearance cues
-  if (/\b(translucent|soft|softened)\b/.test(s)) return 8;     // sauté onions until translucent
-  if (/\b(golden|golden-brown|lightly browned?)\b/.test(s)) return 4; // toast/brown lightly
-  if (/\b(al dente)\b/.test(s)) return 8;                      // pasta al dente
-
-  // Risotto-ish “until absorbed / thickened”
-  if (/\b(absorb(?:ed)?|absorbs|thicken(?:ed)?|reduce(?:d)?\s+by\b)/.test(s)) return 3;
-
-  // Simple simmer or reduce when time not given
-  if (/\b(simmer|reduce)\b/.test(s)) return 10;
-
-  // Fall back: use pack default if any (handled by caller), else small attended step
-  if (verbCanon === "stir") return 2;
-  if (verbCanon === "season") return 1;
-  return null;
 }
 
 /* --------------------------------------------------------------------- */
@@ -225,20 +260,11 @@ export default function AuthoringPanel({ onLoadMeal }) {
     "Slice garlic and parsley; set out chili flakes — 3 min\nBring a large pot of water to a boil — 10 min\n…"
   );
   const [title, setTitle] = useState("");
-  const [titleTouched, setTitleTouched] = useState(false);
   const [autoDeps, setAutoDeps] = useState(true);
   const [preview, setPreview] = useState([]);
 
-  // Prefilter lines for the preview/parser
+  // Phase 1.4: prefilter lines for the preview/parser (now also strips measure parens + normalizes fractions)
   const rows = useMemo(() => prefilterLines(text), [text]);
-
-  // v1.3.1: Fill title ONLY if user hasn't typed one yet
-  const detectedTitle = useMemo(() => detectTitle(text), [text]);
-  useEffect(() => {
-    if (!titleTouched && !title && detectedTitle) {
-      setTitle(detectedTitle);
-    }
-  }, [detectedTitle, titleTouched]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function importFromUrlOrHtml() {
     const packs = await getPacks(); // reserved for future pack-aware transforms
@@ -251,22 +277,8 @@ export default function AuthoringPanel({ onLoadMeal }) {
       const line = cleanLine(raw);
       const vMeta = findVerbSmart(line);
       const verb = vMeta?.name || "free_text";
-
-      // explicit minutes?
       const durMin = parseDurationMin(line);
-
-      // smarter planned_min:
-      // 1) explicit minutes
-      // 2) pack default planned
-      // 3) heuristic hint from text
-      // 4) global defaults by verb
-      const hinted = hintDurationMinutes(line, verb);
-      const planned_min =
-        durMin ??
-        vMeta?.default_planned ??
-        hinted ??
-        DEFAULTS_BY_VERB[verb] ??
-        null;
+      const planned_min = durMin ?? vMeta?.default_planned ?? DEFAULTS_BY_VERB[verb] ?? null;
 
       return {
         id: `draft_${idx + 1}`,
@@ -301,6 +313,14 @@ export default function AuthoringPanel({ onLoadMeal }) {
     onLoadMeal?.(meal);
   }
 
+  // v1.3 auto-title behavior retained:
+  // If the user hasn't typed a title, mirror the first non-empty line.
+  React.useEffect(() => {
+    if (title && title.trim()) return;
+    const first = rows.find((r) => r && r.trim());
+    if (first) setTitle(first.slice(0, 120));
+  }, [rows]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <div
       style={{
@@ -311,7 +331,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ fontWeight: 700 }}>Author Ingestion (v1.3.1)</div>
+        <div style={{ fontWeight: 700 }}>Author Ingestion (v1.4)</div>
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={parseLines}>Parse → Draft</button>
           <button onClick={loadAsMeal}>Load into Preview</button>
@@ -356,7 +376,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
           <div style={{ fontWeight: 600, fontSize: 20, marginBottom: 6 }}>Meal title</div>
           <input
             value={title}
-            onChange={(e) => { setTitle(e.target.value); setTitleTouched(true); }}
+            onChange={(e) => setTitle(e.target.value)}
             placeholder="e.g., Quick Pasta with Garlic Oil"
             style={{
               width: "100%",
