@@ -10,6 +10,7 @@ import React, { useMemo, useState } from "react";
 import { ingestFromUrlOrHtml } from "../ingestion/url_or_text.js";
 import { getPacks } from "../ingestion/packs_bridge";
 import { mapVerb } from "../ingestion/ontology_bridge.js"; // safe, no-throw
+import { upgradeTasksViaOntology } from "../ingestion/ontology_bridge.js";
 
 // Packs (reuse like App)
 import VERB_PACK from "../packs/verbs.en.json";
@@ -283,42 +284,49 @@ export default function AuthoringPanel({ onLoadMeal }) {
     return "free_text";
   }
 
-  async function parseLines() {
-    const tasks = [];
-    for (let idx = 0; idx < rows.length; idx++) {
-      const raw = rows[idx];
-      const line = cleanLine(raw);
+  // NOTE: now async so we can await the ontology upgrader
+async function parseLines() {
+  const tasks = rows.map((raw, idx) => {
+    const line = cleanLine(raw);
+    const vMeta = findVerbSmart(line);
+    const verb = vMeta?.name || "free_text";
+    const durMin = parseDurationMin(line);
+    const planned_min = durMin ?? vMeta?.default_planned ?? DEFAULTS_BY_VERB[verb] ?? null;
 
-      const { value, approx } = parseDurationMinPlus(line);
-      const vPack = findVerb(line);
-      const verb = await finalizeVerb(line);
+    return {
+      id: `draft_${idx + 1}`,
+      name: line.replace(/\s*—\s*\d+\s*min(?:utes?)?$/i, ""),
+      canonical_verb: verb,
+      duration_min: toDurationObj(durMin),
+      planned_min,
+      requires_driver: vMeta ? vMeta.attention === "attended" : true,
+      self_running_after_start: vMeta ? vMeta.attention === "unattended_after_start" : false,
+      inputs: [],
+      outputs: [],
+      edges: [],
+    };
+  });
 
-      const chosenMin =
-        value != null
-          ? (approx && roundAboutUp ? roundUpToPreset(value) : value)
-          : (vPack?.default_planned ?? DEFAULTS_BY_VERB[verb] ?? null);
-
-      tasks.push({
-        id: `draft_${idx + 1}`,
-        name: line.replace(/\s*—\s*\d+\s*min(?:utes?)?$/i, ""),
-        canonical_verb: verb,
-        duration_min: toDurationObj(value != null ? (approx && roundAboutUp ? roundUpToPreset(value) : value) : null),
-        planned_min: chosenMin,
-        requires_driver: vPack ? vPack.attention === "attended" : true,
-        self_running_after_start: vPack ? vPack.attention === "unattended_after_start" : false,
-        inputs: [],
-        outputs: [],
-        edges: [],
-      });
+  if (autoDeps) {
+    for (let i = 1; i < tasks.length; i++) {
+      tasks[i].edges.push({ from: tasks[i - 1].id, type: "FS" });
     }
+  }
 
-    if (autoDeps) {
-      for (let i = 1; i < tasks.length; i++) {
-        tasks[i].edges.push({ from: tasks[i - 1].id, type: "FS" });
-      }
-    }
+  // If you already have a checkbox state like `useOntology` bound to
+  // “(Experimental) Upgrade verbs via ontology”, keep using it.
+  // If not, just always run the upgrader — it’s currently a no-op/passthrough.
+  try {
+    const upgraded = (typeof useOntology === "undefined" || useOntology)
+      ? await upgradeTasksViaOntology(tasks)
+      : tasks;
+
+    setPreview(upgraded);
+  } catch (err) {
+    console.warn("Ontology upgrade failed; using raw tasks.", err);
     setPreview(tasks);
   }
+}
 
   function loadAsMeal() {
     if (preview.length === 0) {
