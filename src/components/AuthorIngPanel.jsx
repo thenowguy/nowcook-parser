@@ -1,11 +1,9 @@
-/* AuthoringPanel.jsx — v1.1.1 (Phase 1.1a)
-   - Pre-ingestion heuristics:
-     * Skip INGREDIENTS section and ingredient-like lines
-     * Ignore common meta (Author/Serves/Prep/Cook/Notes)
-     * Normalize bullets/dashes; strip "Step X" prefixes
-     * Coerce "for 5 minutes" / "about 1 hour" → append "— X min"
-   - Safe verb detection: pack patterns first, then light heuristics
-   - Preserves URL/HTML import hook and existing layout/colors
+/* AuthoringPanel.jsx — v1.1.2 (Phase 1.1b)
+   - Small, safe wins over v1.1.1:
+     * Duration: understands seconds + unicode fractions; better hour/min normalization
+     * Ingredient filtering: accepts "-" bullets as well as "•"; stronger detector
+     * Line hygiene: collapse spaces, trim punctuation tails, de-duplicate filtered lines
+   - Keeps URL/HTML import hook, layout, and panel colors identical
 */
 /* eslint-disable */
 import React, { useMemo, useState } from "react";
@@ -30,7 +28,7 @@ const CANONICAL =
     default_planned: v?.defaults?.planned_min ?? null,
   })) ?? [];
 
-// duration defaults
+// ---------------- duration defaults ----------------
 function extractDurationEntries(pack) {
   const asEntryList = (arr) =>
     (arr || [])
@@ -53,7 +51,7 @@ function extractDurationEntries(pack) {
 }
 const DEFAULTS_BY_VERB = Object.fromEntries(extractDurationEntries(DURATIONS_PACK));
 
-// --- verb matching helpers ---
+// ---------------- verb matching helpers ----------------
 const findVerb = (text) => {
   for (const v of CANONICAL) for (const re of v.patterns) if (re.test(text)) return v;
   return null;
@@ -92,44 +90,103 @@ function findVerbSmart(text) {
   return findVerb(text) || guessVerbHeuristic(text);
 }
 
-// small helpers
+// ---------------- small helpers ----------------
 const toDurationObj = (min) => (min == null ? null : { value: min });
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 
-// Parse explicit "— 5 min" / "3-5 minutes" / "~10 min" suffixes
+// Convert unicode fractions we commonly see (½, ¼, ¾, etc.) → decimal
+function normalizeFractions(s) {
+  return s
+    .replace(/½/g, " 1/2")
+    .replace(/¼/g, " 1/4")
+    .replace(/¾/g, " 3/4")
+    .replace(/⅓/g, " 1/3")
+    .replace(/⅔/g, " 2/3")
+    .replace(/⅛/g, " 1/8")
+    .replace(/⅜/g, " 3/8")
+    .replace(/⅝/g, " 5/8")
+    .replace(/⅞/g, " 7/8");
+}
+
+// Parse explicit "— 5 min" / "3-5 minutes" / "~10 min" suffixes (plus seconds/hours)
 function parseDurationMin(input) {
   if (!input) return null;
-  const s = String(input).toLowerCase().replace(/[–—]/g, "-"); // normalize dashes
+  const s = normalizeFractions(String(input).toLowerCase()).replace(/[–—]/g, "-"); // normalize dashes
 
-  // Range: "3-5 min", "3 to 5 minutes"
+  // Helpers
+  const toMinutes = (num, unit) => {
+    if (!Number.isFinite(num)) return null;
+    if (/^s(ec|econd)s?$/.test(unit)) return clamp(num > 0 ? 1 : 0, 0, 24 * 60); // any seconds → at least 1 min
+    if (/^h(rs?|ours?)$/.test(unit)) return clamp(Math.round(num * 60), 1, 24 * 60);
+    return clamp(Math.round(num), 1, 24 * 60); // minutes default
+  };
+
+  // Range with units (min/sec/hr): "10-20 sec", "1-2 min"
   const range = s.match(
-    /(?:~|about|approx(?:\.|imately)?|around)?\s*(\d{1,4})\s*(?:-|to)\s*(\d{1,4})\s*(?:m(?:in(?:ute)?s?)?)\b/
+    /(?:~|about|approx(?:\.|imately)?|around)?\s*(\d+(?:\s*\d+\/\d+)?)\s*(?:-|to)\s*(\d+(?:\s*\d+\/\d+)?)\s*(s|sec|secs|second|seconds|m|min|mins|minute|minutes|h|hr|hrs|hour|hours)\b/
   );
   if (range) {
-    const hi = parseInt(range[2], 10);
-    return clamp(isNaN(hi) ? 0 : hi, 1, 24 * 60);
+    const hiRaw = evalFraction(range[2]);
+    const unit = unitKey(range[3]);
+    return toMinutes(hiRaw, unit);
   }
 
-  // Single value: "~3 min", "about 10 minutes", "5m"
+  // Single value + unit: "~30 sec", "about 10 minutes", "1.5 hours"
   const single = s.match(
-    /(?:~|about|approx(?:\.|imately)?|around)?\s*(\d{1,4})\s*(?:m(?:in(?:ute)?s?)?)\b/
+    /(?:~|about|approx(?:\.|imately)?|around)?\s*(\d+(?:\.\d+)?(?:\s*\d+\/\d+)?)\s*(s|sec|secs|second|seconds|m|min|mins|minute|minutes|h|hr|hrs|hour|hours)\b/
   );
   if (single) {
-    const v = parseInt(single[1], 10);
+    const val = evalFraction(single[1]);
+    const unit = unitKey(single[2]);
+    return toMinutes(val, unit);
+  }
+
+  // Bare minutes (fallback): "~ 12 min" already matched above, but keep a light catch
+  const bareMin = s.match(/(\d{1,4})\s*(?:m|min|mins|minute|minutes)\b/);
+  if (bareMin) {
+    const v = parseInt(bareMin[1], 10);
     return clamp(isNaN(v) ? 0 : v, 1, 24 * 60);
   }
 
   return null;
 }
 
+function unitKey(u) {
+  const k = String(u || "").toLowerCase();
+  if (/^s/.test(k)) return "sec";
+  if (/^h/.test(k)) return "hr";
+  return "min";
+}
+
+function evalFraction(raw) {
+  // "1 1/2" or "1/2" or "1.5"
+  const s = String(raw).trim();
+  if (s.includes("/")) {
+    const [a, b] = s.split(/\s+/);
+    if (b && a.includes("/")) {
+      // "1/2" only
+      const [n1, d1] = a.split("/").map(Number);
+      return n1 / d1;
+    }
+    if (b) {
+      // "1 1/2"
+      const [n2, d2] = b.split("/").map(Number);
+      return Number(a) + n2 / d2;
+    }
+    const [n, d] = s.split("/").map(Number);
+    return n / d;
+  }
+  return Number(s);
+}
+
 /* -------------------------- Phase 1.1 helpers -------------------------- */
 
-// Basic unicode cleanup
+// Basic unicode cleanup + bullets + spacing tidy
 function normalizeText(s) {
   return s
-    .replace(/\u2013|\u2014/g, "—")              // en/em dash → em dash
-    .replace(/\u2022|\u25CF|\u2219|\*/g, "•")    // bullets → •
-    .replace(/\s+/g, " ")
+    .replace(/\u2013|\u2014/g, "—")           // en/em dash → em dash
+    .replace(/\u2022|\u25CF|\u2219|\*/g, "•") // bullets → •
+    .replace(/[ \t]+/g, " ")
     .trim();
 }
 
@@ -138,16 +195,24 @@ function stripStepPrefix(s) {
   return s.replace(/^\s*step\s*\d+\s*[:.\-\u2013\u2014]\s*/i, "");
 }
 
-// Coerce "for 5 minutes" / "about 1 hour" → append "— X min"
+// Coerce "for 5 minutes" / "about 1 hour" / "30 seconds" → append "— X min"
 function coerceDurationSuffix(s) {
   let line = s;
-  let min = null;
+  let min = 0;
 
-  const hr = line.match(/(\d+(?:\.\d+)?)\s*(?:hours?|hrs?)\b/i);
-  const mn = line.match(/(\d+(?:\.\d+)?)\s*(?:minutes?|mins?)\b/i);
+  const txt = normalizeFractions(line);
 
-  if (hr) min = Math.round(parseFloat(hr[1]) * 60);
-  if (mn) min = (min ?? 0) + Math.round(parseFloat(mn[1]));
+  // hours (including decimals/fractions)
+  const hr = txt.match(/(\d+(?:\.\d+)?(?:\s*\d+\/\d+)?)\s*(?:hours?|hrs?)\b/i);
+  if (hr) min += Math.round(evalFraction(hr[1]) * 60);
+
+  // minutes
+  const mn = txt.match(/(\d+(?:\.\d+)?(?:\s*\d+\/\d+)?)\s*(?:minutes?|mins?)\b/i);
+  if (mn) min += Math.round(evalFraction(mn[1]));
+
+  // seconds → bump to at least 1 minute if present
+  const sc = txt.match(/(\d+(?:\.\d+)?(?:\s*\d+\/\d+)?)\s*(?:seconds?|secs?)\b/i);
+  if (sc) min = Math.max(1, min); // any seconds → at least 1 minute
 
   if (min && !/—\s*\d+\s*min/i.test(line)) {
     line = `${line} — ${min} min`;
@@ -158,11 +223,12 @@ function coerceDurationSuffix(s) {
 const SECTION_START_ING = /^(ingredients?|what you need)\b/i;
 const SECTION_START_DIRS = /^(directions?|method|instructions?)\b/i;
 
-// Rough ingredient detector (amount + unit OR bullet + food-y thing)
-const UNIT = "(cups?|cup|tbsp|tablespoons?|tsp|teaspoons?|oz|ounce|ounces|g|gram|grams|kg|ml|l|liters?|pounds?|lbs?|cloves?|sticks?|slices?|dash|pinch|sprigs?|leaves?)";
+// Ingredient-like detector (amount + unit; accepts "• " or "- " lead)
+const UNIT =
+  "(cups?|cup|tbsp|tablespoons?|tsp|teaspoons?|oz|ounce|ounces|g|gram|grams|kg|ml|l|liters?|pounds?|lbs?|cloves?|sticks?|slices?|dash|pinch|sprigs?|leaves?|heads?|bunch(?:es)?|pieces?)";
 const AMOUNT = "(?:\\d+\\/\\d+|\\d+(?:\\.\\d+)?)";
 const ING_LIKE_RE = new RegExp(
-  `^(?:•\\s*)?(?:${AMOUNT}\\s*(?:${UNIT})\\b|\\d+\\s*(?:${UNIT})\\b)`,
+  `^(?:[•\\-]\\s*)?(?:${AMOUNT}\\s*(?:${UNIT})\\b|\\d+\\s*(?:${UNIT})\\b|${AMOUNT}\\s+\\w+\\b)`,
   "i"
 );
 
@@ -177,7 +243,9 @@ function cleanLine(line) {
     // drop "Step X" markers
     .replace(/^Step\s*\d+[:.]?\s*/i, "")
     // downgrade "Note:" → keep text but remove the label
-    .replace(/^[-*]?\s*Note[:.]?\s*/i, "")
+    .replace(/^[-*•]?\s*Note[:.]?\s*/i, "")
+    // tidy punctuation tails
+    .replace(/[,\s.]+$/g, "")
     .trim();
 }
 
@@ -187,6 +255,8 @@ function prefilterLines(rawText) {
   let seenDirections = false;
 
   const out = [];
+  const seen = new Set();
+
   for (let raw of src) {
     let line = normalizeText(raw);
 
@@ -201,7 +271,7 @@ function prefilterLines(rawText) {
     if (inIngredients || (!seenDirections && ING_LIKE_RE.test(line))) continue;
 
     // Leading bullets and leftover commas look like ingredients
-    if (/^•\s+/.test(line) && ING_LIKE_RE.test(line)) continue;
+    if (/^(?:[•\-])\s+/.test(line) && ING_LIKE_RE.test(line)) continue;
 
     // Step cleanup + duration coercion
     line = stripStepPrefix(line);
@@ -212,6 +282,10 @@ function prefilterLines(rawText) {
 
     // Final polish for preview
     line = cleanLine(line);
+
+    // De-dup identical post-processed lines
+    if (!line || seen.has(line)) continue;
+    seen.add(line);
 
     out.push(line);
   }
