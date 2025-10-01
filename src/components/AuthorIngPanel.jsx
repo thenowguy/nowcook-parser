@@ -1,8 +1,7 @@
-/* AuthoringPanel.jsx — v1.3.0 (Phase 1.2)
-   - Title detection: prefer the first non-meta, non-ingredient, non-step line near top
-     that doesn't look like an instruction. Auto-fills title if the input is empty.
-   - Ingredient cleaning: if an ingredient-only line slips into steps, drop it at parse.
-   - Keeps Phase 1.1 pre-ingestion heuristics and URL/HTML import hook.
+/* AuthoringPanel.jsx — v1.3.1 (Phase 1.3b)
+   - Auto-title detection from pasted text (safe, user-typed title always wins)
+   - Smarter duration hints for lines without explicit minutes (planned_min only)
+   - Keeps Phase 1.1 pre-ingestion heuristics and URL/HTML import hook
 */
 /* eslint-disable */
 import React, { useEffect, useMemo, useState } from "react";
@@ -27,7 +26,7 @@ const CANONICAL =
     default_planned: v?.defaults?.planned_min ?? null,
   })) ?? [];
 
-// duration defaults
+// ----------------------- durations & defaults -----------------------
 function extractDurationEntries(pack) {
   const asEntryList = (arr) =>
     (arr || [])
@@ -50,16 +49,12 @@ function extractDurationEntries(pack) {
 }
 const DEFAULTS_BY_VERB = Object.fromEntries(extractDurationEntries(DURATIONS_PACK));
 
-// --- verb matching helpers ---
+// ----------------------- verb matching helpers -----------------------
 const findVerb = (text) => {
   for (const v of CANONICAL) for (const re of v.patterns) if (re.test(text)) return v;
   return null;
 };
-
-// quick lookup of canonical verbs present in the pack
 const CANON_BY_NAME = new Map(CANONICAL.map((v) => [String(v.name).toLowerCase(), v]));
-
-// Minimal heuristics used only if pack patterns miss
 const HEUR_RULES = [
   { re: /\b(sauté|saute|brown|cook\s+(?:until|till)\s+(?:soft|softened|translucent))\b/i, canon: "sauté" },
   { re: /\b(stir|mix|combine|whisk)\b/i, canon: "stir" },
@@ -73,7 +68,6 @@ const HEUR_RULES = [
   { re: /\b(preheat)\b/i, canon: "preheat" },
   { re: /\b(bake|roast)\b/i, canon: "bake" },
 ];
-
 function guessVerbHeuristic(text) {
   if (!text) return null;
   for (const r of HEUR_RULES) {
@@ -84,12 +78,11 @@ function guessVerbHeuristic(text) {
   }
   return null;
 }
-
 function findVerbSmart(text) {
   return findVerb(text) || guessVerbHeuristic(text);
 }
 
-// small helpers
+// ----------------------- small helpers -----------------------
 const toDurationObj = (min) => (min == null ? null : { value: min });
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 
@@ -98,7 +91,6 @@ function parseDurationMin(input) {
   if (!input) return null;
   const s = String(input).toLowerCase().replace(/[–—]/g, "-"); // normalize dashes
 
-  // Range: "3-5 min", "3 to 5 minutes"
   const range = s.match(
     /(?:~|about|approx(?:\.|imately)?|around)?\s*(\d{1,4})\s*(?:-|to)\s*(\d{1,4})\s*(?:m(?:in(?:ute)?s?)?)\b/
   );
@@ -106,8 +98,6 @@ function parseDurationMin(input) {
     const hi = parseInt(range[2], 10);
     return clamp(isNaN(hi) ? 0 : hi, 1, 24 * 60);
   }
-
-  // Single value: "~3 min", "about 10 minutes", "5m"
   const single = s.match(
     /(?:~|about|approx(?:\.|imately)?|around)?\s*(\d{1,4})\s*(?:m(?:in(?:ute)?s?)?)\b/
   );
@@ -115,71 +105,48 @@ function parseDurationMin(input) {
     const v = parseInt(single[1], 10);
     return clamp(isNaN(v) ? 0 : v, 1, 24 * 60);
   }
-
   return null;
 }
 
 /* -------------------------- Phase 1.1 helpers -------------------------- */
 
-// Basic unicode cleanup
 function normalizeText(s) {
   return s
-    .replace(/\u2013|\u2014/g, "—")              // en/em dash → em dash
-    .replace(/\u2022|\u25CF|\u2219|\*/g, "•")    // bullets → •
+    .replace(/\u2013|\u2014/g, "—")
+    .replace(/\u2022|\u25CF|\u2219|\*/g, "•")
     .replace(/\s+/g, " ")
     .trim();
 }
-
-// Strip "Step 1:" / "Step 1." / "STEP 1 –"
 function stripStepPrefix(s) {
   return s.replace(/^\s*step\s*\d+\s*[:.\-\u2013\u2014]\s*/i, "");
 }
-
-// Coerce "for 5 minutes" / "about 1 hour" → append "— X min"
 function coerceDurationSuffix(s) {
   let line = s;
   let min = null;
-
   const hr = line.match(/(\d+(?:\.\d+)?)\s*(?:hours?|hrs?)\b/i);
   const mn = line.match(/(\d+(?:\.\d+)?)\s*(?:minutes?|mins?)\b/i);
-
   if (hr) min = Math.round(parseFloat(hr[1]) * 60);
   if (mn) min = (min ?? 0) + Math.round(parseFloat(mn[1]));
-
-  if (min && !/—\s*\d+\s*min/i.test(line)) {
-    line = `${line} — ${min} min`;
-  }
+  if (min && !/—\s*\d+\s*min/i.test(line)) line = `${line} — ${min} min`;
   return line;
 }
 
 const SECTION_START_ING = /^(ingredients?|what you need)\b/i;
 const SECTION_START_DIRS = /^(directions?|method|instructions?)\b/i;
-
-// Rough ingredient detector (amount + unit OR bullet + food-y thing)
-const UNIT = "(cups?|cup|tbsp|tablespoons?|tsp|teaspoons?|oz|ounce|ounces|g|gram|grams|kg|ml|l|liters?|pounds?|lbs?|cloves?|sticks?|slices?|dash|pinch|sprigs?|leaves?)";
+const UNIT =
+  "(cups?|cup|tbsp|tablespoons?|tsp|teaspoons?|oz|ounce|ounces|g|gram|grams|kg|ml|l|liters?|pounds?|lbs?|cloves?|sticks?|slices?|dash|pinch|sprigs?|leaves?)";
 const AMOUNT = "(?:\\d+\\/\\d+|\\d+(?:\\.\\d+)?)";
 const ING_LIKE_RE = new RegExp(
   `^(?:•\\s*)?(?:${AMOUNT}\\s*(?:${UNIT})\\b|\\d+\\s*(?:${UNIT})\\b)`,
   "i"
 );
-
-// Also consider "x of y" forms common in ingredients
-const ING_ONLY_LINE = new RegExp(
-  `^(?:•\\s*)?(?:${AMOUNT}\\s*(?:${UNIT})\\b.*|\\d+\\s*(?:${UNIT})\\b.*|[\\d/]+\\s+of\\s+.+)$`,
-  "i"
-);
-
-// Metadata we should skip
 const META_SKIP_RE = /^\s*(author:|serves?\b|yield\b|prep time\b|cook time\b|total time\b|notes?:?)\s*/i;
 
 function cleanLine(line) {
   return line
-    // drop section headers
     .replace(/^ingredients[:]?$/i, "")
     .replace(/^For the .*?:\s*/i, "")
-    // drop "Step X" markers
     .replace(/^Step\s*\d+[:.]?\s*/i, "")
-    // downgrade "Note:" → keep text but remove the label
     .replace(/^[-*]?\s*Note[:.]?\s*/i, "")
     .trim();
 }
@@ -192,91 +159,63 @@ function prefilterLines(rawText) {
   const out = [];
   for (let raw of src) {
     let line = normalizeText(raw);
-
     if (!line) continue;
     if (META_SKIP_RE.test(line)) continue;
 
-    // Section toggles
     if (SECTION_START_ING.test(line)) { inIngredients = true; continue; }
     if (SECTION_START_DIRS.test(line)) { inIngredients = false; seenDirections = true; continue; }
 
-    // Skip ingredient lines while in ingredients (or pre-directions lists)
     if (inIngredients || (!seenDirections && ING_LIKE_RE.test(line))) continue;
-
-    // Leading bullets and leftover commas look like ingredients
     if (/^•\s+/.test(line) && ING_LIKE_RE.test(line)) continue;
 
-    // Step cleanup + duration coercion
     line = stripStepPrefix(line);
     line = coerceDurationSuffix(line);
-
-    // Ignore singleton headings like "Step 3" after stripping
     if (!line || /^step\s*\d+\s*$/i.test(line)) continue;
 
-    // Final polish for preview
     line = cleanLine(line);
-
     out.push(line);
   }
-
-  // If we filtered everything, fall back to original lines to avoid surprising empties
   return out.length ? out : src.map((l) => l.trim()).filter(Boolean);
 }
 
-/* -------------------- Title detection (Phase 1.2) -------------------- */
-
-const LEAD_PUNCT = /^[•\-\u2013\u2014\s]+/;
-const STEPISH_RE = /^(?:\d+[\).\s-]|step\s*\d+\b)/i;
-
-// Looks like an instruction if it has a known verb pattern early.
-function isLikelyInstruction(s) {
-  if (!s) return false;
-  if (STEPISH_RE.test(s)) return true;
-  const low = s.toLowerCase();
-  // quick hit: starts with imperative verb tokens
-  if (/^(add|stir|mix|whisk|saute|sauté|cook|bring|simmer|season|drain|serve|plate|preheat|bake|roast)\b/i.test(low)) {
-    return true;
-  }
-  // pack-based confirmation (cheap pass)
-  return !!findVerbSmart(s);
-}
-
-function scoreTitleCandidate(line) {
-  // prefer medium-length lines without terminal period
-  const len = line.length;
-  let score = 0;
-  if (len >= 8 && len <= 80) score += 2;
-  if (!/[.!?]\s*$/.test(line)) score += 1;
-  // Prefer Title Case / Caps
-  if (/^[A-Z][^a-z]+$/.test(line) || /\b[A-Z][a-z]+\b/.test(line)) score += 1;
-  // Penalize commas (often ingredient fragments)
-  if (/,/.test(line)) score -= 1;
-  return score;
-}
-
-function detectTitleFromText(rawText) {
-  const lines = rawText.split(/\r?\n/).map((l) => normalizeText(l).replace(LEAD_PUNCT, "")).filter(Boolean);
-  const MAX_SCAN = 12; // look only near the top
-  let best = null;
-  let bestScore = -Infinity;
-
-  for (let i = 0; i < Math.min(lines.length, MAX_SCAN); i++) {
+/* --------------------- v1.3.1: auto-title detection --------------------- */
+// Choose the first plausible line that isn't meta/section/ingredient-y
+function detectTitle(rawText) {
+  const lines = rawText.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+  for (let i = 0; i < Math.min(lines.length, 8); i++) {
     const l = lines[i];
-
-    // skip obvious non-title lines
     if (META_SKIP_RE.test(l)) continue;
     if (SECTION_START_ING.test(l) || SECTION_START_DIRS.test(l)) continue;
-    if (ING_LIKE_RE.test(l) || ING_ONLY_LINE.test(l)) continue;
-    if (isLikelyInstruction(l)) continue;
-
-    const cand = l.replace(/\s*[–—-]\s*$/g, "").trim();
-    const score = scoreTitleCandidate(cand);
-    if (score > bestScore) {
-      best = cand;
-      bestScore = score;
-    }
+    if (ING_LIKE_RE.test(l)) continue;
+    if (/^step\s*\d+/i.test(l)) continue;
+    // Avoid obviously sentence-like steps and super long paragraphs
+    if (l.length > 80) continue;
+    // Titles often don't end with a period
+    if (/[.!?]$/.test(l)) continue;
+    return l;
   }
-  return best || "";
+  return "";
+}
+
+/* -------- v1.3.1: heuristic planned_min when no explicit minutes -------- */
+function hintDurationMinutes(line, verbCanon) {
+  const s = String(line).toLowerCase();
+
+  // Texture/appearance cues
+  if (/\b(translucent|soft|softened)\b/.test(s)) return 8;     // sauté onions until translucent
+  if (/\b(golden|golden-brown|lightly browned?)\b/.test(s)) return 4; // toast/brown lightly
+  if (/\b(al dente)\b/.test(s)) return 8;                      // pasta al dente
+
+  // Risotto-ish “until absorbed / thickened”
+  if (/\b(absorb(?:ed)?|absorbs|thicken(?:ed)?|reduce(?:d)?\s+by\b)/.test(s)) return 3;
+
+  // Simple simmer or reduce when time not given
+  if (/\b(simmer|reduce)\b/.test(s)) return 10;
+
+  // Fall back: use pack default if any (handled by caller), else small attended step
+  if (verbCanon === "stir") return 2;
+  if (verbCanon === "season") return 1;
+  return null;
 }
 
 /* --------------------------------------------------------------------- */
@@ -286,19 +225,20 @@ export default function AuthoringPanel({ onLoadMeal }) {
     "Slice garlic and parsley; set out chili flakes — 3 min\nBring a large pot of water to a boil — 10 min\n…"
   );
   const [title, setTitle] = useState("");
+  const [titleTouched, setTitleTouched] = useState(false);
   const [autoDeps, setAutoDeps] = useState(true);
   const [preview, setPreview] = useState([]);
 
-  // Phase 1.1: prefilter lines for the preview/parser
+  // Prefilter lines for the preview/parser
   const rows = useMemo(() => prefilterLines(text), [text]);
 
-  // Phase 1.2: auto-fill title if empty and we can detect a good one
+  // v1.3.1: Fill title ONLY if user hasn't typed one yet
+  const detectedTitle = useMemo(() => detectTitle(text), [text]);
   useEffect(() => {
-    if (!title) {
-      const t = detectTitleFromText(text);
-      if (t) setTitle(t);
+    if (!titleTouched && !title && detectedTitle) {
+      setTitle(detectedTitle);
     }
-  }, [text, title]);
+  }, [detectedTitle, titleTouched]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function importFromUrlOrHtml() {
     const packs = await getPacks(); // reserved for future pack-aware transforms
@@ -307,20 +247,30 @@ export default function AuthoringPanel({ onLoadMeal }) {
   }
 
   function parseLines() {
-    const tasks = [];
-    rows.forEach((raw, idx) => {
-      const line0 = cleanLine(raw);
-      // Ingredient-only safety net: if this line is just an ingredient, skip it
-      if (ING_ONLY_LINE.test(line0) && !isLikelyInstruction(line0)) return;
-
-      const vMeta = findVerbSmart(line0);
+    const tasks = rows.map((raw, idx) => {
+      const line = cleanLine(raw);
+      const vMeta = findVerbSmart(line);
       const verb = vMeta?.name || "free_text";
-      const durMin = parseDurationMin(line0);
-      const planned_min = durMin ?? vMeta?.default_planned ?? DEFAULTS_BY_VERB[verb] ?? null;
 
-      tasks.push({
-        id: `draft_${tasks.length + 1}`,
-        name: line0.replace(/\s*—\s*\d+\s*min(?:utes?)?$/i, ""),
+      // explicit minutes?
+      const durMin = parseDurationMin(line);
+
+      // smarter planned_min:
+      // 1) explicit minutes
+      // 2) pack default planned
+      // 3) heuristic hint from text
+      // 4) global defaults by verb
+      const hinted = hintDurationMinutes(line, verb);
+      const planned_min =
+        durMin ??
+        vMeta?.default_planned ??
+        hinted ??
+        DEFAULTS_BY_VERB[verb] ??
+        null;
+
+      return {
+        id: `draft_${idx + 1}`,
+        name: line.replace(/\s*—\s*\d+\s*min(?:utes?)?$/i, ""),
         canonical_verb: verb,
         duration_min: toDurationObj(durMin),
         planned_min,
@@ -329,7 +279,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
         inputs: [],
         outputs: [],
         edges: [],
-      });
+      };
     });
 
     if (autoDeps) {
@@ -361,7 +311,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ fontWeight: 700 }}>Author Ingestion (v1.3)</div>
+        <div style={{ fontWeight: 700 }}>Author Ingestion (v1.3.1)</div>
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={parseLines}>Parse → Draft</button>
           <button onClick={loadAsMeal}>Load into Preview</button>
@@ -406,7 +356,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
           <div style={{ fontWeight: 600, fontSize: 20, marginBottom: 6 }}>Meal title</div>
           <input
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => { setTitle(e.target.value); setTitleTouched(true); }}
             placeholder="e.g., Quick Pasta with Garlic Oil"
             style={{
               width: "100%",
