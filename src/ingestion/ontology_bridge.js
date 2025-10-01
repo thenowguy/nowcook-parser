@@ -1,15 +1,14 @@
-/* ontology_bridge.js — v0.3
-   Thin facade over the canonical ontology loader.
-   - Single source of truth: ../ontology/loadOntology.js
-   - Lazy cache; opt-in enable/disable
-   - Safe no-op "upgrade" helpers so you can wire this in without risk
+/* ontology_bridge.js — v0.4
+   Facade over the ontology loader.
+   - Restores mapVerb() export for compatibility
+   - Safe no-ops for upgrade helpers
 */
 /* eslint-disable */
 
 import { loadOntology } from "../ontology/loadOntology.js";
 
-let ONTOLOGY_ENABLED = true;       // You can flip this at runtime
-let _cache = null;                 // Lazy-loaded ontology bundle (verbs, ingredients, overrides)
+let ONTOLOGY_ENABLED = true; // can be flipped at runtime
+let _cache = null;           // lazy-loaded ontology bundle
 
 /* ------------------------ Controls & Status ------------------------ */
 
@@ -33,36 +32,33 @@ export function clearOntologyCache() {
 }
 
 /* --------------------- Upgrade / Mapping Helpers -------------------- */
-/* These are intentionally conservative, safe no-ops by default.
-   You can start wiring them into AuthoringPanel without breaking anything.
-   Later, we’ll fill in the real mapping logic (synonyms, applicability, etc.).
-*/
 
-// Given a single draft task (object with `name`, `canonical_verb`, etc.),
-// return a NEW task object with any ontology upgrades applied.
-// For now: no-op that simply returns the original task unchanged.
-export async function upgradeTaskViaOntology(task) {
-  if (!ONTOLOGY_ENABLED) return task;
-  await getOntology(); // ensure loaded (future logic will use it)
-  return task; // no-op placeholder
+// Compatibility shim: previously imported in AuthoringPanel
+// For now: simple passthrough; later can map synonyms → canonical verbs
+export function mapVerb(verbString) {
+  return normalizeVerb(verbString);
 }
 
-// Given an array of tasks, return a NEW array with upgrades applied.
+// Upgrade a single task (currently no-op)
+export async function upgradeTaskViaOntology(task) {
+  if (!ONTOLOGY_ENABLED) return task;
+  await getOntology();
+  return task;
+}
+
+// Upgrade an array of tasks (currently no-op)
 export async function upgradeTasksViaOntology(tasks = []) {
   if (!ONTOLOGY_ENABLED || !Array.isArray(tasks) || tasks.length === 0) return tasks;
-  await getOntology(); // ensure loaded
-  // No-op pass-through for now
+  await getOntology();
   return tasks.slice();
 }
 
 /* -------------------------- Small Utilities ------------------------- */
 
-// Normalize a verb string (future: fold case, strip punctuation, map synonyms)
 export function normalizeVerb(s) {
   return String(s || "").trim();
 }
 
-// Normalize an ingredient string (future: plural → singular, remove descriptors)
 export function normalizeIngredient(s) {
   return String(s || "").trim();
 }
