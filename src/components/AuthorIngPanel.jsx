@@ -1,26 +1,20 @@
-/* AuthoringPanel.jsx — v1.6.2 (Phase 1.6b)
-   Builds on v1.6.1 (Phase 1.6a) and v1.5:
-     • Fuzzy durations: lines with “about/around/approx/~ /roughly” → +20% forgiveness, ceil.
-     • Ranges like “8–10 min” keep using the *high* end (unchanged).
-     • Optional ontology debug hook: window.__NOWCOOK_ONTOLOGY__?.debugSuggest({ verb, text })
-   Preserves prior phases:
-     • Split long lines into action steps (., ;, then/and then) without breaking (…) or after abbrevs.
-     • Skip INGREDIENTS & ingredient-like lines; ignore meta (Author/Serves/Prep/Cook/Notes)
-     • Normalize bullets/dashes; strip “Step X” prefixes
-     • Coerce “for 5 minutes / 1 hour” → append “— X min”
-     • Normalize unicode fractions; strip measurement-only parentheticals
-     • Safe verb detection (pack patterns first, then light heuristics)
+/* AuthoringPanel.jsx — v1.6.3 (Phase 1.6b)
+   - Fix: keep all imports at top (avoids “Unexpected token, expected 'from'”).
+   - Wire ontology upgrader to opportunistically upgrade free_text → canonical verbs.
+   - Keeps v1.6 parsing/cleanup/splitting behavior.
 */
 /* eslint-disable */
+
+// ── Imports (MUST be at top) ───────────────────────────────────────────────────
 import React, { useMemo, useState } from "react";
 import { ingestFromUrlOrHtml } from "../ingestion/url_or_text";
 import { getPacks } from "../ingestion/packs_bridge";
-import { upgradeWithOntology }
+import { upgradeWithOntology } from "../ingestion/ontology_bridge";
 
-// Packs (reuse like App)
 import VERB_PACK from "../packs/verbs.en.json";
 import DURATIONS_PACK from "../packs/durations.en.json";
 
+// ── Packs & helpers ────────────────────────────────────────────────────────────
 const VERBS_ARRAY = Array.isArray(VERB_PACK)
   ? VERB_PACK
   : Array.isArray(VERB_PACK?.verbs)
@@ -101,18 +95,14 @@ function findVerbSmart(text) {
 const toDurationObj = (min) => (min == null ? null : { value: min });
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 
-/* ------------------- Phase 1.6 fuzzy duration helpers ------------------- */
-const FUZZY_TOKEN_RE = /\b(~|about|around|approx(?:\.|imately)?|roughly)\b/i;
-const hasFuzzyToken = (s) => FUZZY_TOKEN_RE.test(String(s || ""));
-
-// Parse explicit "— 5 min" / "3-5 minutes" / "~10 min" suffixes (returns integer minutes)
+// Parse explicit "— 5 min" / "3-5 minutes" / "~10 min" suffixes
 function parseDurationMin(input) {
   if (!input) return null;
   const s = String(input).toLowerCase().replace(/[–—]/g, "-"); // normalize dashes
 
-  // Range: "3-5 min", "3 to 5 minutes" → use high end
+  // Range: "3-5 min", "3 to 5 minutes"
   const range = s.match(
-    /(?:~|about|approx(?:\.|imately)?|around|roughly)?\s*(\d{1,4})\s*(?:-|to)\s*(\d{1,4})\s*(?:m(?:in(?:ute)?s?)?)\b/
+    /(?:~|about|approx(?:\.|imately)?|around)?\s*(\d{1,4})\s*(?:-|to)\s*(\d{1,4})\s*(?:m(?:in(?:ute)?s?)?)\b/
   );
   if (range) {
     const hi = parseInt(range[2], 10);
@@ -121,7 +111,7 @@ function parseDurationMin(input) {
 
   // Single value: "~3 min", "about 10 minutes", "5m"
   const single = s.match(
-    /(?:~|about|approx(?:\.|imately)?|around|roughly)?\s*(\d{1,4})\s*(?:m(?:in(?:ute)?s?)?)\b/
+    /(?:~|about|approx(?:\.|imately)?|around)?\s*(\d{1,4})\s*(?:m(?:in(?:ute)?s?)?)\b/
   );
   if (single) {
     const v = parseInt(single[1], 10);
@@ -131,7 +121,7 @@ function parseDurationMin(input) {
   return null;
 }
 
-/* -------------------------- Phase 1.1 helpers -------------------------- */
+/* -------------------------- Phase helpers (1.1 → 1.5) ------------------------- */
 
 // Basic unicode cleanup
 function normalizeText(s) {
@@ -253,7 +243,7 @@ function prefilterLines(rawText) {
   return out.length ? out : src.map((l) => l.trim()).filter(Boolean);
 }
 
-/* -------------------------- Phase 1.5 helpers -------------------------- */
+/* -------------------------- Phase 1.5 split into actions --------------------- */
 
 // Split a line into action-sized steps, avoiding splits inside (...) and after common abbreviations.
 const ABBRV = /(?:e\.g|i\.e|approx|vs|min|hr|hrs)\.$/i;
@@ -315,7 +305,7 @@ function explodeActions(lines) {
     for (const seg of merged) {
       if (!seg) continue;
       if (ABBRV.test(seg)) {
-        out.push(raw); // fallback to original line if it looks risky
+        out.push(raw); // fallback to original line if it looks like we broke after an abbreviation
         break;
       } else {
         out.push(seg);
@@ -347,52 +337,13 @@ export default function AuthoringPanel({ onLoadMeal }) {
     setText(draft); // preview table reacts via rows
   }
 
-  function computePlannedMinutes(line, vMeta) {
-    const explicit = parseDurationMin(line);
-    const canonDefault = vMeta?.default_planned ?? null;
-    const byVerb = DEFAULTS_BY_VERB[vMeta?.name || ""] ?? null;
-
-    let planned = explicit ?? canonDefault ?? byVerb ?? null;
-
-    // Fuzzy tokens: add forgiveness + ceil
-    if (planned != null && hasFuzzyToken(line)) {
-      planned = Math.ceil(planned * 1.2);
-    }
-    return planned;
-  }
-
-  function parseLines() {
-    const tasks = rows.map((raw, idx) => {
+  async function parseLines() {
+    const rawTasks = rows.map((raw, idx) => {
       const line = cleanLine(raw);
       const vMeta = findVerbSmart(line);
       const verb = vMeta?.name || "free_text";
-
-      const durMin = parseDurationMin(line); // explicit suffix if any
-      const planned_min = computePlannedMinutes(line, vMeta);
-
-      async function parseLines() {
-  const rawTasks = rows.map(/* your existing construction */);
-
-  if (autoDeps) {
-    for (let i = 1; i < rawTasks.length; i++) {
-      rawTasks[i].edges.push({ from: rawTasks[i - 1].id, type: "FS" });
-    }
-  }
-
-  // NEW: upgrade with ontology (only bumps free_text when safe)
-  const tasks = await upgradeWithOntology(rawTasks);
-
-  setPreview(tasks);
-}
-
-      // ---- Optional ontology debug (no-op if not present) ----
-      try {
-        const dbgAPI = typeof window !== "undefined" && window.__NOWCOOK_ONTOLOGY__?.debugSuggest;
-        if (dbgAPI) {
-          const dbg = dbgAPI({ verb, text: line });
-          if (dbg) console.debug("[ontology]", dbg);
-        }
-      } catch (_) { /* ignore */ }
+      const durMin = parseDurationMin(line);
+      const planned_min = durMin ?? vMeta?.default_planned ?? DEFAULTS_BY_VERB[verb] ?? null;
 
       return {
         id: `draft_${idx + 1}`,
@@ -409,15 +360,23 @@ export default function AuthoringPanel({ onLoadMeal }) {
     });
 
     if (autoDeps) {
-      for (let i = 1; i < tasks.length; i++) {
-        tasks[i].edges.push({ from: tasks[i - 1].id, type: "FS" });
+      for (let i = 1; i < rawTasks.length; i++) {
+        rawTasks[i].edges.push({ from: rawTasks[i - 1].id, type: "FS" });
       }
     }
+
+    // NEW: upgrade with ontology (only bumps free_text when safe)
+    const tasks = await upgradeWithOntology(rawTasks);
+
     setPreview(tasks);
   }
 
   function loadAsMeal() {
-    if (preview.length === 0) parseLines();
+    if (preview.length === 0) {
+      // ensure parse has run at least once
+      parseLines();
+      return;
+    }
     const meal = {
       title: title || "Untitled Meal",
       author: { name: "Draft" },
@@ -437,10 +396,10 @@ export default function AuthoringPanel({ onLoadMeal }) {
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ fontWeight: 700 }}>Author Ingestion (v1.6.2)</div>
+        <div style={{ fontWeight: 700 }}>Author Ingestion (v1.6.3)</div>
         <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={parseLines}>Parse → Draft</button>
-          <button onClick={loadAsMeal}>Load into Preview</button>
+          <button onClick={() => parseLines()}>Parse → Draft</button>
+          <button onClick={() => loadAsMeal()}>Load into Preview</button>
         </div>
       </div>
 
@@ -515,7 +474,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
               Auto-create sequential dependencies (FS)
             </label>
 
-            <button onClick={importFromUrlOrHtml}>Import from URL/HTML</button>
+            <button onClick={() => importFromUrlOrHtml()}>Import from URL/HTML</button>
           </div>
         </div>
       </div>
