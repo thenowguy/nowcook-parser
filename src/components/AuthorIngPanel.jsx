@@ -7,9 +7,9 @@
 
 // ── Imports (MUST be at top) ───────────────────────────────────────────────────
 import React, { useMemo, useState } from "react";
-import { ingestFromUrlOrHtml } from "../ingestion/url_or_text";
-import { getPacks } from "../ingestion/packs_bridge";
-import { upgradeWithOntology } from "../ingestion/ontology_bridge";
+import { ingestFromUrlOrHtml } from "../ingestion/url_or_text.js";
+import { getPacks } from "../ingestion/packs_bridge.js";
+import { upgradeWithOntology } from "../ingestion/ontology_bridge.js";
 
 import VERB_PACK from "../packs/verbs.en.json";
 import DURATIONS_PACK from "../packs/durations.en.json";

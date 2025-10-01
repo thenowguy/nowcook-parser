@@ -66,6 +66,10 @@ function detectIngredients(text, ingByAlias) {
   return [...hits];
 }
 
+export async function getOntology() {
+  return loadOntology();
+}
+
 /** Upgrade tasks in-place (but returns a new array for React friendliness). */
 export async function upgradeWithOntology(tasks) {
   const onto = await loadOntology(); // { actions/verbs, ingredients, overrides? }
