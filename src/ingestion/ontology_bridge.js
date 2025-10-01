@@ -1,62 +1,62 @@
-// src/ingestion/ontology_bridge.js
-/* eslint-disable */
-/*
-  Ontology bridge — Phase 0 wiring.
-  - Loads verbs/ingredients via src/ontology/loadOntology.js
-  - Provides a couple of tiny helpers the parser can call safely.
+/* ontology_bridge.js — v1.0.1 (safe, optional)
+   - Loads ontology (verbs/ingredients) if present.
+   - Exposes no-throw helpers: mapVerb, mapIngredient.
+   - If ontology missing, returns identity values.
 */
+/* eslint-disable */
 
-import {
-  getVerbs,
-  getIngredients,
-  getVerbByCanonical,
-  getIngredientByName,
-} from "../ontology/loadOntology.js"; // <-- NOTE the .. (up one level) and .js
+import { loadOntology } from "./ontology/loadOntology.js";
 
-function escapeRegExp(s) {
-  return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
+let ONTOLOGY_ENABLED = true; // flip to false to hard-disable without removing code
+let _ont = {
+  verbs: new Map(),         // canonicalVerb -> { label, params?, synonyms[] }
+  ingredients: new Map(),   // canonicalIngredient -> { label, synonyms[] }
+  synonymsToVerb: new Map(),       // lc synonym -> canonicalVerb
+  synonymsToIngredient: new Map(), // lc synonym -> canonicalIngredient
+  loaded: false,
+  error: null,
+};
 
-// Returns the canonical verb if `text` is exactly a canon or synonym; else null.
-export function normalizeVerb(text) {
-  const t = String(text || "").trim().toLowerCase();
-  if (!t) return null;
-
-  const verbs = getVerbs();
-  // exact canonical
-  const exact = verbs.find(
-    (v) => String(v?.canonical || "").toLowerCase() === t
-  );
-  if (exact) return exact.canonical;
-
-  // exact synonym
-  for (const v of verbs) {
-    const syns = Array.isArray(v.synonyms) ? v.synonyms : [];
-    if (syns.some((s) => String(s).toLowerCase() === t)) return v.canonical;
+async function ensureLoaded() {
+  if (!ONTOLOGY_ENABLED || _ont.loaded || _ont.error) return;
+  try {
+    const o = await loadOntology();
+    _ont = { ...o, loaded: true, error: null };
+  } catch (err) {
+    // Don’t crash the app; just mark unavailable
+    _ont.error = err;
+    _ont.loaded = false;
   }
-  return null;
 }
 
-// Very soft guesser: scans a line for any canonical/synonym word boundary match.
-export function suggestVerbForLine(line) {
-  const s = String(line || "").toLowerCase();
-  if (!s) return null;
+function lc(s) {
+  return typeof s === "string" ? s.trim().toLowerCase() : "";
+}
 
-  const verbs = getVerbs();
-  for (const v of verbs) {
-    const cand = [v.canonical, ...(Array.isArray(v.synonyms) ? v.synonyms : [])];
-    for (const w of cand) {
-      const re = new RegExp(`\\b${escapeRegExp(String(w).toLowerCase())}\\b`, "i");
-      if (re.test(s)) return v.canonical;
-    }
+// Public helpers (all safe fallbacks)
+export async function mapVerb(text) {
+  await ensureLoaded();
+  if (!_ont.loaded) return { canon: null, source: "none" };
+  const key = lc(text);
+  if (_ont.verbs.has(key)) return { canon: key, source: "canon" };
+  if (_ont.synonymsToVerb.has(key)) {
+    return { canon: _ont.synonymsToVerb.get(key), source: "synonym" };
   }
-  return null;
+  return { canon: null, source: "miss" };
 }
 
-// Quick presence check so callers can feature-detect.
-export function ontologyPresent() {
-  const list = getVerbs();
-  return Array.isArray(list) && list.length > 0;
+export async function mapIngredient(text) {
+  await ensureLoaded();
+  if (!_ont.loaded) return { canon: null, source: "none" };
+  const key = lc(text);
+  if (_ont.ingredients.has(key)) return { canon: key, source: "canon" };
+  if (_ont.synonymsToIngredient.has(key)) {
+    return { canon: _ont.synonymsToIngredient.get(key), source: "synonym" };
+  }
+  return { canon: null, source: "miss" };
 }
 
-export { getVerbs, getIngredients, getVerbByCanonical, getIngredientByName };
+// optional: allow external toggling (debug)
+export function setOntologyEnabled(flag) {
+  ONTOLOGY_ENABLED = !!flag;
+}

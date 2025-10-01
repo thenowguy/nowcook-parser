@@ -1,23 +1,44 @@
-// src/ontology/loadOntology.js
+/* loadOntology.js — v1.0.1
+   - Dynamically imports ontology JSON with explicit .json paths.
+   - Builds quick lookup maps + reverse synonym maps.
+*/
 /* eslint-disable */
 
-// Local JSON sources (keep both files next to this one)
-import VERBS from "./verbs.master.json";
-import ING from "./ingredients.master.json";
+function toMap(obj) {
+  const m = new Map();
+  if (obj && typeof obj === "object") {
+    for (const [k, v] of Object.entries(obj)) m.set(String(k).toLowerCase(), v || {});
+  }
+  return m;
+}
 
-// Synchronous in-memory getters (swap to fetch later if you like)
-export const getVerbs = () => (Array.isArray(VERBS) ? VERBS : []);
-export const getIngredients = () => (Array.isArray(ING) ? ING : []);
+function addSynonymsReverse(map, out) {
+  for (const [canon, data] of map.entries()) {
+    const syns = Array.isArray(data?.synonyms) ? data.synonyms : [];
+    for (const s of syns) out.set(String(s).toLowerCase(), canon);
+    // Also map the canonical label to itself for convenience
+    const label = data?.label || canon;
+    out.set(String(label).toLowerCase(), canon);
+  }
+}
 
-// Convenience lookups (null-safe)
-export const getIngredientByName = (name) => {
-  if (!name) return null;
-  const n = String(name).trim().toLowerCase();
-  return getIngredients().find((i) => String(i?.name || "").toLowerCase() === n) || null;
-};
+export async function loadOntology() {
+  // NOTE: these paths are relative to THIS FILE at build-time
+  const verbsMod = await import("./verbs.master.json");
+  const ingsMod  = await import("./ingredients.master.json");
 
-export const getVerbByCanonical = (canon) => {
-  if (!canon) return null;
-  const c = String(canon).trim().toLowerCase();
-  return getVerbs().find((v) => String(v?.canonical || "").toLowerCase() === c) || null;
-};
+  const verbs = toMap(verbsMod?.default || verbsMod || {});
+  const ingredients = toMap(ingsMod?.default || ingsMod || {});
+
+  const synonymsToVerb = new Map();
+  const synonymsToIngredient = new Map();
+  addSynonymsReverse(verbs, synonymsToVerb);
+  addSynonymsReverse(ingredients, synonymsToIngredient);
+
+  return {
+    verbs,
+    ingredients,
+    synonymsToVerb,
+    synonymsToIngredient,
+  };
+}
