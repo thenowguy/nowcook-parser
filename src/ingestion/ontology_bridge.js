@@ -18,7 +18,7 @@
 
 import { loadOntology } from "./ontology/loadOntology.js";
 
-let ONTOLOGY_ENABLED = true; // flip from AuthoringPanel toggle if desired
+let ONTOLOGY_ENABLED = true;
 export function setOntologyEnabled(v) { ONTOLOGY_ENABLED = !!v; }
 export function isOntologyEnabled() { return ONTOLOGY_ENABLED; }
 
