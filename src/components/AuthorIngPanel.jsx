@@ -1,15 +1,12 @@
-/* AuthoringPanel.jsx — v1.6.9 (Phase 1.6f)
-   Restores “Action + Chef Note” split and keeps duration on the action only.
-   Pipeline:
-     normalize → stripStepPrefix → prefilter(skip ingredients/meta) → explodeActions
-     → extractActionAndNote → coerceDurationSuffix(actionOnly) → rows
+/* AuthoringPanel.jsx — v1.6.10 (Phase 1.6g)
+   Fix: treat stand-alone advisory lines (e.g., “be careful…”, “don’t…”, “season to taste”)
+   as Chef Notes. Keeps action+note split and duration on action only.
 */
 /* eslint-disable */
 import React, { useMemo, useState } from "react";
 import { ingestFromUrlOrHtml } from "../ingestion/url_or_text";
 import { getPacks } from "../ingestion/packs_bridge";
 
-// Packs (reuse like App)
 import VERB_PACK from "../packs/verbs.en.json";
 import DURATIONS_PACK from "../packs/durations.en.json";
 
@@ -22,12 +19,12 @@ const VERBS_ARRAY = Array.isArray(VERB_PACK)
 const CANONICAL =
   VERBS_ARRAY.map((v) => ({
     name: v.canon,
-    attention: v.attention, // "attended" | "unattended_after_start"
+    attention: v.attention,
     patterns: (v.patterns || []).map((p) => new RegExp(p, "i")),
     default_planned: v?.defaults?.planned_min ?? null,
   })) ?? [];
 
-/* ---------------- duration defaults ---------------- */
+/* -------- duration defaults -------- */
 function extractDurationEntries(pack) {
   const asEntryList = (arr) =>
     (arr || [])
@@ -50,7 +47,7 @@ function extractDurationEntries(pack) {
 }
 const DEFAULTS_BY_VERB = Object.fromEntries(extractDurationEntries(DURATIONS_PACK));
 
-/* ---------------- verb helpers ---------------- */
+/* -------- verb helpers -------- */
 const findVerbByPack = (text) => {
   for (const v of CANONICAL) for (const re of v.patterns) if (re.test(text)) return v;
   return null;
@@ -83,7 +80,7 @@ function findVerbSmart(text) {
   return findVerbByPack(text) || guessVerbHeuristic(text);
 }
 
-/* ---------------- small helpers ---------------- */
+/* -------- misc helpers -------- */
 const toDurationObj = (min) => (min == null ? null : { value: min });
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 
@@ -107,27 +104,14 @@ function parseDurationMin(input) {
   return null;
 }
 
-/* ---------------- cleanup ---------------- */
+/* -------- cleanup -------- */
 function normalizeText(s) {
-  return s
-    .replace(/\u2013|\u2014/g, "—")
-    .replace(/\u2022|\u25CF|\u2219/g, "•")
-    .replace(/\s+/g, " ")
-    .trim();
+  return s.replace(/\u2013|\u2014/g, "—").replace(/\u2022|\u25CF|\u2219/g, "•").replace(/\s+/g, " ").trim();
 }
-function stripStepPrefix(s) {
-  return s.replace(/^\s*step\s*\d+\s*[:.\-\u2013\u2014]\s*/i, "");
-}
+function stripStepPrefix(s) { return s.replace(/^\s*step\s*\d+\s*[:.\-\u2013\u2014]\s*/i, ""); }
 
-// v1.4 helpers preserved
-const FRACTION_MAP = {
-  "¼":"1/4","½":"1/2","¾":"3/4","⅐":"1/7","⅑":"1/9","⅒":"1/10",
-  "⅓":"1/3","⅔":"2/3","⅕":"1/5","⅖":"2/5","⅗":"3/5","⅘":"4/5",
-  "⅙":"1/6","⅚":"5/6","⅛":"1/8","⅜":"3/8","⅝":"5/8","⅞":"7/8",
-};
-function normalizeFractions(s) {
-  return s.replace(/[¼½¾⅐⅑⅒⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]/g, (m) => FRACTION_MAP[m] || m);
-}
+const FRACTION_MAP = {"¼":"1/4","½":"1/2","¾":"3/4","⅐":"1/7","⅑":"1/9","⅒":"1/10","⅓":"1/3","⅔":"2/3","⅕":"1/5","⅖":"2/5","⅗":"3/5","⅘":"4/5","⅙":"1/6","⅚":"5/6","⅛":"1/8","⅜":"3/8","⅝":"5/8","⅞":"7/8"};
+function normalizeFractions(s) { return s.replace(/[¼½¾⅐⅑⅒⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]/g, (m) => FRACTION_MAP[m] || m); }
 const UNIT_WORDS = "(?:cup|cups|tbsp|tablespoon|tablespoons|tsp|teaspoon|teaspoons|oz|ounce|ounces|g|gram|grams|kg|ml|l|liter|liters|pound|pounds|lb|lbs)";
 function stripMeasurementParens(s) {
   return s.replace(/\(([^)]*)\)/g, (m, inside) => {
@@ -150,7 +134,7 @@ function cleanLine(line) {
   ).trim();
 }
 
-/* ---------------- prefilter (skip ingredients/meta) ---------------- */
+/* -------- prefilter (skip ingredients/meta) -------- */
 const SECTION_START_ING = /^(ingredients?|what you need)\b/i;
 const SECTION_START_DIRS = /^(directions?|method|instructions?)\b/i;
 const UNIT = "(cups?|cup|tbsp|tablespoons?|tsp|teaspoons?|oz|ounce|ounces|g|gram|grams|kg|ml|l|liters?|pounds?|lbs?|cloves?|sticks?|slices?|dash|pinch|sprigs?|leaves?)";
@@ -162,7 +146,6 @@ function prefilterLines(rawText) {
   const src = rawText.split(/\r?\n/);
   let inIngredients = false;
   let seenDirections = false;
-
   const out = [];
   for (let raw of src) {
     let line = normalizeText(raw);
@@ -176,22 +159,18 @@ function prefilterLines(rawText) {
     if (/^•\s+/.test(line) && ING_LIKE_RE.test(line)) continue;
 
     line = stripStepPrefix(line);
-    // NOTE: duration coercion moved later (after action/note split)
     if (!line || /^step\s*\d+\s*$/i.test(line)) continue;
-
     line = cleanLine(line);
     out.push(line);
   }
   return out.length ? out : src.map((l) => l.trim()).filter(Boolean);
 }
 
-/* ---------------- explode to action-sized sentences ---------------- */
+/* -------- explode to action-sized sentences -------- */
 function explodeActions(lines) {
   const out = [];
   for (let raw of lines) {
     if (!raw) continue;
-
-    // mask (...) to avoid splitting inside
     const masks = [];
     let masked = "", depth = 0, buf = "";
     for (let i = 0; i < raw.length; i++) {
@@ -209,7 +188,6 @@ function explodeActions(lines) {
       .filter(Boolean);
 
     const unmasked = parts.map((p) => p.replace(/@@P(\d+)@@/g, (_, i) => masks[Number(i)] || ""));
-    // merge tiny tails like "to taste"
     const merged = [];
     for (const p of unmasked) {
       const segment = p.replace(/\s+/g, " ").trim();
@@ -224,59 +202,47 @@ function explodeActions(lines) {
   return out;
 }
 
-/* ---------------- action + chef note extraction ---------------- */
-const NOTE_LEADS = /\b(?:be careful|don'?t|do not|avoid|optionally|optional|tip:|note:|if\b.+|as needed|to taste|season to taste)\b/i;
+/* -------- action + chef note extraction -------- */
+const NOTE_LEADS = /^\s*(?:be careful|don'?t|do not|avoid|optionally|optional|tip:|note:|if\b|as needed|to taste|season to taste)\b/i;
 
 function splitActionAndNote(line) {
   // Case A: trailing (…) advisory
   const parenTail = line.match(/^(.*)\(([^)]{4,})\)\s*$/);
   if (parenTail) {
     const action = parenTail[1].replace(/\s+/g, " ").trim();
-    const note = parenTail[2].trim();
-    if (NOTE_LEADS.test(note) || note.length >= 6) {
-      return { action, note };
-    }
+    const note   = parenTail[2].trim();
+    if (note.length >= 4) return { action, note };
   }
-
   // Case B: “action — note” or “action; note”
-  const splitDash = line.split(/\s+[—-]\s+/);
-  if (splitDash.length === 2 && NOTE_LEADS.test(splitDash[1])) {
-    return { action: splitDash[0].trim(), note: splitDash[1].trim() };
+  const dashSplit = line.split(/\s+[—-]\s+/);
+  if (dashSplit.length === 2 && NOTE_LEADS.test(dashSplit[1])) {
+    return { action: dashSplit[0].trim(), note: dashSplit[1].trim() };
   }
-  const splitSemi = line.split(/;\s+/);
-  if (splitSemi.length === 2 && NOTE_LEADS.test(splitSemi[1])) {
-    return { action: splitSemi[0].trim(), note: splitSemi[1].trim() };
+  const semiSplit = line.split(/;\s+/);
+  if (semiSplit.length === 2 && NOTE_LEADS.test(semiSplit[1])) {
+    return { action: semiSplit[0].trim(), note: semiSplit[1].trim() };
   }
-
-  // Case C: "If ..., (then) do X"
+  // Case C: "If ..., then do X"
   const ifThen = line.match(/^\s*(If .+?),\s*(?:then\s+)?(.+)\s*$/i);
   if (ifThen) {
     return { action: ifThen[2].trim(), note: ifThen[1].trim() };
   }
-
-  // default: no note
   return { action: line.trim(), note: null };
 }
 
-/* only apply duration suffix to action */
+/* only apply duration suffix to action text */
 function coerceDurationSuffix(actionText) {
   let line = actionText;
   let min = null;
-
   const hr = line.match(/(\d+(?:\.\d+)?)\s*(?:hours?|hrs?)\b/i);
   const mn = line.match(/(\d+(?:\.\d+)?)\s*(?:minutes?|mins?)\b/i);
-
   if (hr) min = Math.round(parseFloat(hr[1]) * 60);
   if (mn) min = (min ?? 0) + Math.round(parseFloat(mn[1]));
-
-  if (min && !/—\s*\d+\s*min/i.test(line)) {
-    line = `${line} — ${min} min`;
-  }
+  if (min && !/—\s*\d+\s*min/i.test(line)) line = `${line} — ${min} min`;
   return line;
 }
 
 /* --------------------------------------------------------------------- */
-
 export default function AuthoringPanel({ onLoadMeal }) {
   const [text, setText] = useState(
     "Slice garlic and parsley; set out chili flakes — 3 min\nBring a large pot of water to a boil — 10 min\n…"
@@ -284,18 +250,27 @@ export default function AuthoringPanel({ onLoadMeal }) {
   const [title, setTitle] = useState("");
   const [autoDeps, setAutoDeps] = useState(true);
   const [roundAbout, setRoundAbout] = useState(true);
-  const [upgradeViaOntology, setUpgradeViaOntology] = useState(false); // placeholder toggle
+  const [upgradeViaOntology, setUpgradeViaOntology] = useState(false);
   const [preview, setPreview] = useState([]);
 
-  // rows: prefilter → explode → extract (action/note) → apply duration to action only
+  // Build rows: prefilter → explode → classify advisory lines → split action/note → attach
   const rows = useMemo(() => {
     const base = prefilterLines(text);
     const actions = explodeActions(base);
+
     const out = [];
     for (const raw of actions) {
-      const { action, note } = splitActionAndNote(raw);
+      const trimmed = raw.trim();
+
+      // NEW — stand-alone advisory becomes note row
+      if (NOTE_LEADS.test(trimmed)) {
+        out.push({ kind: "note", text: trimmed.replace(/^[-*]?\s*(note|tip)[:.]?\s*/i, "") });
+        continue;
+      }
+
+      const { action, note } = splitActionAndNote(trimmed);
       if (action) out.push({ kind: "action", text: coerceDurationSuffix(action) });
-      if (note) out.push({ kind: "note", text: note.replace(/^[-*]?\s*(note|tip)[:.]?\s*/i, "") });
+      if (note)   out.push({ kind: "note", text: note.replace(/^[-*]?\s*(note|tip)[:.]?\s*/i, "") });
     }
     return out;
   }, [text]);
@@ -312,7 +287,6 @@ export default function AuthoringPanel({ onLoadMeal }) {
 
     for (const row of rows) {
       if (row.kind === "note") {
-        // Represent notes as lightweight rows in preview only
         tasks.push({
           id: `note_${tasks.length + 1}`,
           name: row.text,
@@ -331,12 +305,10 @@ export default function AuthoringPanel({ onLoadMeal }) {
       const line = row.text;
       const vMeta = findVerbSmart(line);
       const verb = vMeta?.name || "free_text";
-
-      // parse duration from the action only
       const durMin = parseDurationMin(line);
       const planned_min = durMin ?? vMeta?.default_planned ?? DEFAULTS_BY_VERB[verb] ?? null;
 
-      const task = {
+      tasks.push({
         id: `draft_${++actionIndex}`,
         name: line.replace(/\s*—\s*\d+\s*min(?:utes?)?$/i, ""),
         canonical_verb: verb,
@@ -347,12 +319,10 @@ export default function AuthoringPanel({ onLoadMeal }) {
         inputs: [],
         outputs: [],
         edges: [],
-      };
-      tasks.push(task);
+      });
     }
 
     if (autoDeps) {
-      // attach FS only between consecutive ACTIONS, not notes
       let lastActionId = null;
       for (const t of tasks) {
         if (t.is_note) continue;
@@ -368,7 +338,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
     const meal = {
       title: title || "Untitled Meal",
       author: { name: "Draft" },
-      tasks: preview.length ? preview.filter(t => !t.is_note) : [], // notes are metadata, not runnable
+      tasks: preview.length ? preview.filter(t => !t.is_note) : [],
       packs_meta: {},
     };
     onLoadMeal?.(meal);
@@ -377,39 +347,20 @@ export default function AuthoringPanel({ onLoadMeal }) {
   return (
     <div style={{ border: "1px solid #ddd", borderRadius: 12, padding: 12, background: "#ffe7b3" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ fontWeight: 700 }}>Author Ingestion (v1.6.9)</div>
+        <div style={{ fontWeight: 700 }}>Author Ingestion (v1.6.10)</div>
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={parseLines}>Parse → Draft</button>
           <button onClick={loadAsMeal}>Load into Preview</button>
         </div>
       </div>
 
-      {/* TOP ROW */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))",
-          gap: 12,
-          alignItems: "start",
-          marginTop: 8,
-          marginBottom: 8,
-        }}
-      >
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 12, alignItems: "start", marginTop: 8, marginBottom: 8 }}>
         <div>
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="One step per line… or paste a URL/HTML, then click “Import from URL/HTML”."
-            style={{
-              width: "100%",
-              minHeight: 190,
-              border: "1px solid #e5e7eb",
-              borderRadius: 8,
-              padding: "10px 12px",
-              boxSizing: "border-box",
-              resize: "vertical",
-              background: "#fff",
-            }}
+            style={{ width: "100%", minHeight: 190, border: "1px solid #e5e7eb", borderRadius: 8, padding: "10px 12px", boxSizing: "border-box", resize: "vertical", background: "#fff" }}
           />
           <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
             Recipe text (one step per line) — or paste a URL/HTML, and click “Import from URL/HTML”.
@@ -422,15 +373,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="e.g., Quick Pasta with Garlic Oil"
-            style={{
-              width: "100%",
-              border: "1px solid #e5e7eb",
-              borderRadius: 10,
-              padding: "10px 12px",
-              marginBottom: 8,
-              boxSizing: "border-box",
-              background: "#fff",
-            }}
+            style={{ width: "100%", border: "1px solid #e5e7eb", borderRadius: 10, padding: "10px 12px", marginBottom: 8, boxSizing: "border-box", background: "#fff" }}
           />
           <div style={{ fontSize: 14, color: "#4b5563", lineHeight: 1.5, marginBottom: 10 }}>
             Tip: durations like “— 3 min” are optional — packs provide sensible defaults per verb.
@@ -454,7 +397,6 @@ export default function AuthoringPanel({ onLoadMeal }) {
         </div>
       </div>
 
-      {/* Preview */}
       <div style={{ fontWeight: 700, marginTop: 8, marginBottom: 6 }}>Preview</div>
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -481,7 +423,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
 
               if (t.is_note) {
                 return (
-                  <tr key={`n_${idx}`} style={{ background: i % 2 ? "rgba(255,255,255,0.45)" : "transparent", opacity: 0.85 }}>
+                  <tr key={`n_${idx}`} style={{ background: i % 2 ? "rgba(255,255,255,0.45)" : "transparent", opacity: 0.9 }}>
                     <td style={td}>{idx}</td>
                     <td style={{ ...td, fontStyle: "italic", color: "#475569" }}>🗒️ {t.name}</td>
                     <td style={td}>note</td>
@@ -509,15 +451,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
                   <td style={td}>{verb}</td>
                   <td style={td}>{planned || "—"}</td>
                   <td style={td}>
-                    <span
-                      style={{
-                        padding: "2px 8px",
-                        borderRadius: 999,
-                        border: "1px solid #d1d5db",
-                        background: attention === "attended" ? "#eef5ff" : "#ecfdf5",
-                        fontSize: 12,
-                      }}
-                    >
+                    <span style={{ padding: "2px 8px", borderRadius: 999, border: "1px solid #d1d5db", background: attention === "attended" ? "#eef5ff" : "#ecfdf5", fontSize: 12 }}>
                       {attention}
                     </span>
                   </td>
@@ -532,13 +466,5 @@ export default function AuthoringPanel({ onLoadMeal }) {
   );
 }
 
-const th = {
-  textAlign: "left",
-  padding: "8px 10px",
-  borderBottom: "1px solid #e5e7eb",
-  fontWeight: 600,
-};
-const td = {
-  padding: "8px 10px",
-  borderBottom: "1px solid #f1f5f9",
-};
+const th = { textAlign: "left", padding: "8px 10px", borderBottom: "1px solid #e5e7eb", fontWeight: 600 };
+const td = { padding: "8px 10px", borderBottom: "1px solid #f1f5f9" };
