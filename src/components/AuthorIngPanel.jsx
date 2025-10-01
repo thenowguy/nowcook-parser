@@ -361,7 +361,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ fontWeight: 700 }}>Author Ingestion (v1.2)</div>
+        <div style={{ fontWeight: 700 }}>Author Ingestion (v1.3)</div>
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={parseLines}>Parse → Draft</button>
           <button onClick={loadAsMeal}>Load into Preview</button>
