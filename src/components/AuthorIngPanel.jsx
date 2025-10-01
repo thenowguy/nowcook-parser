@@ -207,7 +207,7 @@ function cleanLine(line) {
 }
 
 function prefilterLines(rawText) {
-  const src = rawText split(/\r?\n/);
+  const src = rawText ; split(/\r?\n/);
   let inIngredients = false;
   let seenDirections = false;
 
