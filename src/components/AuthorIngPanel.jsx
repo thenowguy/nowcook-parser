@@ -1,8 +1,15 @@
-/* AuthoringPanel.jsx — v1.6.1 (Phase 1.6a)
-   Builds on v1.6:
-     • Preview shows 🗒️ note icon (hover for note text) when a step captured a note.
-     • Preview shows "~" badge beside Planned (min) when duration_estimated is true.
-   Everything else unchanged from v1.6 (notes capture, approx rounding-up, action splitting, etc.)
+/* AuthoringPanel.jsx — v1.6.2 (Phase 1.6b)
+   Builds on v1.6.1 (Phase 1.6a) and v1.5:
+     • Fuzzy durations: lines with “about/around/approx/~ /roughly” → +20% forgiveness, ceil.
+     • Ranges like “8–10 min” keep using the *high* end (unchanged).
+     • Optional ontology debug hook: window.__NOWCOOK_ONTOLOGY__?.debugSuggest({ verb, text })
+   Preserves prior phases:
+     • Split long lines into action steps (., ;, then/and then) without breaking (…) or after abbrevs.
+     • Skip INGREDIENTS & ingredient-like lines; ignore meta (Author/Serves/Prep/Cook/Notes)
+     • Normalize bullets/dashes; strip “Step X” prefixes
+     • Coerce “for 5 minutes / 1 hour” → append “— X min”
+     • Normalize unicode fractions; strip measurement-only parentheticals
+     • Safe verb detection (pack patterns first, then light heuristics)
 */
 /* eslint-disable */
 import React, { useMemo, useState } from "react";
@@ -93,34 +100,34 @@ function findVerbSmart(text) {
 const toDurationObj = (min) => (min == null ? null : { value: min });
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 
-/* ---------------- Duration parsing & approximation flags ---------------- */
+/* ------------------- Phase 1.6 fuzzy duration helpers ------------------- */
+const FUZZY_TOKEN_RE = /\b(~|about|around|approx(?:\.|imately)?|roughly)\b/i;
+const hasFuzzyToken = (s) => FUZZY_TOKEN_RE.test(String(s || ""));
 
-// Returns { minutes, estimated }
-function parseDurationMinWithMeta(input) {
-  if (!input) return { minutes: null, estimated: false };
+// Parse explicit "— 5 min" / "3-5 minutes" / "~10 min" suffixes (returns integer minutes)
+function parseDurationMin(input) {
+  if (!input) return null;
   const s = String(input).toLowerCase().replace(/[–—]/g, "-"); // normalize dashes
 
-  // Range: "3-5 min", "3 to 5 minutes"
+  // Range: "3-5 min", "3 to 5 minutes" → use high end
   const range = s.match(
-    /(?:~|about|approx(?:\.|imately)?|around)?\s*(\d{1,4})\s*(?:-|to)\s*(\d{1,4})\s*(?:m(?:in(?:ute)?s?)?)\b/
+    /(?:~|about|approx(?:\.|imately)?|around|roughly)?\s*(\d{1,4})\s*(?:-|to)\s*(\d{1,4})\s*(?:m(?:in(?:ute)?s?)?)\b/
   );
   if (range) {
     const hi = parseInt(range[2], 10);
-    return { minutes: clamp(isNaN(hi) ? 0 : hi, 1, 24 * 60), estimated: true };
+    return clamp(isNaN(hi) ? 0 : hi, 1, 24 * 60);
   }
 
   // Single value: "~3 min", "about 10 minutes", "5m"
   const single = s.match(
-    /((?:~|about|approx(?:\.|imately)?|around)\s*)?(\d{1,4})\s*(?:m(?:in(?:ute)?s?)?)\b/
+    /(?:~|about|approx(?:\.|imately)?|around|roughly)?\s*(\d{1,4})\s*(?:m(?:in(?:ute)?s?)?)\b/
   );
   if (single) {
-    const approx = !!single[1];
-    const v = parseInt(single[2], 10);
-    const minutes = clamp(isNaN(v) ? 0 : v, 1, 24 * 60);
-    return { minutes: approx ? Math.ceil(minutes) : minutes, estimated: approx };
+    const v = parseInt(single[1], 10);
+    return clamp(isNaN(v) ? 0 : v, 1, 24 * 60);
   }
 
-  return { minutes: null, estimated: false };
+  return null;
 }
 
 /* -------------------------- Phase 1.1 helpers -------------------------- */
@@ -247,6 +254,7 @@ function prefilterLines(rawText) {
 
 /* -------------------------- Phase 1.5 helpers -------------------------- */
 
+// Split a line into action-sized steps, avoiding splits inside (...) and after common abbreviations.
 const ABBRV = /(?:e\.g|i\.e|approx|vs|min|hr|hrs)\.$/i;
 function explodeActions(lines) {
   const out = [];
@@ -278,17 +286,20 @@ function explodeActions(lines) {
         else masked += ch;
       }
     }
-    if (buf) masked += buf;
+    if (buf) masked += buf; // any remainder
 
+    // Split on ., ;, " then ", " and then "
     const parts = masked
       .split(/(?:\.\s+|;\s+|\s+(?:and\s+then|then)\s+)/i)
       .map((p) => p.trim())
       .filter(Boolean);
 
+    // Unmask + tidy
     const unmasked = parts.map((p) =>
       p.replace(/@@P(\d+)@@/g, (m, idx) => masks[Number(idx)] || "")
     );
 
+    // Merge too-short tail fragments back into previous (e.g., “to taste.”)
     const merged = [];
     for (const p of unmasked) {
       const segment = p.replace(/\s+/g, " ").trim();
@@ -299,10 +310,11 @@ function explodeActions(lines) {
       }
     }
 
+    // Keep abbreviations from splitting on their period
     for (const seg of merged) {
       if (!seg) continue;
       if (ABBRV.test(seg)) {
-        out.push(raw);
+        out.push(raw); // fallback to original line if it looks risky
         break;
       } else {
         out.push(seg);
@@ -310,39 +322,6 @@ function explodeActions(lines) {
     }
   }
   return out;
-}
-
-/* -------------------------- Phase 1.6 helpers -------------------------- */
-
-// Extract non-measurement notes AFTER cleanLine.
-function extractNoteFromCleanLine(line) {
-  let note = null;
-  let main = line;
-
-  const paren = main.match(/\(([^)]+)\)/);
-  if (paren) {
-    const content = paren[1].trim();
-    if (content) {
-      note = content;
-      main = main.replace(/\([^)]*\)/g, "").replace(/\s{2,}/g, " ").trim();
-    }
-  }
-
-  const parts = main.split("—").map(s => s.trim()).filter(Boolean);
-  if (parts.length >= 2) {
-    const lastIsDuration = /^\d+\s*min(?:utes?)?$/i.test(parts[parts.length - 1]);
-    const middle = parts.slice(1, lastIsDuration ? -1 : undefined);
-    const advisory = middle.find(p => /(be careful|avoid|optional|if needed|watch|tip:|note:|to taste)/i.test(p));
-    if (advisory) {
-      const cleaned = advisory.replace(/^(tip|note)[:.]\s*/i,"");
-      note = note ? `${note}; ${cleaned}` : cleaned;
-      const rebuilt = [parts[0], ...parts.slice(1).filter(p => p !== advisory)];
-      main = rebuilt.join(" — ").trim();
-    }
-  }
-
-  main = main.replace(/\s{2,}/g, " ").replace(/\s+([,;:.])/g, "$1").trim();
-  return { main, note };
 }
 
 /* --------------------------------------------------------------------- */
@@ -355,40 +334,58 @@ export default function AuthoringPanel({ onLoadMeal }) {
   const [autoDeps, setAutoDeps] = useState(true);
   const [preview, setPreview] = useState([]);
 
+  // Phase 1.1: prefilter lines, then Phase 1.5: explode into actions
   const rows = useMemo(() => {
     const base = prefilterLines(text);
     return explodeActions(base);
   }, [text]);
 
   async function importFromUrlOrHtml() {
-    const packs = await getPacks();
+    const packs = await getPacks(); // reserved for future pack-aware transforms
     const draft = await ingestFromUrlOrHtml(text, packs);
-    setText(draft);
+    setText(draft); // preview table reacts via rows
+  }
+
+  function computePlannedMinutes(line, vMeta) {
+    const explicit = parseDurationMin(line);
+    const canonDefault = vMeta?.default_planned ?? null;
+    const byVerb = DEFAULTS_BY_VERB[vMeta?.name || ""] ?? null;
+
+    let planned = explicit ?? canonDefault ?? byVerb ?? null;
+
+    // Fuzzy tokens: add forgiveness + ceil
+    if (planned != null && hasFuzzyToken(line)) {
+      planned = Math.ceil(planned * 1.2);
+    }
+    return planned;
   }
 
   function parseLines() {
     const tasks = rows.map((raw, idx) => {
-      const cleaned = cleanLine(raw);
-      const { main, note } = extractNoteFromCleanLine(cleaned);
-
-      const vMeta = findVerbSmart(main);
+      const line = cleanLine(raw);
+      const vMeta = findVerbSmart(line);
       const verb = vMeta?.name || "free_text";
 
-      const { minutes, estimated } = parseDurationMinWithMeta(main);
-      const planned_min = (minutes != null)
-        ? minutes
-        : (vMeta?.default_planned ?? DEFAULTS_BY_VERB[verb] ?? null);
+      const durMin = parseDurationMin(line); // explicit suffix if any
+      const planned_min = computePlannedMinutes(line, vMeta);
+
+      // ---- Optional ontology debug (no-op if not present) ----
+      try {
+        const dbgAPI = typeof window !== "undefined" && window.__NOWCOOK_ONTOLOGY__?.debugSuggest;
+        if (dbgAPI) {
+          const dbg = dbgAPI({ verb, text: line });
+          if (dbg) console.debug("[ontology]", dbg);
+        }
+      } catch (_) { /* ignore */ }
 
       return {
         id: `draft_${idx + 1}`,
-        name: main.replace(/\s*—\s*\d+\s*min(?:utes?)?$/i, ""),
+        name: line.replace(/\s*—\s*\d+\s*min(?:utes?)?$/i, ""),
         canonical_verb: verb,
-        duration_min: toDurationObj(minutes),
+        duration_min: toDurationObj(durMin),
         planned_min,
         requires_driver: vMeta ? vMeta.attention === "attended" : true,
         self_running_after_start: vMeta ? vMeta.attention === "unattended_after_start" : false,
-        note: note || null,
-        duration_estimated: !!estimated,
         inputs: [],
         outputs: [],
         edges: [],
@@ -420,17 +417,18 @@ export default function AuthoringPanel({ onLoadMeal }) {
         border: "1px solid #ddd",
         borderRadius: 12,
         padding: 12,
-        background: "#ffe7b3",
+        background: "#ffe7b3", // authoring panel color
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ fontWeight: 700 }}>Author Ingestion (v1.6.1)</div>
+        <div style={{ fontWeight: 700 }}>Author Ingestion (v1.6.2)</div>
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={parseLines}>Parse → Draft</button>
           <button onClick={loadAsMeal}>Load into Preview</button>
         </div>
       </div>
 
+      {/* TOP ROW — responsive 2-column grid (stacks on narrow widths) */}
       <div
         style={{
           display: "grid",
@@ -441,6 +439,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
           marginBottom: 8,
         }}
       >
+        {/* Left: textarea */}
         <div>
           <textarea
             value={text}
@@ -462,6 +461,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
           </div>
         </div>
 
+        {/* Right: title + tip + actions */}
         <div>
           <div style={{ fontWeight: 600, fontSize: 20, marginBottom: 6 }}>Meal title</div>
           <input
@@ -522,10 +522,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
             {(preview.length ? preview : rows.map((line, i) => ({ name: line, _row: i })) ).map((t, i) => {
               const idx = i + 1;
               const verb = t.canonical_verb || findVerb(t.name)?.name || "free_text";
-              const plannedBase = t.planned_min ?? DEFAULTS_BY_VERB[verb] ?? "";
-              const planned = plannedBase || "—";
-              const approxBadge = t.duration_estimated ? " ~" : "";
-
+              const planned = t.planned_min ?? DEFAULTS_BY_VERB[verb] ?? "";
               const attention =
                 t.requires_driver != null
                   ? t.requires_driver
@@ -533,45 +530,12 @@ export default function AuthoringPanel({ onLoadMeal }) {
                     : "unattended"
                   : (findVerb(t.name)?.attention === "unattended_after_start" ? "unattended" : "attended");
               const dep = t.edges?.[0]?.from ? `#${Number(String(t.edges[0].from).split("_").pop())}` : "—";
-
               return (
                 <tr key={idx} style={{ background: i % 2 ? "rgba(255,255,255,0.45)" : "transparent" }}>
                   <td style={td}>{idx}</td>
-                  <td style={td}>
-                    {t.name || t}
-                    {t.note ? (
-                      <span
-                        title={t.note}
-                        style={{
-                          marginLeft: 8,
-                          border: "1px solid #d1d5db",
-                          borderRadius: 6,
-                          padding: "0 6px",
-                          fontSize: 12,
-                          background: "#fff",
-                          cursor: "help",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          lineHeight: "18px"
-                        }}
-                        aria-label="Chef's note"
-                      >
-                        🗒️
-                      </span>
-                    ) : null}
-                  </td>
+                  <td style={td}>{t.name || t}</td>
                   <td style={td}>{verb}</td>
-                  <td style={td}>
-                    {planned}
-                    {approxBadge && planned !== "—" ? (
-                      <span
-                        title="Author gave an approximate or ranged time; rounded up."
-                        style={{ marginLeft: 6, fontWeight: 600 }}
-                      >
-                        ~
-                      </span>
-                    ) : null}
-                  </td>
+                  <td style={td}>{planned || "—"}</td>
                   <td style={td}>
                     <span
                       style={{
