@@ -10,3 +10,8 @@
   { "name": "flour", "tags": ["dry","powder"] },
   { "name": "olive oil", "tags": ["liquid","fat"] }
 ]
+[
+  { "canon": "tomato", "aliases": ["tomatoes", "roma tomatoes", "cherry tomatoes"] },
+  { "canon": "onion",  "aliases": ["onions", "yellow onion", "red onion"] }
+  // …
+]

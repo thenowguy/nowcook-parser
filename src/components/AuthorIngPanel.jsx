@@ -15,6 +15,7 @@
 import React, { useMemo, useState } from "react";
 import { ingestFromUrlOrHtml } from "../ingestion/url_or_text";
 import { getPacks } from "../ingestion/packs_bridge";
+import { upgradeWithOntology }
 
 // Packs (reuse like App)
 import VERB_PACK from "../packs/verbs.en.json";
@@ -368,6 +369,21 @@ export default function AuthoringPanel({ onLoadMeal }) {
 
       const durMin = parseDurationMin(line); // explicit suffix if any
       const planned_min = computePlannedMinutes(line, vMeta);
+
+      async function parseLines() {
+  const rawTasks = rows.map(/* your existing construction */);
+
+  if (autoDeps) {
+    for (let i = 1; i < rawTasks.length; i++) {
+      rawTasks[i].edges.push({ from: rawTasks[i - 1].id, type: "FS" });
+    }
+  }
+
+  // NEW: upgrade with ontology (only bumps free_text when safe)
+  const tasks = await upgradeWithOntology(rawTasks);
+
+  setPreview(tasks);
+}
 
       // ---- Optional ontology debug (no-op if not present) ----
       try {

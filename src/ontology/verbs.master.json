@@ -75,3 +75,14 @@
     "defaults": { "planned_min": 15, "attention": "unattended_after_start" }
   }
 ]
+[
+  {
+    "canon": "slice",
+    "synonyms": ["thinly slice", "cut into slices", "slice into rounds"]
+  },
+  {
+    "canon": "chop",
+    "synonyms": ["roughly chop", "finely chop", "chop up"]
+  }
+  // …
+]
