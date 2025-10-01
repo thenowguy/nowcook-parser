@@ -429,7 +429,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
                 return (
                   <tr key={`note_${idx}`} style={{ background: i % 2 ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.35)" }}>
                     <td style={td}>{idx}</td>
-                    <td style={{ ...td, paddingLeft: 28, fontStyle: "italic", color: "#475569", borderLeft: "3px solid #dbeafe", background: "rgba(59,130,246,0.04)" }}>
+                    <td style={{ ...td, paddingLeft: 60, fontStyle: "italic", color: "#475569", borderLeft: "3px solid #dbeafe", background: "rgba(59,130,246,0.04)" }}>
                       <span style={{ opacity: 0.9, marginRight: 6 }}>🗒️</span>
                       {t.name}
                     </td>
