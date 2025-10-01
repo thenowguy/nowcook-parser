@@ -1,26 +1,28 @@
-/* AuthoringPanel.jsx — v1.6.5 (Phase 1.6c)
-   Restores Chef Notes:
-     • Detect lines like "Note:" (any case, optional bullet, also "— Note: ..." in-line)
-     • Notes render with 🗒️ in Verb column, italic step text, no duration/attention/depends
-     • Notes are excluded from verb/duration parsing and ontology upgrade
-   Keeps previous phases:
-     • Ingredient/meta skipping; unicode/bullets normalization; "Step X" stripping
+/* AuthoringPanel.jsx — v1.6.6 (Phase 1.6c)
+   Chef Notes restored + robust:
+     • Preserve standalone “Note:” lines before meta/ingredient filtering
+     • Split inline notes “... — Note: …” into Action + Note rows
+     • Don’t sentence-split note lines; render with 🗒️ icon
+     • Notes load as zero-duration, non-blocking items (requires_driver:false)
+
+   Keeps prior phases:
+     • Skip INGREDIENTS and ingredient-like lines
+     • Ignore common meta (Author/Serves/Prep/Cook/Notes headers)
+     • Normalize bullets/dashes; strip "Step X" prefixes
      • Coerce “for 5 minutes / 1 hour” → append “— X min”
-     • Fraction normalization; measurement-only parenthetical stripping
-     • Action splitting (v1.5)
-     • Ontology hook (safe no-op if disabled)
+     • Unicode fraction normalization; strip measurement-y parentheticals
+     • Action-level splitting on “.”, “;”, “then/and then” (not inside (…) )
+     • Safe verb detection (pack patterns, then light heuristics)
 */
- /* eslint-disable */
+/* eslint-disable */
 import React, { useMemo, useState } from "react";
 import { ingestFromUrlOrHtml } from "../ingestion/url_or_text";
 import { getPacks } from "../ingestion/packs_bridge";
-import { upgradeTasksViaOntology } from "../ingestion/ontology_bridge.js";
 
 // Packs (reuse like App)
 import VERB_PACK from "../packs/verbs.en.json";
 import DURATIONS_PACK from "../packs/durations.en.json";
 
-/* ------------------ verb/duration utilities (unchanged) ------------------ */
 const VERBS_ARRAY = Array.isArray(VERB_PACK)
   ? VERB_PACK
   : Array.isArray(VERB_PACK?.verbs)
@@ -30,11 +32,12 @@ const VERBS_ARRAY = Array.isArray(VERB_PACK)
 const CANONICAL =
   VERBS_ARRAY.map((v) => ({
     name: v.canon,
-    attention: v.attention,
+    attention: v.attention, // "attended" | "unattended_after_start"
     patterns: (v.patterns || []).map((p) => new RegExp(p, "i")),
     default_planned: v?.defaults?.planned_min ?? null,
   })) ?? [];
 
+// duration defaults
 function extractDurationEntries(pack) {
   const asEntryList = (arr) =>
     (arr || [])
@@ -57,12 +60,16 @@ function extractDurationEntries(pack) {
 }
 const DEFAULTS_BY_VERB = Object.fromEntries(extractDurationEntries(DURATIONS_PACK));
 
+// --- verb matching helpers ---
 const findVerbByPack = (text) => {
   for (const v of CANONICAL) for (const re of v.patterns) if (re.test(text)) return v;
   return null;
 };
 
+// quick lookup of canonical verbs present in the pack
 const CANON_BY_NAME = new Map(CANONICAL.map((v) => [String(v.name).toLowerCase(), v]));
+
+// Minimal heuristics used only if pack patterns miss
 const HEUR_RULES = [
   { re: /\b(sauté|saute|brown|cook\s+(?:until|till)\s+(?:soft|softened|translucent))\b/i, canon: "sauté" },
   { re: /\b(stir|mix|combine|whisk)\b/i, canon: "stir" },
@@ -76,6 +83,7 @@ const HEUR_RULES = [
   { re: /\b(preheat)\b/i, canon: "preheat" },
   { re: /\b(bake|roast)\b/i, canon: "bake" },
 ];
+
 function guessVerbHeuristic(text) {
   if (!text) return null;
   for (const r of HEUR_RULES) {
@@ -86,94 +94,191 @@ function guessVerbHeuristic(text) {
   }
   return null;
 }
+
 function findVerbSmart(text) {
   return findVerbByPack(text) || guessVerbHeuristic(text);
 }
+
+// small helpers
 const toDurationObj = (min) => (min == null ? null : { value: min });
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
+
+// Parse explicit "— 5 min" / "3-5 minutes" / "~10 min" suffixes
 function parseDurationMin(input) {
   if (!input) return null;
-  const s = String(input).toLowerCase().replace(/[–—]/g, "-");
-  const range = s.match(/(?:~|about|approx(?:\.|imately)?|around)?\s*(\d{1,4})\s*(?:-|to)\s*(\d{1,4})\s*m(?:in(?:ute)?s?)?\b/);
+  const s = String(input).toLowerCase().replace(/[–—]/g, "-"); // normalize dashes
+
+  // Range: "3-5 min", "3 to 5 minutes"
+  const range = s.match(
+    /(?:~|about|approx(?:\.|imately)?|around)?\s*(\d{1,4})\s*(?:-|to)\s*(\d{1,4})\s*(?:m(?:in(?:ute)?s?)?)\b/
+  );
   if (range) {
     const hi = parseInt(range[2], 10);
     return clamp(isNaN(hi) ? 0 : hi, 1, 24 * 60);
   }
-  const single = s.match(/(?:~|about|approx(?:\.|imately)?|around)?\s*(\d{1,4})\s*m(?:in(?:ute)?s?)?\b/);
+
+  // Single value: "~3 min", "about 10 minutes", "5m"
+  const single = s.match(
+    /(?:~|about|approx(?:\.|imately)?|around)?\s*(\d{1,4})\s*(?:m(?:in(?:ute)?s?)?)\b/
+  );
   if (single) {
     const v = parseInt(single[1], 10);
     return clamp(isNaN(v) ? 0 : v, 1, 24 * 60);
   }
+
   return null;
 }
 
-/* ---------------------- Phase 1.1 + 1.4 helpers ---------------------- */
+/* -------------------------- Phase 1.1 helpers -------------------------- */
+
+// Basic unicode cleanup
 function normalizeText(s) {
   return s
-    .replace(/\u2013|\u2014/g, "—")
-    .replace(/\u2022|\u25CF|\u2219|\*/g, "•")
+    .replace(/\u2013|\u2014/g, "—")              // en/em dash → em dash
+    .replace(/\u2022|\u25CF|\u2219|\*/g, "•")    // bullets → •
     .replace(/\s+/g, " ")
     .trim();
 }
-function stripStepPrefix(s) { return s.replace(/^\s*step\s*\d+\s*[:.\-\u2013\u2014]\s*/i, ""); }
+
+// Strip "Step 1:" / "Step 1." / "STEP 1 –"
+function stripStepPrefix(s) {
+  return s.replace(/^\s*step\s*\d+\s*[:.\-\u2013\u2014]\s*/i, "");
+}
+
+// Coerce "for 5 minutes" / "about 1 hour" → append "— X min"
 function coerceDurationSuffix(s) {
-  let line = s, min = null;
+  let line = s;
+  let min = null;
+
   const hr = line.match(/(\d+(?:\.\d+)?)\s*(?:hours?|hrs?)\b/i);
   const mn = line.match(/(\d+(?:\.\d+)?)\s*(?:minutes?|mins?)\b/i);
+
   if (hr) min = Math.round(parseFloat(hr[1]) * 60);
   if (mn) min = (min ?? 0) + Math.round(parseFloat(mn[1]));
-  if (min && !/—\s*\d+\s*min/i.test(line)) line = `${line} — ${min} min`;
+
+  if (min && !/—\s*\d+\s*min/i.test(line)) {
+    line = `${line} — ${min} min`;
+  }
   return line;
 }
+
 const SECTION_START_ING = /^(ingredients?|what you need)\b/i;
 const SECTION_START_DIRS = /^(directions?|method|instructions?)\b/i;
+
+// Rough ingredient detector (amount + unit OR bullet + food-y thing)
 const UNIT = "(cups?|cup|tbsp|tablespoons?|tsp|teaspoons?|oz|ounce|ounces|g|gram|grams|kg|ml|l|liters?|pounds?|lbs?|cloves?|sticks?|slices?|dash|pinch|sprigs?|leaves?)";
 const AMOUNT = "(?:\\d+\\/\\d+|\\d+(?:\\.\\d+)?)";
-const ING_LIKE_RE = new RegExp(`^(?:•\\s*)?(?:${AMOUNT}\\s*(?:${UNIT})\\b|\\d+\\s*(?:${UNIT})\\b)`, "i");
-const META_SKIP_RE = /^\s*(author:|serves?\b|yield\b|prep time\b|cook time\b|total time\b|notes?:?)\s*/i;
-const FRACTION_MAP = {"¼":"1/4","½":"1/2","¾":"3/4","⅐":"1/7","⅑":"1/9","⅒":"1/10","⅓":"1/3","⅔":"2/3","⅕":"1/5","⅖":"2/5","⅗":"3/5","⅘":"4/5","⅙":"1/6","⅚":"5/6","⅛":"1/8","⅜":"3/8","⅝":"5/8","⅞":"7/8"};
-function normalizeFractions(s){ return s.replace(/[¼½¾⅐⅑⅒⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]/g,(m)=>FRACTION_MAP[m]||m); }
+const ING_LIKE_RE = new RegExp(
+  `^(?:•\\s*)?(?:${AMOUNT}\\s*(?:${UNIT})\\b|\\d+\\s*(?:${UNIT})\\b)`,
+  "i"
+);
+
+// Metadata we should skip (but NOT Chef Notes)
+const META_SKIP_RE = /^\s*(author:|serves?\b|yield\b|prep time\b|cook time\b|total time\b|notes?:?)\s*$/i;
+
+// v1.4: fraction normalization + measurement-parenthetical stripping
+const FRACTION_MAP = {
+  "¼":"1/4","½":"1/2","¾":"3/4","⅐":"1/7","⅑":"1/9","⅒":"1/10",
+  "⅓":"1/3","⅔":"2/3","⅕":"1/5","⅖":"2/5","⅗":"3/5","⅘":"4/5",
+  "⅙":"1/6","⅚":"5/6","⅛":"1/8","⅜":"3/8","⅝":"5/8","⅞":"7/8",
+};
+function normalizeFractions(s) {
+  return s.replace(/[¼½¾⅐⅑⅒⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]/g, (m) => FRACTION_MAP[m] || m);
+}
 const UNIT_WORDS = "(?:cup|cups|tbsp|tablespoon|tablespoons|tsp|teaspoon|teaspoons|oz|ounce|ounces|g|gram|grams|kg|ml|l|liter|liters|pound|pounds|lb|lbs)";
-function stripMeasurementParens(s){
-  return s.replace(/\(([^)]*)\)/g,(m,inside)=>{
-    const t=inside.trim();
-    if(/^\s*(?:about|around|approx\.?)?\s*\d+(?:\/\d+)?\s*(?:-?\s*\d+(?:\/\d+)?)?\s*/i.test(t) && new RegExp(UNIT_WORDS,"i").test(t)) {
+function stripMeasurementParens(s) {
+  // remove parentheticals that look like purely measurement/notes e.g., "(about 1/2 cup)", "(7 oz)"
+  return s.replace(/\(([^)]*)\)/g, (m, inside) => {
+    const t = inside.trim();
+    if (/^\s*(?:about|around|approx\.?)?\s*\d+(?:\/\d+)?\s*(?:-?\s*\d+(?:\/\d+)?)?\s*/i.test(t) && new RegExp(UNIT_WORDS,"i").test(t)) {
       return "";
     }
-    return m;
+    return m; // keep descriptive ones
   });
 }
+
 function cleanLine(line) {
   return normalizeFractions(
     stripMeasurementParens(
       line
+        // drop section headers
         .replace(/^ingredients[:]?$/i, "")
         .replace(/^For the .*?:\s*/i, "")
+        // drop "Step X" markers
         .replace(/^Step\s*\d+[:.]?\s*/i, "")
     )
   ).trim();
 }
 
-/* ---------------------- Chef Notes detection ---------------------- */
-// Leading-note formats: "Note:", "- Note:", "* note:"
-const NOTE_LEAD_RE = /^\s*(?:[-*]\s*)?note[:.]\s*/i;
-// Inline “— Note: …” suffixes: keep only the note text for the note object
-const NOTE_INLINE_SPLIT_RE = /\s+[—-]\s*note[:.]\s*/i;
+/* -------------------------- Chef Notes helpers -------------------------- */
 
-function isChefNoteLine(original) {
-  if (!original) return false;
-  if (NOTE_LEAD_RE.test(original)) return true;
-  if (NOTE_INLINE_SPLIT_RE.test(original)) return true;
-  return false;
-}
-function extractNoteText(original) {
-  if (!original) return "";
-  if (NOTE_LEAD_RE.test(original)) return original.replace(NOTE_LEAD_RE, "").trim();
-  const parts = original.split(NOTE_INLINE_SPLIT_RE);
-  return parts.length > 1 ? parts[1].trim() : original.trim();
+// Standalone note detector (do NOT strip its label)
+const NOTE_LINE_RE = /^\s*(?:[-*]\s*)?note\s*[:.]\s*/i;
+// Inline split marker: em dash/en dash/hyphen before Note:
+const NOTE_INLINE_SPLIT_RE = /\s*[—–-]\s*Note\s*[:.]\s*/i;
+
+function isChefNoteLine(line) {
+  return NOTE_LINE_RE.test(line);
 }
 
-/* -------------------------- Phase 1.5 splitter -------------------------- */
+/* -------------------------- Prefilter (with notes) -------------------------- */
+
+function prefilterLines(rawText) {
+  const src = rawText.split(/\r?\n/);
+  let inIngredients = false;
+  let seenDirections = false;
+
+  const out = [];
+  for (let raw of src) {
+    let line = normalizeText(raw);
+    if (!line) continue;
+
+    // 1) Keep Chef Notes BEFORE any meta/ingredient filtering
+    if (isChefNoteLine(line)) {
+      // normalize leading bullet "Note:" forms to "Note: ..."
+      const norm = line.replace(NOTE_LINE_RE, "Note: ").trim();
+      out.push(norm);
+      continue;
+    }
+
+    // 2) Meta/section handling
+    if (META_SKIP_RE.test(line)) continue;
+
+    if (SECTION_START_ING.test(line)) { inIngredients = true; continue; }
+    if (SECTION_START_DIRS.test(line)) { inIngredients = false; seenDirections = true; continue; }
+
+    if (inIngredients || (!seenDirections && ING_LIKE_RE.test(line))) continue;
+    if (/^•\s+/.test(line) && ING_LIKE_RE.test(line)) continue;
+
+    // 3) Inline note split: "… — Note: …"
+    if (NOTE_INLINE_SPLIT_RE.test(line)) {
+      const [actionPart, notePart] = line.split(NOTE_INLINE_SPLIT_RE);
+      let action = stripStepPrefix(actionPart);
+      action = coerceDurationSuffix(action);
+      action = cleanLine(action);
+      if (action && !/^step\s*\d+\s*$/i.test(action)) out.push(action);
+
+      const noteLine = `Note: ${notePart.trim()}`;
+      if (notePart.trim()) out.push(noteLine);
+      continue;
+    }
+
+    // 4) Normal non-note line cleanup
+    line = stripStepPrefix(line);
+    line = coerceDurationSuffix(line);
+    if (!line || /^step\s*\d+\s*$/i.test(line)) continue;
+
+    line = cleanLine(line);
+    out.push(line);
+  }
+
+  return out.length ? out : src.map((l) => l.trim()).filter(Boolean);
+}
+
+/* -------------------------- Phase 1.5 action explosion -------------------------- */
+
+// Split a line into action-sized steps, avoiding splits inside (...) and after common abbreviations.
+// Do NOT split Chef Note lines.
 function explodeActions(lines) {
   const out = [];
   const ABBRV = /(?:e\.g|i\.e|approx|vs|min|hr|hrs)\.$/i;
@@ -181,27 +286,49 @@ function explodeActions(lines) {
   for (let raw of lines) {
     if (!raw) continue;
 
-    // Don't split notes; push as-is and continue
-    if (isChefNoteLine(raw)) { out.push(raw); continue; }
+    // 0) Never split notes
+    if (isChefNoteLine(raw)) {
+      out.push(raw);
+      continue;
+    }
 
-    // Mask (...) so we don't split inside them
+    // Mask (...) so we don’t split inside them.
     const masks = [];
-    let masked = "", depth = 0, buf = "";
+    let masked = "";
+    let depth = 0, buf = "";
     for (let i = 0; i < raw.length; i++) {
       const ch = raw[i];
-      if (ch === "(") { if (depth === 0 && buf) { masked += buf; buf = ""; } depth++; buf += ch; }
-      else if (ch === ")") { buf += ch; depth = Math.max(0, depth - 1); if (depth === 0) { const token = `@@P${masks.length}@@`; masks.push(buf); masked += token; buf = ""; } }
-      else { if (depth > 0) buf += ch; else masked += ch; }
+      if (ch === "(") {
+        if (depth === 0 && buf) { masked += buf; buf = ""; }
+        depth++;
+        buf += ch;
+      } else if (ch === ")") {
+        buf += ch;
+        depth = Math.max(0, depth - 1);
+        if (depth === 0) {
+          const token = `@@P${masks.length}@@`;
+          masks.push(buf);
+          masked += token;
+          buf = "";
+        }
+      } else {
+        if (depth > 0) buf += ch;
+        else masked += ch;
+      }
     }
-    if (buf) masked += buf;
+    if (buf) masked += buf; // any remainder
 
+    // Split on ., ;, " then ", " and then "
     const parts = masked
       .split(/(?:\.\s+|;\s+|\s+(?:and\s+then|then)\s+)/i)
       .map((p) => p.trim())
       .filter(Boolean);
 
-    const unmasked = parts.map((p) => p.replace(/@@P(\d+)@@/g, (m, idx) => masks[Number(idx)] || ""));
+    const unmasked = parts.map((p) =>
+      p.replace(/@@P(\d+)@@/g, (m, idx) => masks[Number(idx)] || "")
+    );
 
+    // Merge too-short tail fragments back into previous
     const merged = [];
     for (const p of unmasked) {
       const segment = p.replace(/\s+/g, " ").trim();
@@ -221,40 +348,6 @@ function explodeActions(lines) {
   return out;
 }
 
-/* -------------------------- Prefilter pipeline -------------------------- */
-function prefilterLines(rawText) {
-  const src = rawText.split(/\r?\n/);
-  let inIngredients = false;
-  let seenDirections = false;
-
-  const out = [];
-  for (let raw of src) {
-    let line = normalizeText(raw);
-    if (!line) continue;
-    if (META_SKIP_RE.test(line)) continue;
-
-    if (SECTION_START_ING.test(line)) { inIngredients = true; continue; }
-    if (SECTION_START_DIRS.test(line)) { inIngredients = false; seenDirections = true; continue; }
-
-    if (inIngredients || (!seenDirections && ING_LIKE_RE.test(line))) continue;
-    if (/^•\s+/.test(line) && ING_LIKE_RE.test(line)) continue;
-
-    // Preserve notes here (do NOT coerce duration or strip them)
-    if (isChefNoteLine(line)) { out.push(line); continue; }
-
-    line = stripStepPrefix(line);
-    line = coerceDurationSuffix(line);
-
-    if (!line || /^step\s*\d+\s*$/i.test(line)) continue;
-
-    // Final polish (without removing "Note:" now)
-    line = cleanLine(line);
-    out.push(line);
-  }
-
-  return out.length ? out : src.map((l) => l.trim()).filter(Boolean);
-}
-
 /* --------------------------------------------------------------------- */
 
 export default function AuthoringPanel({ onLoadMeal }) {
@@ -264,37 +357,37 @@ export default function AuthoringPanel({ onLoadMeal }) {
   const [title, setTitle] = useState("");
   const [autoDeps, setAutoDeps] = useState(true);
   const [roundAbout, setRoundAbout] = useState(true);
-  const [useOntology, setUseOntology] = useState(false);
+  const [useOntology, setUseOntology] = useState(false); // reserved; UI toggle only for now
   const [preview, setPreview] = useState([]);
 
+  // Prefilter lines (incl. notes), then explode into actions (notes untouched)
   const rows = useMemo(() => {
     const base = prefilterLines(text);
     return explodeActions(base);
   }, [text]);
 
   async function importFromUrlOrHtml() {
-    const packs = await getPacks();
+    const packs = await getPacks(); // reserved for future pack-aware transforms
     const draft = await ingestFromUrlOrHtml(text, packs);
-    setText(draft);
+    setText(draft); // preview table reacts via rows
   }
 
-  // Chef notes: never parsed for verb/duration; flagged with is_note + note_text
-  async function parseLines() {
+  function parseLines() {
     const tasks = rows.map((raw, idx) => {
-      const isNote = isChefNoteLine(raw);
-      const line = isNote ? extractNoteText(raw) : cleanLine(raw);
+      const is_note = isChefNoteLine(raw);
+      const line = is_note ? raw.replace(NOTE_LINE_RE, "").trim() : cleanLine(raw);
 
-      if (isNote) {
+      // Note rows become non-blocking, zero-duration info items
+      if (is_note) {
         return {
           id: `draft_${idx + 1}`,
-          is_note: true,
-          note_text: line,
-          name: line,                // preview renders italics
-          canonical_verb: "free_text",
+          name: line,
+          canonical_verb: "note",
           duration_min: null,
           planned_min: null,
           requires_driver: false,
-          self_running_after_start: false,
+          self_running_after_start: true,
+          is_note: true,
           inputs: [],
           outputs: [],
           edges: [],
@@ -303,8 +396,14 @@ export default function AuthoringPanel({ onLoadMeal }) {
 
       const vMeta = findVerbSmart(line);
       const verb = vMeta?.name || "free_text";
-      const rawDur = parseDurationMin(line);
-      const durMin = roundAbout ? rawDur : parseDurationMin(line);
+      let durMin = parseDurationMin(line);
+
+      // Optional rounding for “about/approx/range”
+      if (roundAbout && durMin != null) {
+        // gentle round up to next whole minute (already is), keep as-is
+        durMin = Math.max(1, Math.round(durMin));
+      }
+
       const planned_min = durMin ?? vMeta?.default_planned ?? DEFAULTS_BY_VERB[verb] ?? null;
 
       return {
@@ -315,6 +414,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
         planned_min,
         requires_driver: vMeta ? vMeta.attention === "attended" : true,
         self_running_after_start: vMeta ? vMeta.attention === "unattended_after_start" : false,
+        is_note: false,
         inputs: [],
         outputs: [],
         edges: [],
@@ -323,22 +423,15 @@ export default function AuthoringPanel({ onLoadMeal }) {
 
     if (autoDeps) {
       for (let i = 1; i < tasks.length; i++) {
-        // Don’t chain a dependency from or to a note
-        if (tasks[i]?.is_note || tasks[i - 1]?.is_note) continue;
-        tasks[i].edges.push({ from: tasks[i - 1].id, type: "FS" });
+        // Don’t chain a note as a hard dependency
+        if (tasks[i].is_note) continue;
+        const prev = tasks[i - 1];
+        if (prev && !prev.is_note) {
+          tasks[i].edges.push({ from: prev.id, type: "FS" });
+        }
       }
     }
-
-    try {
-      const upgraded =
-        useOntology && tasks.some((t) => !t.is_note)
-          ? await upgradeTasksViaOntology(tasks)
-          : tasks;
-      setPreview(upgraded);
-    } catch (err) {
-      console.warn("Ontology upgrade failed; using raw tasks.", err);
-      setPreview(tasks);
-    }
+    setPreview(tasks);
   }
 
   function loadAsMeal() {
@@ -353,16 +446,23 @@ export default function AuthoringPanel({ onLoadMeal }) {
   }
 
   return (
-    <div style={{ border: "1px solid #ddd", borderRadius: 12, padding: 12, background: "#ffe7b3" }}>
+    <div
+      style={{
+        border: "1px solid #ddd",
+        borderRadius: 12,
+        padding: 12,
+        background: "#ffe7b3", // authoring panel color
+      }}
+    >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ fontWeight: 700 }}>Author Ingestion (v1.6.5)</div>
+        <div style={{ fontWeight: 700 }}>Author Ingestion (v1.6.6)</div>
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={parseLines}>Parse → Draft</button>
           <button onClick={loadAsMeal}>Load into Preview</button>
         </div>
       </div>
 
-      {/* TOP ROW */}
+      {/* TOP ROW — responsive 2-column grid (stacks on narrow widths) */}
       <div
         style={{
           display: "grid",
@@ -412,21 +512,42 @@ export default function AuthoringPanel({ onLoadMeal }) {
               background: "#fff",
             }}
           />
-          <div style={{ fontSize: 14, color: "#4b5563", lineHeight: 1.5, marginBottom: 10 }}>
+          <div
+            style={{
+              fontSize: 14,
+              color: "#4b5563",
+              lineHeight: 1.5,
+              marginBottom: 10,
+            }}
+          >
             Tip: durations like “— 3 min” are optional — packs provide sensible defaults per verb.
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
             <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <input type="checkbox" checked={autoDeps} onChange={(e) => setAutoDeps(e.target.checked)} />
+              <input
+                type="checkbox"
+                checked={autoDeps}
+                onChange={(e) => setAutoDeps(e.target.checked)}
+              />
               Auto-create sequential dependencies (FS)
             </label>
+
             <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <input type="checkbox" checked={roundAbout} onChange={(e) => setRoundAbout(e.target.checked)} />
+              <input
+                type="checkbox"
+                checked={roundAbout}
+                onChange={(e) => setRoundAbout(e.target.checked)}
+              />
               Round “about/approx/range” durations up
             </label>
-            <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <input type="checkbox" checked={useOntology} onChange={(e) => setUseOntology(e.target.checked)} />
+
+            <label title="Prototype only — not used yet" style={{ display: "flex", alignItems: "center", gap: 8, opacity: 0.8 }}>
+              <input
+                type="checkbox"
+                checked={useOntology}
+                onChange={(e) => setUseOntology(e.target.checked)}
+              />
               (Experimental) Upgrade verbs via ontology
             </label>
 
@@ -450,34 +571,30 @@ export default function AuthoringPanel({ onLoadMeal }) {
             </tr>
           </thead>
           <tbody>
-            {(preview.length ? preview : rows.map((line, i) => ({ name: line, _row: i })) ).map((t, i) => {
+            {(preview.length ? preview : rows.map((line, i) => ({ name: line, _row: i, is_note: isChefNoteLine(line) })) ).map((t, i) => {
               const idx = i + 1;
-
-              const isNote = t.is_note === true || isChefNoteLine(t.name);
-              const verb = isNote
+              const isNote = t.is_note === true || isChefNoteLine(t.name || t);
+              const resolvedVerb = isNote
                 ? "🗒️ note"
                 : (t.canonical_verb || findVerbByPack(t.name)?.name || "free_text");
-
-              const planned = isNote ? "" : (t.planned_min ?? DEFAULTS_BY_VERB[verb] ?? "");
-              const attention = isNote
-                ? ""
-                : t.requires_driver != null
-                  ? (t.requires_driver ? "attended" : "unattended")
-                  : (findVerbByPack(t.name)?.attention === "unattended_after_start" ? "unattended" : "attended");
-              const dep = t.edges?.[0]?.from && !isNote
-                ? `#${Number(String(t.edges[0].from).split("_").pop())}`
-                : "—";
-
+              const planned = isNote ? "—" : (t.planned_min ?? DEFAULTS_BY_VERB[resolvedVerb] ?? "");
+              const attention =
+                isNote
+                  ? "—"
+                  : (t.requires_driver != null
+                      ? t.requires_driver ? "attended" : "unattended"
+                      : (findVerbByPack(t.name)?.attention === "unattended_after_start" ? "unattended" : "attended"));
+              const dep = t.edges?.[0]?.from ? `#${Number(String(t.edges[0].from).split("_").pop())}` : "—";
               return (
                 <tr key={idx} style={{ background: i % 2 ? "rgba(255,255,255,0.45)" : "transparent" }}>
                   <td style={td}>{idx}</td>
-                  <td style={{ ...td, fontStyle: isNote ? "italic" : "normal", opacity: isNote ? 0.9 : 1 }}>
-                    {t.name || t}
-                  </td>
-                  <td style={td}>{verb}</td>
+                  <td style={td}>{t.name || t}</td>
+                  <td style={td}>{resolvedVerb}</td>
                   <td style={td}>{planned || "—"}</td>
                   <td style={td}>
-                    {attention ? (
+                    {isNote ? (
+                      <span style={{ fontSize: 12, color: "#6b7280" }}>—</span>
+                    ) : (
                       <span
                         style={{
                           padding: "2px 8px",
@@ -489,7 +606,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
                       >
                         {attention}
                       </span>
-                    ) : "—"}
+                    )}
                   </td>
                   <td style={td}>{dep}</td>
                 </tr>
