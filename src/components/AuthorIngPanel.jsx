@@ -1,15 +1,13 @@
-/* AuthoringPanel.jsx — v1.5.0 (Phase 1.5)
-   Adds action-level sentence trimming to v1.4:
-     • Splits long direction lines into smaller “action” lines.
-     • Splits on ".", ";", and “then/and then” — but NOT inside (…) and not after common abbreviations.
-     • Merges tiny tail fragments back if they’re too short to stand alone.
-   Keeps previous phases:
-     • Skip INGREDIENTS and ingredient-like lines
-     • Ignore common meta (Author/Serves/Prep/Cook/Notes)
-     • Normalize bullets/dashes; strip "Step X" prefixes
-     • Coerce “for 5 minutes / 1 hour” → append “— X min”
-     • Normalize unicode fractions (½ → 1/2) and strip measurement-y parentheticals only
-     • Safe verb detection (pack patterns, then light heuristics)
+/* AuthoringPanel.jsx — v1.6.0 (Phase 1.6)
+   Builds on v1.5:
+     • Adds task.note extraction (keeps non-measurement parentheticals / afterthought tips).
+     • Adds task.duration_estimated when line uses approximate words or a range.
+     • Rounds approximate minutes UP; ranges still use the high end.
+   Preserves Phase 1.5:
+     • Prefilter: skip INGREDIENTS/meta, normalize, coerce “for X minutes” → “— X min”, fraction normalization,
+       measurement-parenthetical stripping, safe verb detection.
+     • Action splitting: ".", ";", “then/and then” (not inside (...), not after common abbrevs), short-tail merge.
+   UI unchanged (Parse button; no notes UI yet).
 */
 /* eslint-disable */
 import React, { useMemo, useState } from "react";
@@ -100,30 +98,39 @@ function findVerbSmart(text) {
 const toDurationObj = (min) => (min == null ? null : { value: min });
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 
-// Parse explicit "— 5 min" / "3-5 minutes" / "~10 min" suffixes
-function parseDurationMin(input) {
-  if (!input) return null;
+/* ---------------- Duration parsing & approximation flags ---------------- */
+
+// Parse explicit "— 5 min" / "3-5 minutes" / "~10 min" suffixes.
+// Also return a boolean for whether it looked approximate/ranged.
+function parseDurationMinWithMeta(input) {
+  if (!input) return { minutes: null, estimated: false };
   const s = String(input).toLowerCase().replace(/[–—]/g, "-"); // normalize dashes
+
+  const approxWord = /(?:~|about|approx(?:\.|imately)?|around)/i;
 
   // Range: "3-5 min", "3 to 5 minutes"
   const range = s.match(
-    /(?:~|about|approx(?:\.|imately)?|around)?\s*(\d{1,4})\s*(?:-|to)\s*(\d{1,4})\s*(?:m(?:in(?:ute)?s?)?)\b/
+    new RegExp(
+      "(?:~|about|approx(?:\\.|imately)?|around)?\\s*(\\d{1,4})\\s*(?:-|to)\\s*(\\d{1,4})\\s*(?:m(?:in(?:ute)?s?)?)\\b"
+    )
   );
   if (range) {
     const hi = parseInt(range[2], 10);
-    return clamp(isNaN(hi) ? 0 : hi, 1, 24 * 60);
+    return { minutes: clamp(isNaN(hi) ? 0 : hi, 1, 24 * 60), estimated: true };
   }
 
   // Single value: "~3 min", "about 10 minutes", "5m"
   const single = s.match(
-    /(?:~|about|approx(?:\.|imately)?|around)?\s*(\d{1,4})\s*(?:m(?:in(?:ute)?s?)?)\b/
+    /((?:~|about|approx(?:\.|imately)?|around)\s*)?(\d{1,4})\s*(?:m(?:in(?:ute)?s?)?)\b/
   );
   if (single) {
-    const v = parseInt(single[1], 10);
-    return clamp(isNaN(v) ? 0 : v, 1, 24 * 60);
+    const approx = !!single[1];
+    const v = parseInt(single[2], 10);
+    const minutes = clamp(isNaN(v) ? 0 : v, 1, 24 * 60);
+    return { minutes: approx ? Math.ceil(minutes) : minutes, estimated: approx };
   }
 
-  return null;
+  return { minutes: null, estimated: false };
 }
 
 /* -------------------------- Phase 1.1 helpers -------------------------- */
@@ -313,13 +320,52 @@ function explodeActions(lines) {
         out.push(raw); // fallback to original line if it looks like we broke after an abbreviation
         break;
       } else {
-        // Add a final period back if the source had it and it reads like a sentence
-        const s = /[.?!]\s*$/.test(seg) ? seg : seg;
-        out.push(s);
+        out.push(seg);
       }
     }
   }
   return out;
+}
+
+/* -------------------------- Phase 1.6 helpers -------------------------- */
+
+// Extract non-measurement notes AFTER cleanLine.
+// 1) Parenthetical note: keep content as note and drop it from the main instruction.
+// 2) Afterthought after em dash that is NOT the timing suffix (e.g., “— 5 min”).
+//    Example: “Stir constantly — be careful not to brown — 3 min” → note: “be careful not to brown”.
+function extractNoteFromCleanLine(line) {
+  let note = null;
+  let main = line;
+
+  // Parenthetical note (keep only if not empty after stripping)
+  const paren = main.match(/\(([^)]+)\)/);
+  if (paren) {
+    const content = paren[1].trim();
+    if (content) {
+      note = content;
+      main = main.replace(/\([^)]*\)/g, "").replace(/\s{2,}/g, " ").trim();
+    }
+  }
+
+  // Em-dash afterthoughts (but ignore the trailing "— N min" duration)
+  // Capture middle segments between em-dashes that contain advisory words.
+  const parts = main.split("—").map(s => s.trim()).filter(Boolean);
+  if (parts.length >= 2) {
+    // If the last part is clearly a duration, ignore it for notes.
+    const lastIsDuration = /^\d+\s*min(?:utes?)?$/i.test(parts[parts.length - 1]);
+    const middle = parts.slice(1, lastIsDuration ? -1 : undefined); // after the first, before duration
+    const advisory = middle.find(p => /(be careful|avoid|optional|if needed|watch|tip:|note:|to taste)/i.test(p));
+    if (advisory) {
+      note = note ? `${note}; ${advisory.replace(/^(tip|note)[:.]\s*/i,"")}` : advisory.replace(/^(tip|note)[:.]\s*/i,"");
+      // remove that advisory chunk from main
+      const rebuilt = [parts[0], ...parts.slice(1).filter(p => p !== advisory)];
+      main = rebuilt.join(" — ").trim();
+    }
+  }
+
+  // Tidy duplicate spaces and stray punctuation
+  main = main.replace(/\s{2,}/g, " ").replace(/\s+([,;:.])/g, "$1").trim();
+  return { main, note };
 }
 
 /* --------------------------------------------------------------------- */
@@ -346,20 +392,28 @@ export default function AuthoringPanel({ onLoadMeal }) {
 
   function parseLines() {
     const tasks = rows.map((raw, idx) => {
-      const line = cleanLine(raw);
-      const vMeta = findVerbSmart(line);
+      // Clean again (idempotent), then extract note
+      const cleaned = cleanLine(raw);
+      const { main, note } = extractNoteFromCleanLine(cleaned);
+
+      const vMeta = findVerbSmart(main);
       const verb = vMeta?.name || "free_text";
-      const durMin = parseDurationMin(line);
-      const planned_min = durMin ?? vMeta?.default_planned ?? DEFAULTS_BY_VERB[verb] ?? null;
+
+      const { minutes, estimated } = parseDurationMinWithMeta(main);
+      const planned_min = (minutes != null)
+        ? minutes
+        : (vMeta?.default_planned ?? DEFAULTS_BY_VERB[verb] ?? null);
 
       return {
         id: `draft_${idx + 1}`,
-        name: line.replace(/\s*—\s*\d+\s*min(?:utes?)?$/i, ""),
+        name: main.replace(/\s*—\s*\d+\s*min(?:utes?)?$/i, ""),
         canonical_verb: verb,
-        duration_min: toDurationObj(durMin),
+        duration_min: toDurationObj(minutes),
         planned_min,
         requires_driver: vMeta ? vMeta.attention === "attended" : true,
         self_running_after_start: vMeta ? vMeta.attention === "unattended_after_start" : false,
+        note: note || null,
+        duration_estimated: !!estimated,
         inputs: [],
         outputs: [],
         edges: [],
@@ -395,7 +449,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ fontWeight: 700 }}>Author Ingestion (v1.5)</div>
+        <div style={{ fontWeight: 700 }}>Author Ingestion (v1.6)</div>
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={parseLines}>Parse → Draft</button>
           <button onClick={loadAsMeal}>Load into Preview</button>
