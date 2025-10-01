@@ -1,13 +1,8 @@
-/* AuthoringPanel.jsx — v1.2.0 (Phase 1.2)
-   - Auto-title (from first plausible heading) — unchanged from 1.1.2
-   - NEW: Auto-author detection (e.g., "By Jane Doe", "Author: Jane Doe", "Recipe by …")
-   - NEW: Rich duration parsing:
-       * seconds ("30 sec", "45 seconds") → ceil to minutes
-       * composite ("1 hour 30 minutes", "1 hr 15 min")
-       * hour ranges ("1–2 hours", "1 to 2 hrs") → take upper bound
-       * fuzzy words ("a few minutes") → 3 min
-       * "overnight" → 8 hours (480 min)
-   - Keeps pre-ingestion heuristics and URL/HTML import hook
+/* AuthoringPanel.jsx — v1.3.0 (Phase 1.2)
+   - Title detection: prefer the first non-meta, non-ingredient, non-step line near top
+     that doesn't look like an instruction. Auto-fills title if the input is empty.
+   - Ingredient cleaning: if an ingredient-only line slips into steps, drop it at parse.
+   - Keeps Phase 1.1 pre-ingestion heuristics and URL/HTML import hook.
 */
 /* eslint-disable */
 import React, { useEffect, useMemo, useState } from "react";
@@ -98,53 +93,30 @@ function findVerbSmart(text) {
 const toDurationObj = (min) => (min == null ? null : { value: min });
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 
-/* -------------------- Phase 1.2: duration parsing core -------------------- */
-function extractCompositeMinutes(input) {
+// Parse explicit "— 5 min" / "3-5 minutes" / "~10 min" suffixes
+function parseDurationMin(input) {
   if (!input) return null;
-  const s = String(input).toLowerCase().replace(/[–—]/g, "-");
+  const s = String(input).toLowerCase().replace(/[–—]/g, "-"); // normalize dashes
 
-  // "overnight"
-  if (/\bover\s*night\b/.test(s) || /\bovernight\b/.test(s)) return 480; // 8h default
-
-  // "a few minutes"
-  if (/\ba\s+few\s+minutes?\b/.test(s)) return 3;
-
-  // seconds → ceil to minutes
-  const sec = s.match(/(\d{1,4})\s*(?:sec(?:onds?)?)\b/);
-  if (sec) return clamp(Math.ceil(parseInt(sec[1], 10) / 60), 1, 24 * 60);
-
-  // composite hours + minutes (order-insensitive)
-  const hm = s.match(/(\d+(?:\.\d+)?)\s*(?:hours?|hrs?)\b(?:[^0-9]{0,10}(\d{1,2})\s*(?:m(?:in(?:ute)?s?)?)\b)?/);
-  if (hm) {
-    const h = parseFloat(hm[1]);
-    const m = hm[2] ? parseInt(hm[2], 10) : 0;
-    return clamp(Math.round(h * 60 + m), 1, 24 * 60);
-  }
-
-  // hour range: "1-2 hours", "1 to 2 hrs" → take upper bound
-  const hrRange = s.match(/(\d+(?:\.\d+)?)\s*(?:-|to)\s*(\d+(?:\.\d+)?)\s*(?:hours?|hrs?)\b/);
-  if (hrRange) {
-    const hi = parseFloat(hrRange[2]);
-    return clamp(Math.round(hi * 60), 1, 24 * 60);
-  }
-
-  // minute range: "3-5 min" / "3 to 5 minutes"
-  const mRange = s.match(/(?:~|about|approx(?:\.|imately)?|around)?\s*(\d{1,4})\s*(?:-|to)\s*(\d{1,4})\s*(?:m(?:in(?:ute)?s?)?)\b/);
-  if (mRange) {
-    const hi = parseInt(mRange[2], 10);
+  // Range: "3-5 min", "3 to 5 minutes"
+  const range = s.match(
+    /(?:~|about|approx(?:\.|imately)?|around)?\s*(\d{1,4})\s*(?:-|to)\s*(\d{1,4})\s*(?:m(?:in(?:ute)?s?)?)\b/
+  );
+  if (range) {
+    const hi = parseInt(range[2], 10);
     return clamp(isNaN(hi) ? 0 : hi, 1, 24 * 60);
   }
 
-  // single minutes: "~10 min", "about 5 minutes", "5m"
-  const singleM = s.match(/(?:~|about|approx(?:\.|imately)?|around)?\s*(\d{1,4})\s*(?:m(?:in(?:ute)?s?)?)\b/);
-  if (singleM) return clamp(parseInt(singleM[1], 10), 1, 24 * 60);
+  // Single value: "~3 min", "about 10 minutes", "5m"
+  const single = s.match(
+    /(?:~|about|approx(?:\.|imately)?|around)?\s*(\d{1,4})\s*(?:m(?:in(?:ute)?s?)?)\b/
+  );
+  if (single) {
+    const v = parseInt(single[1], 10);
+    return clamp(isNaN(v) ? 0 : v, 1, 24 * 60);
+  }
 
   return null;
-}
-
-// Parse explicit durations in the line
-function parseDurationMin(input) {
-  return extractCompositeMinutes(input);
 }
 
 /* -------------------------- Phase 1.1 helpers -------------------------- */
@@ -163,11 +135,20 @@ function stripStepPrefix(s) {
   return s.replace(/^\s*step\s*\d+\s*[:.\-\u2013\u2014]\s*/i, "");
 }
 
-// Coerce "for 5 minutes" / "about 1 hour" / "30 sec" / "overnight" → append "— X min"
+// Coerce "for 5 minutes" / "about 1 hour" → append "— X min"
 function coerceDurationSuffix(s) {
   let line = s;
-  const min = extractCompositeMinutes(line);
-  if (min && !/—\s*\d+\s*min/i.test(line)) line = `${line} — ${min} min`;
+  let min = null;
+
+  const hr = line.match(/(\d+(?:\.\d+)?)\s*(?:hours?|hrs?)\b/i);
+  const mn = line.match(/(\d+(?:\.\d+)?)\s*(?:minutes?|mins?)\b/i);
+
+  if (hr) min = Math.round(parseFloat(hr[1]) * 60);
+  if (mn) min = (min ?? 0) + Math.round(parseFloat(mn[1]));
+
+  if (min && !/—\s*\d+\s*min/i.test(line)) {
+    line = `${line} — ${min} min`;
+  }
   return line;
 }
 
@@ -179,6 +160,12 @@ const UNIT = "(cups?|cup|tbsp|tablespoons?|tsp|teaspoons?|oz|ounce|ounces|g|gram
 const AMOUNT = "(?:\\d+\\/\\d+|\\d+(?:\\.\\d+)?)";
 const ING_LIKE_RE = new RegExp(
   `^(?:•\\s*)?(?:${AMOUNT}\\s*(?:${UNIT})\\b|\\d+\\s*(?:${UNIT})\\b)`,
+  "i"
+);
+
+// Also consider "x of y" forms common in ingredients
+const ING_ONLY_LINE = new RegExp(
+  `^(?:•\\s*)?(?:${AMOUNT}\\s*(?:${UNIT})\\b.*|\\d+\\s*(?:${UNIT})\\b.*|[\\d/]+\\s+of\\s+.+)$`,
   "i"
 );
 
@@ -236,30 +223,60 @@ function prefilterLines(rawText) {
   return out.length ? out : src.map((l) => l.trim()).filter(Boolean);
 }
 
-/* ----------------------- Title & Author detection ----------------------- */
+/* -------------------- Title detection (Phase 1.2) -------------------- */
 
-// Title guess: first non-empty non-meta, not ingredients/directions
-function guessTitle(rawText) {
-  const lines = rawText.split(/\r?\n/).map((l) => normalizeText(l));
-  for (const l of lines) {
-    if (!l) continue;
-    if (SECTION_START_ING.test(l) || SECTION_START_DIRS.test(l) || META_SKIP_RE.test(l)) continue;
-    // Avoid obvious steps
-    if (/^(step\s*\d+|directions?|method|instructions?)\b/i.test(l)) continue;
-    // Likely a heading (short and Title Case-ish)
-    if (l.length <= 80 && /[A-Za-z]/.test(l)) return l.replace(/^\W+|\W+$/g, "");
+const LEAD_PUNCT = /^[•\-\u2013\u2014\s]+/;
+const STEPISH_RE = /^(?:\d+[\).\s-]|step\s*\d+\b)/i;
+
+// Looks like an instruction if it has a known verb pattern early.
+function isLikelyInstruction(s) {
+  if (!s) return false;
+  if (STEPISH_RE.test(s)) return true;
+  const low = s.toLowerCase();
+  // quick hit: starts with imperative verb tokens
+  if (/^(add|stir|mix|whisk|saute|sauté|cook|bring|simmer|season|drain|serve|plate|preheat|bake|roast)\b/i.test(low)) {
+    return true;
   }
-  return "";
+  // pack-based confirmation (cheap pass)
+  return !!findVerbSmart(s);
 }
 
-function guessAuthor(rawText) {
-  const s = rawText;
-  // Patterns: "By Jane Doe", "Recipe by Jane Doe", "Author: Jane Doe"
-  const m1 = s.match(/\b(?:by|recipe by)\s+([A-Z][\w'.-]+(?:\s+[A-Z][\w'.-]+){0,4})\b/i);
-  if (m1) return m1[1].trim();
-  const m2 = s.match(/\bauthor\s*:\s*([A-Z][\w'.-]+(?:\s+[A-Z][\w'.-]+){0,4})\b/i);
-  if (m2) return m2[1].trim();
-  return "";
+function scoreTitleCandidate(line) {
+  // prefer medium-length lines without terminal period
+  const len = line.length;
+  let score = 0;
+  if (len >= 8 && len <= 80) score += 2;
+  if (!/[.!?]\s*$/.test(line)) score += 1;
+  // Prefer Title Case / Caps
+  if (/^[A-Z][^a-z]+$/.test(line) || /\b[A-Z][a-z]+\b/.test(line)) score += 1;
+  // Penalize commas (often ingredient fragments)
+  if (/,/.test(line)) score -= 1;
+  return score;
+}
+
+function detectTitleFromText(rawText) {
+  const lines = rawText.split(/\r?\n/).map((l) => normalizeText(l).replace(LEAD_PUNCT, "")).filter(Boolean);
+  const MAX_SCAN = 12; // look only near the top
+  let best = null;
+  let bestScore = -Infinity;
+
+  for (let i = 0; i < Math.min(lines.length, MAX_SCAN); i++) {
+    const l = lines[i];
+
+    // skip obvious non-title lines
+    if (META_SKIP_RE.test(l)) continue;
+    if (SECTION_START_ING.test(l) || SECTION_START_DIRS.test(l)) continue;
+    if (ING_LIKE_RE.test(l) || ING_ONLY_LINE.test(l)) continue;
+    if (isLikelyInstruction(l)) continue;
+
+    const cand = l.replace(/\s*[–—-]\s*$/g, "").trim();
+    const score = scoreTitleCandidate(cand);
+    if (score > bestScore) {
+      best = cand;
+      bestScore = score;
+    }
+  }
+  return best || "";
 }
 
 /* --------------------------------------------------------------------- */
@@ -269,39 +286,41 @@ export default function AuthoringPanel({ onLoadMeal }) {
     "Slice garlic and parsley; set out chili flakes — 3 min\nBring a large pot of water to a boil — 10 min\n…"
   );
   const [title, setTitle] = useState("");
-  const [authorGuess, setAuthorGuess] = useState("");
   const [autoDeps, setAutoDeps] = useState(true);
   const [preview, setPreview] = useState([]);
 
-  // Phase 1.2: prefilter lines for the preview/parser
+  // Phase 1.1: prefilter lines for the preview/parser
   const rows = useMemo(() => prefilterLines(text), [text]);
 
-  // Auto-fill title (if empty) and detect author whenever source text changes
+  // Phase 1.2: auto-fill title if empty and we can detect a good one
   useEffect(() => {
     if (!title) {
-      const g = guessTitle(text);
-      if (g) setTitle(g);
+      const t = detectTitleFromText(text);
+      if (t) setTitle(t);
     }
-    setAuthorGuess(guessAuthor(text) || "");
-  }, [text]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [text, title]);
 
   async function importFromUrlOrHtml() {
     const packs = await getPacks(); // reserved for future pack-aware transforms
     const draft = await ingestFromUrlOrHtml(text, packs);
-    setText(draft); // preview table reacts via rows + useEffect will (re)guess title/author
+    setText(draft); // preview table reacts via rows
   }
 
   function parseLines() {
-    const tasks = rows.map((raw, idx) => {
-      const line = cleanLine(raw);
-      const vMeta = findVerbSmart(line);
+    const tasks = [];
+    rows.forEach((raw, idx) => {
+      const line0 = cleanLine(raw);
+      // Ingredient-only safety net: if this line is just an ingredient, skip it
+      if (ING_ONLY_LINE.test(line0) && !isLikelyInstruction(line0)) return;
+
+      const vMeta = findVerbSmart(line0);
       const verb = vMeta?.name || "free_text";
-      const durMin = parseDurationMin(line);
+      const durMin = parseDurationMin(line0);
       const planned_min = durMin ?? vMeta?.default_planned ?? DEFAULTS_BY_VERB[verb] ?? null;
 
-      return {
-        id: `draft_${idx + 1}`,
-        name: line.replace(/\s*—\s*\d+\s*min(?:utes?)?$/i, ""),
+      tasks.push({
+        id: `draft_${tasks.length + 1}`,
+        name: line0.replace(/\s*—\s*\d+\s*min(?:utes?)?$/i, ""),
         canonical_verb: verb,
         duration_min: toDurationObj(durMin),
         planned_min,
@@ -310,7 +329,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
         inputs: [],
         outputs: [],
         edges: [],
-      };
+      });
     });
 
     if (autoDeps) {
@@ -325,7 +344,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
     if (preview.length === 0) parseLines();
     const meal = {
       title: title || "Untitled Meal",
-      author: { name: authorGuess || "Draft" },
+      author: { name: "Draft" },
       tasks: preview.length ? preview : [],
       packs_meta: {},
     };
@@ -394,16 +413,11 @@ export default function AuthoringPanel({ onLoadMeal }) {
               border: "1px solid #e5e7eb",
               borderRadius: 10,
               padding: "10px 12px",
-              marginBottom: 6,
+              marginBottom: 8,
               boxSizing: "border-box",
               background: "#fff",
             }}
           />
-          {authorGuess && (
-            <div style={{ fontSize: 12, color: "#4b5563", marginBottom: 6 }}>
-              Detected author: <b>{authorGuess}</b>
-            </div>
-          )}
           <div
             style={{
               fontSize: 14,
