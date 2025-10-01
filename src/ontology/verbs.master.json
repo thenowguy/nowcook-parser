@@ -1,0 +1,77 @@
+[
+  {
+    "canonical": "slice",
+    "class": "cutting",
+    "synonyms": ["slice thinly", "slice finely", "cut into slices", "cut into rounds"],
+    "parameters": {
+      "thickness_mm": { "type": "number", "min": 0.1, "max": 50, "optional": true },
+      "shape": { "type": "enum", "values": ["rounds","half-rounds","lengthwise"], "optional": true }
+    },
+    "applicability": {
+      "include_tags": ["vegetable","fruit","cheese","bread","protein"],
+      "exclude_ingredients": ["milk","water","flour"],
+      "notes": "If a liquid, treat as inapplicable."
+    },
+    "defaults": { "planned_min": 3, "attention": "attended" }
+  },
+  {
+    "canonical": "cut into wedges",
+    "class": "cutting",
+    "synonyms": ["wedge", "cut into sixths", "cut into eighths"],
+    "parameters": {
+      "count": { "type": "integer", "min": 2, "max": 16, "optional": true }
+    },
+    "applicability": { "include_tags": ["vegetable","fruit"], "exclude_ingredients": ["leafy-greens"] },
+    "defaults": { "planned_min": 3, "attention": "attended" }
+  },
+  {
+    "canonical": "dice",
+    "class": "cutting",
+    "synonyms": ["chop into cubes","small dice","medium dice","large dice"],
+    "parameters": {
+      "size_mm": { "type": "enum", "values": [3,6,10], "optional": true }
+    },
+    "applicability": { "include_tags": ["vegetable","fruit","protein","cheese"] },
+    "defaults": { "planned_min": 4, "attention": "attended" }
+  },
+  {
+    "canonical": "mince",
+    "class": "cutting",
+    "synonyms": ["finely chop","very finely chop"],
+    "parameters": {},
+    "applicability": { "include_tags": ["aromatic","vegetable","herb","protein"] },
+    "defaults": { "planned_min": 3, "attention": "attended" }
+  },
+  {
+    "canonical": "julienne",
+    "class": "cutting",
+    "synonyms": ["matchsticks"],
+    "parameters": { "size_mm": { "type": "enum", "values": [2,3], "optional": true } },
+    "applicability": { "include_tags": ["vegetable","fruit"] },
+    "defaults": { "planned_min": 4, "attention": "attended" }
+  },
+  {
+    "canonical": "pour",
+    "class": "transfer",
+    "synonyms": ["add liquid","pour in"],
+    "parameters": {},
+    "applicability": { "include_tags": ["liquid"], "exclude_ingredients": ["steak"] },
+    "defaults": { "planned_min": 1, "attention": "attended" }
+  },
+  {
+    "canonical": "sauté",
+    "class": "stovetop",
+    "synonyms": ["saute","pan-fry lightly","cook until translucent","sweat"],
+    "parameters": { "doneness": { "type": "enum", "values": ["translucent","golden","browned"], "optional": true } },
+    "applicability": { "include_tags": ["vegetable","aromatic","protein"] },
+    "defaults": { "planned_min": 8, "attention": "attended" }
+  },
+  {
+    "canonical": "simmer",
+    "class": "stovetop",
+    "synonyms": ["reduce heat to low","cook gently"],
+    "parameters": { "duration_min": { "type": "number", "optional": true } },
+    "applicability": { "include_tags": ["liquid","mixture"] },
+    "defaults": { "planned_min": 15, "attention": "unattended_after_start" }
+  }
+]
