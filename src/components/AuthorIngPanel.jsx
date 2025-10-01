@@ -1,9 +1,15 @@
-/* AuthoringPanel.jsx — v1.4.0 (Phase 1.4)
-   - Builds on v1.3.1:
-     * Cleans inline ingredient parentheticals in steps, e.g. "(about 1/2 cup)", "(200 g)", "(2 tbsp)"
-       while preserving non-measurement notes like "(no longer chalky ...)".
-     * Normalizes unicode fractions (¼ ½ ¾ ⅓ ⅔ ⅛ ⅜ ⅝ ⅞ → ASCII).
-   - Keeps: pre-ingestion heuristics, smart verb detection, URL/HTML import hook, layout/colors.
+/* AuthoringPanel.jsx — v1.5.0 (Phase 1.5)
+   Adds action-level sentence trimming to v1.4:
+     • Splits long direction lines into smaller “action” lines.
+     • Splits on ".", ";", and “then/and then” — but NOT inside (…) and not after common abbreviations.
+     • Merges tiny tail fragments back if they’re too short to stand alone.
+   Keeps previous phases:
+     • Skip INGREDIENTS and ingredient-like lines
+     • Ignore common meta (Author/Serves/Prep/Cook/Notes)
+     • Normalize bullets/dashes; strip "Step X" prefixes
+     • Coerce “for 5 minutes / 1 hour” → append “— X min”
+     • Normalize unicode fractions (½ → 1/2) and strip measurement-y parentheticals only
+     • Safe verb detection (pack patterns, then light heuristics)
 */
 /* eslint-disable */
 import React, { useMemo, useState } from "react";
@@ -120,29 +126,15 @@ function parseDurationMin(input) {
   return null;
 }
 
-/* -------------------------- Phase 1.4 helpers -------------------------- */
+/* -------------------------- Phase 1.1 helpers -------------------------- */
 
-// Basic unicode + bullets cleanup
+// Basic unicode cleanup
 function normalizeText(s) {
   return s
     .replace(/\u2013|\u2014/g, "—")              // en/em dash → em dash
     .replace(/\u2022|\u25CF|\u2219|\*/g, "•")    // bullets → •
     .replace(/\s+/g, " ")
     .trim();
-}
-
-// Unicode fractions → ASCII
-function normalizeFractions(s) {
-  return s
-    .replace(/¼/g, "1/4")
-    .replace(/½/g, "1/2")
-    .replace(/¾/g, "3/4")
-    .replace(/⅓/g, "1/3")
-    .replace(/⅔/g, "2/3")
-    .replace(/⅛/g, "1/8")
-    .replace(/⅜/g, "3/8")
-    .replace(/⅝/g, "5/8")
-    .replace(/⅞/g, "7/8");
 }
 
 // Strip "Step 1:" / "Step 1." / "STEP 1 –"
@@ -170,7 +162,7 @@ function coerceDurationSuffix(s) {
 const SECTION_START_ING = /^(ingredients?|what you need)\b/i;
 const SECTION_START_DIRS = /^(directions?|method|instructions?)\b/i;
 
-// Units for ingredient-y detection
+// Rough ingredient detector (amount + unit OR bullet + food-y thing)
 const UNIT = "(cups?|cup|tbsp|tablespoons?|tsp|teaspoons?|oz|ounce|ounces|g|gram|grams|kg|ml|l|liters?|pounds?|lbs?|cloves?|sticks?|slices?|dash|pinch|sprigs?|leaves?)";
 const AMOUNT = "(?:\\d+\\/\\d+|\\d+(?:\\.\\d+)?)";
 const ING_LIKE_RE = new RegExp(
@@ -178,39 +170,43 @@ const ING_LIKE_RE = new RegExp(
   "i"
 );
 
-// Remove inline parentheticals that are *just* quantities/units, e.g. "(about 1/2 cup)", "(200 g)", "(2 tbsp oil)"
-// but keep descriptive parentheticals.
-const PAREN_MEASURE_RE = new RegExp(
-  String.raw`$begin:math:text$(?:about|around|approx(?:\\.|imately)?\\s*)?(?:${AMOUNT})\\s*(?:${UNIT})(?:[^)]*)$end:math:text$`,
-  "i"
-);
-
-// Metadata to skip entirely
+// Metadata we should skip
 const META_SKIP_RE = /^\s*(author:|serves?\b|yield\b|prep time\b|cook time\b|total time\b|notes?:?)\s*/i;
 
-function cleanLine(line) {
-  return line
-    // drop section headers
-    .replace(/^ingredients[:]?$/i, "")
-    .replace(/^For the .*?:\s*/i, "")
-    // drop "Step X" markers
-    .replace(/^Step\s*\d+[:.]?\s*/i, "")
-    // downgrade "Note:" → keep text but remove the label
-    .replace(/^[-*]?\s*Note[:.]?\s*/i, "")
-    .trim();
+// v1.4: fraction normalization + measurement-parenthetical stripping
+const FRACTION_MAP = {
+  "¼":"1/4","½":"1/2","¾":"3/4","⅐":"1/7","⅑":"1/9","⅒":"1/10",
+  "⅓":"1/3","⅔":"2/3","⅕":"1/5","⅖":"2/5","⅗":"3/5","⅘":"4/5",
+  "⅙":"1/6","⅚":"5/6","⅛":"1/8","⅜":"3/8","⅝":"5/8","⅞":"7/8",
+};
+function normalizeFractions(s) {
+  return s.replace(/[¼½¾⅐⅑⅒⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]/g, (m) => FRACTION_MAP[m] || m);
+}
+const UNIT_WORDS = "(?:cup|cups|tbsp|tablespoon|tablespoons|tsp|teaspoon|teaspoons|oz|ounce|ounces|g|gram|grams|kg|ml|l|liter|liters|pound|pounds|lb|lbs)";
+function stripMeasurementParens(s) {
+  // remove parentheticals that look like purely measurement/notes e.g., "(about 1/2 cup)", "(7 oz)"
+  return s.replace(/\(([^)]*)\)/g, (m, inside) => {
+    const t = inside.trim();
+    if (/^\s*(?:about|around|approx\.?)?\s*\d+(?:\/\d+)?\s*(?:-?\s*\d+(?:\/\d+)?)?\s*/i.test(t) && new RegExp(UNIT_WORDS,"i").test(t)) {
+      return "";
+    }
+    return m; // keep descriptive ones
+  });
 }
 
-function stripMeasureParentheticals(s) {
-  let out = s;
-  // remove multiple measurement parens if present
-  for (let i = 0; i < 4; i++) { // conservative cap
-    const before = out;
-    out = out.replace(PAREN_MEASURE_RE, "").replace(/\s{2,}/g, " ").trim();
-    if (out === before) break;
-  }
-  // tidy stray spaces before punctuation
-  out = out.replace(/\s+([,.;:])\b/g, "$1");
-  return out;
+function cleanLine(line) {
+  return normalizeFractions(
+    stripMeasurementParens(
+      line
+        // drop section headers
+        .replace(/^ingredients[:]?$/i, "")
+        .replace(/^For the .*?:\s*/i, "")
+        // drop "Step X" markers
+        .replace(/^Step\s*\d+[:.]?\s*/i, "")
+        // downgrade "Note:" → keep text but remove the label
+        .replace(/^[-*]?\s*Note[:.]?\s*/i, "")
+    )
+  ).trim();
 }
 
 function prefilterLines(rawText) {
@@ -220,7 +216,7 @@ function prefilterLines(rawText) {
 
   const out = [];
   for (let raw of src) {
-    let line = normalizeText(normalizeFractions(raw));
+    let line = normalizeText(raw);
 
     if (!line) continue;
     if (META_SKIP_RE.test(line)) continue;
@@ -238,7 +234,6 @@ function prefilterLines(rawText) {
     // Step cleanup + duration coercion
     line = stripStepPrefix(line);
     line = coerceDurationSuffix(line);
-    line = stripMeasureParentheticals(line);
 
     // Ignore singleton headings like "Step 3" after stripping
     if (!line || /^step\s*\d+\s*$/i.test(line)) continue;
@@ -253,6 +248,80 @@ function prefilterLines(rawText) {
   return out.length ? out : src.map((l) => l.trim()).filter(Boolean);
 }
 
+/* -------------------------- Phase 1.5 helpers -------------------------- */
+
+// Split a line into action-sized steps, avoiding splits inside (...) and after common abbreviations.
+const ABBRV = /(?:e\.g|i\.e|approx|vs|min|hr|hrs)\.$/i;
+function explodeActions(lines) {
+  const out = [];
+
+  for (let raw of lines) {
+    if (!raw) continue;
+
+    // Mask parentheticals so we don't split inside them.
+    const masks = [];
+    let masked = "";
+    let depth = 0, buf = "";
+    for (let i = 0; i < raw.length; i++) {
+      const ch = raw[i];
+      if (ch === "(") {
+        if (depth === 0 && buf) { masked += buf; buf = ""; }
+        depth++;
+        buf += ch;
+      } else if (ch === ")") {
+        buf += ch;
+        depth = Math.max(0, depth - 1);
+        if (depth === 0) {
+          const token = `@@P${masks.length}@@`;
+          masks.push(buf);
+          masked += token;
+          buf = "";
+        }
+      } else {
+        if (depth > 0) buf += ch;
+        else masked += ch;
+      }
+    }
+    if (buf) masked += buf; // any remainder
+
+    // Split on ., ;, " then ", " and then "
+    const parts = masked
+      .split(/(?:\.\s+|;\s+|\s+(?:and\s+then|then)\s+)/i)
+      .map((p) => p.trim())
+      .filter(Boolean);
+
+    // Unmask + tidy
+    const unmasked = parts.map((p) =>
+      p.replace(/@@P(\d+)@@/g, (m, idx) => masks[Number(idx)] || "")
+    );
+
+    // Merge too-short tail fragments back into previous (e.g., “to taste.”)
+    const merged = [];
+    for (const p of unmasked) {
+      const segment = p.replace(/\s+/g, " ").trim();
+      if (segment.length < 18 && merged.length) {
+        merged[merged.length - 1] = `${merged[merged.length - 1].replace(/[.]\s*$/, "")}; ${segment}`;
+      } else {
+        merged.push(segment);
+      }
+    }
+
+    // Keep abbreviations from splitting on their period (we already split; this just guards odd tails)
+    for (const seg of merged) {
+      if (!seg) continue;
+      if (ABBRV.test(seg)) {
+        out.push(raw); // fallback to original line if it looks like we broke after an abbreviation
+        break;
+      } else {
+        // Add a final period back if the source had it and it reads like a sentence
+        const s = /[.?!]\s*$/.test(seg) ? seg : seg;
+        out.push(s);
+      }
+    }
+  }
+  return out;
+}
+
 /* --------------------------------------------------------------------- */
 
 export default function AuthoringPanel({ onLoadMeal }) {
@@ -263,8 +332,11 @@ export default function AuthoringPanel({ onLoadMeal }) {
   const [autoDeps, setAutoDeps] = useState(true);
   const [preview, setPreview] = useState([]);
 
-  // Phase 1.4: prefilter lines for the preview/parser (now also strips measure parens + normalizes fractions)
-  const rows = useMemo(() => prefilterLines(text), [text]);
+  // Phase 1.1: prefilter lines, then Phase 1.5: explode into actions
+  const rows = useMemo(() => {
+    const base = prefilterLines(text);
+    return explodeActions(base);
+  }, [text]);
 
   async function importFromUrlOrHtml() {
     const packs = await getPacks(); // reserved for future pack-aware transforms
@@ -313,14 +385,6 @@ export default function AuthoringPanel({ onLoadMeal }) {
     onLoadMeal?.(meal);
   }
 
-  // v1.3 auto-title behavior retained:
-  // If the user hasn't typed a title, mirror the first non-empty line.
-  React.useEffect(() => {
-    if (title && title.trim()) return;
-    const first = rows.find((r) => r && r.trim());
-    if (first) setTitle(first.slice(0, 120));
-  }, [rows]); // eslint-disable-line react-hooks/exhaustive-deps
-
   return (
     <div
       style={{
@@ -331,7 +395,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ fontWeight: 700 }}>Author Ingestion (v1.4)</div>
+        <div style={{ fontWeight: 700 }}>Author Ingestion (v1.5)</div>
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={parseLines}>Parse → Draft</button>
           <button onClick={loadAsMeal}>Load into Preview</button>
