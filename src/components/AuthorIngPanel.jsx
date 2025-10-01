@@ -1,13 +1,16 @@
-/* AuthoringPanel.jsx — v1.6.7 (Phase 1.6d)
-   Chef Notes (hardened with sentinel):
-     • Detect Note/Tip/Chef’s note (incl. bullet/asterisk)
-     • Convert to sentinel “⟦NOTE⟧ …” before any other transforms
-     • Split inline “— Note: …” into Action + Note sentinel
-     • Never sentence-split note rows; show 🗒️ in Verb column
-     • Notes load as zero-duration, non-blocking items
+/* AuthoringPanel.jsx — v1.6.8 (Phase 1.6e)
+   Chef Notes: action+note separation (robust), protected by sentinel
+   • Extracts notes from:
+     – dash splits: “… — be careful…”, “… – don’t…”, “… — Note: …”
+     – semicolon tails: “…; don’t…”, “…; avoid…”
+     – trailing parentheses: “(don’t let it stick)”, “(be careful…)”
+     – leading conditionals: “If the rice looks dry, add 1/2 cup broth.”
+   • Notes are stored as ⟦NOTE⟧ … during parsing to prevent accidental splitting
+   • Preview shows notes with Verb = 🗒️ note; no plan/attention/depends
+   • Parse → Draft emits notes as zero-duration, non-blocking items
 
-   Keeps prior phases (ingredients/meta skip, unicode/parenthetical cleanup,
-   duration coercion, action-splitting, safe verb detection, etc.)
+   Keeps previous phases (ingredients/meta skip, unicode/parenthetical cleanup,
+   duration coercion, action-splitting, safe verb detection, “about” rounding).
 */
 /* eslint-disable */
 import React, { useMemo, useState } from "react";
@@ -27,7 +30,7 @@ const VERBS_ARRAY = Array.isArray(VERB_PACK)
 const CANONICAL =
   VERBS_ARRAY.map((v) => ({
     name: v.canon,
-    attention: v.attention, // "attended" | "unattended_after_start"
+    attention: v.attention,
     patterns: (v.patterns || []).map((p) => new RegExp(p, "i")),
     default_planned: v?.defaults?.planned_min ?? null,
   })) ?? [];
@@ -55,7 +58,7 @@ function extractDurationEntries(pack) {
 }
 const DEFAULTS_BY_VERB = Object.fromEntries(extractDurationEntries(DURATIONS_PACK));
 
-// --- verb matching helpers ---
+/* ---------------- verb matching ---------------- */
 const findVerbByPack = (text) => {
   for (const v of CANONICAL) for (const re of v.patterns) if (re.test(text)) return v;
   return null;
@@ -88,7 +91,7 @@ function findVerbSmart(text) {
   return findVerbByPack(text) || guessVerbHeuristic(text);
 }
 
-// small helpers
+/* ---------------- small helpers ---------------- */
 const toDurationObj = (min) => (min == null ? null : { value: min });
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 function parseDurationMin(input) {
@@ -107,9 +110,13 @@ function parseDurationMin(input) {
   return null;
 }
 
-/* -------------------------- cleanup helpers -------------------------- */
+/* ---------------- cleanup ---------------- */
 function normalizeText(s) {
-  return s.replace(/\u2013|\u2014/g, "—").replace(/\u2022|\u25CF|\u2219|\*/g, m => (m==="*" ? "*" : "•")).replace(/\s+/g, " ").trim();
+  return s
+    .replace(/\u2013|\u2014/g, "—")
+    .replace(/\u2022|\u25CF|\u2219/g, "•")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 function stripStepPrefix(s) {
   return s.replace(/^\s*step\s*\d+\s*[:.\-\u2013\u2014]\s*/i, "");
@@ -154,16 +161,68 @@ function cleanLine(line) {
   ).trim();
 }
 
-/* -------------------------- Chef Notes (sentinel) -------------------------- */
+/* ---------------- Chef Notes (sentinel + extraction) ---------------- */
 const NOTE_SENTINEL = "⟦NOTE⟧ ";
 const NOTE_LINE_RE = /^\s*(?:[-*]\s*)?(?:note|tip|chef['’]?\s*s?\s*note)\s*[:.]\s*/i;
-const NOTE_INLINE_SPLIT_RE = /\s*[—–-]\s*(?:note|tip|chef['’]?\s*s?\s*note)\s*[:.]\s*/i;
+const NOTE_INLINE_LABEL_RE = /\s*[—–-]\s*(?:note|tip|chef['’]?\s*s?\s*note)\s*[:.]\s*/i;
+const NOTE_CUE_RE = /^(?:be\s+careful|don['’]t|do\s+not|avoid|keep\b|make\s+sure|watch\s+for|ensure|if\b)/i;
 
 const isNoteSentinel = (s) => typeof s === "string" && s.startsWith(NOTE_SENTINEL);
 const toNoteSentinel = (txt) => NOTE_SENTINEL + txt.trim();
 const fromNoteSentinel = (s) => s.replace(NOTE_SENTINEL, "").trim();
 
-/* -------------------------- Prefilter (with sentinel) -------------------------- */
+/** Try to split an action line into {action, note?}. Safe heuristics only. */
+function extractActionAndNote(src) {
+  let line = src.trim();
+
+  // 0) Explicit: “Note:” line
+  if (NOTE_LINE_RE.test(line)) {
+    return { action: "", note: line.replace(NOTE_LINE_RE, "").trim() };
+  }
+
+  // 1) “— Note: …” label inline
+  if (NOTE_INLINE_LABEL_RE.test(line)) {
+    const [a, n] = line.split(NOTE_INLINE_LABEL_RE);
+    return { action: a.trim(), note: cleanLine(n || "") };
+  }
+
+  // 2) Dash/semicolon tail with cue words on the right
+  const dashSplit = line.split(/\s[—–-]\s/);
+  if (dashSplit.length >= 2) {
+    const rhs = dashSplit.slice(1).join(" — ").trim();
+    if (NOTE_CUE_RE.test(rhs)) {
+      return { action: dashSplit[0].trim(), note: rhs.replace(/^(?:note|tip)\s*[:.]\s*/i, "").trim() };
+    }
+  }
+  const semiSplit = line.split(/\s*;\s*/);
+  if (semiSplit.length >= 2) {
+    const tail = semiSplit[semiSplit.length - 1].trim();
+    if (NOTE_CUE_RE.test(tail)) {
+      return { action: semiSplit.slice(0, -1).join("; ").trim(), note: tail };
+    }
+  }
+
+  // 3) Trailing (…) whose content looks like a note
+  const paren = line.match(/^(.*)\(([^)]+)\)\s*$/);
+  if (paren) {
+    const body = paren[2].trim();
+    if (NOTE_CUE_RE.test(body)) {
+      return { action: paren[1].trim(), note: body };
+    }
+  }
+
+  // 4) Leading conditional: “If …, <do X>”
+  const cond = line.match(/^\s*If\b([^,]+),\s*(.+)$/i);
+  if (cond) {
+    const action = cond[2].trim();
+    const note = `If${cond[1]}.`.replace(/\s+/g, " ").trim();
+    return { action, note };
+  }
+
+  return { action: line, note: "" };
+}
+
+/* ---------------- Prefilter (with note extraction) ---------------- */
 function prefilterLines(rawText) {
   const src = rawText.split(/\r?\n/);
   let inIngredients = false;
@@ -174,44 +233,35 @@ function prefilterLines(rawText) {
     let line = normalizeText(raw);
     if (!line) continue;
 
-    // 1) Standalone note before any other filtering
+    // Standalone labeled note
     if (NOTE_LINE_RE.test(line)) {
       const body = line.replace(NOTE_LINE_RE, "").trim();
       if (body) out.push(toNoteSentinel(body));
       continue;
     }
 
-    // 2) Meta/section toggles
     if (META_SKIP_RE.test(line)) continue;
     if (SECTION_START_ING.test(line)) { inIngredients = true; continue; }
     if (SECTION_START_DIRS.test(line)) { inIngredients = false; seenDirections = true; continue; }
     if (inIngredients || (!seenDirections && ING_LIKE_RE.test(line))) continue;
     if (/^•\s+/.test(line) && ING_LIKE_RE.test(line)) continue;
 
-    // 3) Inline note splitter “… — Note: …”
-    if (NOTE_INLINE_SPLIT_RE.test(line)) {
-      const [actionPart, notePart] = line.split(NOTE_INLINE_SPLIT_RE);
-      let action = stripStepPrefix(actionPart);
-      action = coerceDurationSuffix(action);
-      action = cleanLine(action);
-      if (action && !/^step\s*\d+\s*$/i.test(action)) out.push(action);
-      const body = cleanLine(notePart || "");
-      if (body) out.push(toNoteSentinel(body));
-      continue;
-    }
-
-    // 4) Normal action line
+    // Main cleanup
     line = stripStepPrefix(line);
     line = coerceDurationSuffix(line);
     if (!line || /^step\s*\d+\s*$/i.test(line)) continue;
     line = cleanLine(line);
-    out.push(line);
+
+    // Action + (optional) note
+    const { action, note } = extractActionAndNote(line);
+    if (action) out.push(action);
+    if (note) out.push(toNoteSentinel(note));
   }
 
   return out.length ? out : src.map((l) => l.trim()).filter(Boolean);
 }
 
-/* -------------------------- Action explosion (skip notes) -------------------------- */
+/* ---------------- Action explosion (notes are skipped) ---------------- */
 function explodeActions(lines) {
   const out = [];
   const ABBRV = /(?:e\.g|i\.e|approx|vs|min|hr|hrs)\.$/i;
@@ -220,7 +270,7 @@ function explodeActions(lines) {
     if (!raw) continue;
     if (isNoteSentinel(raw)) { out.push(raw); continue; }
 
-    // mask (...) while splitting
+    // mask (…) to avoid splitting inside
     const masks = [];
     let masked = "", depth = 0, buf = "";
     for (let i = 0; i < raw.length; i++) {
@@ -267,7 +317,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
   const [title, setTitle] = useState("");
   const [autoDeps, setAutoDeps] = useState(true);
   const [roundAbout, setRoundAbout] = useState(true);
-  const [useOntology, setUseOntology] = useState(false); // prototype toggle
+  const [useOntology, setUseOntology] = useState(false); // placeholder
   const [preview, setPreview] = useState([]);
 
   const rows = useMemo(() => explodeActions(prefilterLines(text)), [text]);
@@ -323,9 +373,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
       for (let i = 1; i < tasks.length; i++) {
         if (tasks[i].is_note) continue;
         const prev = tasks[i - 1];
-        if (prev && !prev.is_note) {
-          tasks[i].edges.push({ from: prev.id, type: "FS" });
-        }
+        if (prev && !prev.is_note) tasks[i].edges.push({ from: prev.id, type: "FS" });
       }
     }
     setPreview(tasks);
@@ -345,38 +393,20 @@ export default function AuthoringPanel({ onLoadMeal }) {
   return (
     <div style={{ border: "1px solid #ddd", borderRadius: 12, padding: 12, background: "#ffe7b3" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ fontWeight: 700 }}>Author Ingestion (v1.6.7)</div>
+        <div style={{ fontWeight: 700 }}>Author Ingestion (v1.6.8)</div>
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={parseLines}>Parse → Draft</button>
           <button onClick={loadAsMeal}>Load into Preview</button>
         </div>
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))",
-          gap: 12,
-          alignItems: "start",
-          marginTop: 8,
-          marginBottom: 8,
-        }}
-      >
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 12, alignItems: "start", marginTop: 8, marginBottom: 8 }}>
         <div>
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="One step per line… or paste a URL/HTML, then click “Import from URL/HTML”."
-            style={{
-              width: "100%",
-              minHeight: 190,
-              border: "1px solid #e5e7eb",
-              borderRadius: 8,
-              padding: "10px 12px",
-              boxSizing: "border-box",
-              resize: "vertical",
-              background: "#fff",
-            }}
+            style={{ width: "100%", minHeight: 190, border: "1px solid #e5e7eb", borderRadius: 8, padding: "10px 12px", boxSizing: "border-box", resize: "vertical", background: "#fff" }}
           />
           <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
             Recipe text (one step per line) — or paste a URL/HTML, and click “Import from URL/HTML”.
@@ -389,15 +419,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="e.g., Quick Pasta with Garlic Oil"
-            style={{
-              width: "100%",
-              border: "1px solid #e5e7eb",
-              borderRadius: 10,
-              padding: "10px 12px",
-              marginBottom: 8,
-              boxSizing: "border-box",
-              background: "#fff",
-            }}
+            style={{ width: "100%", border: "1px solid #e5e7eb", borderRadius: 10, padding: "10px 12px", marginBottom: 8, boxSizing: "border-box", background: "#fff" }}
           />
           <div style={{ fontSize: 14, color: "#4b5563", lineHeight: 1.5, marginBottom: 10 }}>
             Tip: durations like “— 3 min” are optional — packs provide sensible defaults per verb.
@@ -445,9 +467,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
             ).map((t, i) => {
               const idx = i + 1;
               const isNote = t.is_note === true;
-              const resolvedVerb = isNote
-                ? "🗒️ note"
-                : (t.canonical_verb || findVerbByPack(t.name)?.name || "free_text");
+              const resolvedVerb = isNote ? "🗒️ note" : (t.canonical_verb || findVerbByPack(t.name)?.name || "free_text");
               const planned = isNote ? "—" : (t.planned_min ?? DEFAULTS_BY_VERB[resolvedVerb] ?? "");
               const attention = isNote
                 ? "—"
@@ -464,15 +484,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
                   <td style={td}>{planned || "—"}</td>
                   <td style={td}>
                     {isNote ? <span style={{ fontSize: 12, color: "#6b7280" }}>—</span> : (
-                      <span
-                        style={{
-                          padding: "2px 8px",
-                          borderRadius: 999,
-                          border: "1px solid #d1d5db",
-                          background: attention === "attended" ? "#eef5ff" : "#ecfdf5",
-                          fontSize: 12,
-                        }}
-                      >
+                      <span style={{ padding: "2px 8px", borderRadius: 999, border: "1px solid #d1d5db", background: attention === "attended" ? "#eef5ff" : "#ecfdf5", fontSize: 12 }}>
                         {attention}
                       </span>
                     )}
