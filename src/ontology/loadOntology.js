@@ -1,44 +1,26 @@
-/* loadOntology.js — v1.0.1
-   - Dynamically imports ontology JSON with explicit .json paths.
-   - Builds quick lookup maps + reverse synonym maps.
+/* loadOntology.js — v0.2
+   Canonical, lazy loader for ontology JSON.
+   Always import THIS file (never the JSON directly) from app code.
 */
 /* eslint-disable */
 
-function toMap(obj) {
-  const m = new Map();
-  if (obj && typeof obj === "object") {
-    for (const [k, v] of Object.entries(obj)) m.set(String(k).toLowerCase(), v || {});
-  }
-  return m;
-}
-
-function addSynonymsReverse(map, out) {
-  for (const [canon, data] of map.entries()) {
-    const syns = Array.isArray(data?.synonyms) ? data.synonyms : [];
-    for (const s of syns) out.set(String(s).toLowerCase(), canon);
-    // Also map the canonical label to itself for convenience
-    const label = data?.label || canon;
-    out.set(String(label).toLowerCase(), canon);
-  }
-}
-
 export async function loadOntology() {
-  // NOTE: these paths are relative to THIS FILE at build-time
+  // Dynamic imports keep bundlers happy and let us lazy-load.
   const verbsMod = await import("./verbs.master.json");
   const ingsMod  = await import("./ingredients.master.json");
-
-  const verbs = toMap(verbsMod?.default || verbsMod || {});
-  const ingredients = toMap(ingsMod?.default || ingsMod || {});
-
-  const synonymsToVerb = new Map();
-  const synonymsToIngredient = new Map();
-  addSynonymsReverse(verbs, synonymsToVerb);
-  addSynonymsReverse(ingredients, synonymsToIngredient);
+  // Optional: per-project overrides (present in your repo)
+  let overrides = {};
+  try {
+    const ovMod = await import("./verbs.applicability.overrides.json");
+    overrides = ovMod.default ?? ovMod;
+  } catch {
+    // Ok if missing — keep overrides empty
+  }
 
   return {
-    verbs,
-    ingredients,
-    synonymsToVerb,
-    synonymsToIngredient,
+    verbs: verbsMod.default ?? verbsMod,                // Master verb ontology
+    ingredients: ingsMod.default ?? ingsMod,            // Master ingredient ontology
+    overrides,                                          // Applicability / tweaks
+    loadedAt: Date.now(),
   };
 }
