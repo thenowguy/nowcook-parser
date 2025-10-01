@@ -5,7 +5,7 @@
 */
 /* eslint-disable */
 
-import { loadOntology } from "./ontology/loadOntology.js";
+import { loadOntology } from "../ontology/loadOntology.js";
 
 let ONTOLOGY_ENABLED = true; // flip to false to hard-disable without removing code
 let _ont = {
