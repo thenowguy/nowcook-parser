@@ -1,97 +1,62 @@
-/* ingestion/ontology_bridge.js — v0.2
-   - Loads ontology (verbs + synonyms, ingredients + aliases)
-   - Upgrades parsed tasks that are still free_text → canonical verb when safe
-   - Leaves timing/attention alone; rely on verbs.en.json defaults after upgrade
-*/
+// src/ingestion/ontology_bridge.js
 /* eslint-disable */
-import { loadOntology } from "./ontology/loadOntology.js";
+/*
+  Ontology bridge — Phase 0 wiring.
+  - Loads verbs/ingredients via src/ontology/loadOntology.js
+  - Provides a couple of tiny helpers the parser can call safely.
+*/
 
-// simple normalizer
-function norm(s) {
-  return String(s || "")
-    .toLowerCase()
-    .replace(/\s+/g, " ")
-    .trim();
+import {
+  getVerbs,
+  getIngredients,
+  getVerbByCanonical,
+  getIngredientByName,
+} from "../ontology/loadOntology.js"; // <-- NOTE the .. (up one level) and .js
+
+function escapeRegExp(s) {
+  return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-// build quick lookups from ontology payload
-function buildLookups(onto) {
-  const verbBySyn = new Map();   // "chop finely" -> "slice" (example)
-  const verbMeta  = new Map();   // "slice" -> { canon: "slice", params: {...} }
-  const ingByAlias = new Map();  // "roma tomatoes" -> "tomato"
+// Returns the canonical verb if `text` is exactly a canon or synonym; else null.
+export function normalizeVerb(text) {
+  const t = String(text || "").trim().toLowerCase();
+  if (!t) return null;
 
-  for (const v of onto.actions || onto.verbs || []) {
-    const canon = norm(v.canon || v.name);
-    verbMeta.set(canon, { ...v, canon });
+  const verbs = getVerbs();
+  // exact canonical
+  const exact = verbs.find(
+    (v) => String(v?.canonical || "").toLowerCase() === t
+  );
+  if (exact) return exact.canonical;
+
+  // exact synonym
+  for (const v of verbs) {
     const syns = Array.isArray(v.synonyms) ? v.synonyms : [];
-    for (const s of syns) verbBySyn.set(norm(s), canon);
-    // also allow the canonical label itself
-    if (canon) verbBySyn.set(canon, canon);
+    if (syns.some((s) => String(s).toLowerCase() === t)) return v.canonical;
   }
-
-  for (const ing of onto.ingredients || []) {
-    const head = norm(ing.canon || ing.name);
-    if (!head) continue;
-    ingByAlias.set(head, head);
-    for (const a of (ing.aliases || [])) ingByAlias.set(norm(a), head);
-  }
-
-  return { verbBySyn, verbMeta, ingByAlias };
+  return null;
 }
 
-// very light “phrase anywhere” matcher (prefers longer phrases)
-function findBestVerb(text, verbBySyn) {
-  const t = norm(text);
-  let best = null;
-  for (const [syn, canon] of verbBySyn.entries()) {
-    if (!syn) continue;
-    // whole-word-ish containment
-    const re = new RegExp(`(^|\\b)${syn.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}($|\\b)`, "i");
-    if (re.test(t)) {
-      if (!best || syn.length > best.syn.length) best = { syn, canon };
+// Very soft guesser: scans a line for any canonical/synonym word boundary match.
+export function suggestVerbForLine(line) {
+  const s = String(line || "").toLowerCase();
+  if (!s) return null;
+
+  const verbs = getVerbs();
+  for (const v of verbs) {
+    const cand = [v.canonical, ...(Array.isArray(v.synonyms) ? v.synonyms : [])];
+    for (const w of cand) {
+      const re = new RegExp(`\\b${escapeRegExp(String(w).toLowerCase())}\\b`, "i");
+      if (re.test(s)) return v.canonical;
     }
   }
-  return best ? best.canon : null;
+  return null;
 }
 
-// optional: ingredient detection can steer ambiguous verb choices later
-function detectIngredients(text, ingByAlias) {
-  const t = norm(text);
-  const hits = new Set();
-  for (const [alias, canon] of ingByAlias.entries()) {
-    if (!alias) continue;
-    const re = new RegExp(`(^|\\b)${alias.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}($|\\b)`, "i");
-    if (re.test(t)) hits.add(canon);
-  }
-  return [...hits];
+// Quick presence check so callers can feature-detect.
+export function ontologyPresent() {
+  const list = getVerbs();
+  return Array.isArray(list) && list.length > 0;
 }
 
-export async function getOntology() {
-  return loadOntology();
-}
-
-/** Upgrade tasks in-place (but returns a new array for React friendliness). */
-export async function upgradeWithOntology(tasks) {
-  const onto = await loadOntology(); // { actions/verbs, ingredients, overrides? }
-  const { verbBySyn, verbMeta, ingByAlias } = buildLookups(onto);
-
-  return tasks.map((t) => {
-    // already upgraded? leave it alone
-    if (t.canonical_verb && t.canonical_verb !== "free_text") return t;
-
-    const guess = findBestVerb(t.name || "", verbBySyn);
-    if (!guess) return t; // no confident upgrade
-
-    const v = verbMeta.get(guess);
-    if (!v) return t;
-
-    // future: use detectIngredients(t.name, ingByAlias) to refine ambiguous verbs
-
-    return {
-      ...t,
-      canonical_verb: v.canon,
-      // Do NOT set planned_min or requires_driver here; let existing
-      // verb pack defaults apply downstream (your current pipeline already does).
-    };
-  });
-}
+export { getVerbs, getIngredients, getVerbByCanonical, getIngredientByName };

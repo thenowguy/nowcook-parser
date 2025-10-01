@@ -1,17 +1,9 @@
 [
-  { "name": "tomato", "tags": ["vegetable","fruit","watery","seedy"] },
-  { "name": "onion", "tags": ["vegetable","aromatic"] },
-  { "name": "garlic", "tags": ["aromatic","vegetable"] },
-  { "name": "beef", "tags": ["protein"] },
-  { "name": "chicken breast", "tags": ["protein"] },
-  { "name": "bread", "tags": ["bread"] },
-  { "name": "milk", "tags": ["liquid","dairy"] },
+  { "name": "tomato", "tags": ["vegetable", "fruit"] },
+  { "name": "onion", "tags": ["vegetable", "aromatic"] },
+  { "name": "garlic", "tags": ["aromatic"] },
   { "name": "water", "tags": ["liquid"] },
-  { "name": "flour", "tags": ["dry","powder"] },
-  { "name": "olive oil", "tags": ["liquid","fat"] }
-]
-[
-  { "canon": "tomato", "aliases": ["tomatoes", "roma tomatoes", "cherry tomatoes"] },
-  { "canon": "onion",  "aliases": ["onions", "yellow onion", "red onion"] }
-  // …
+  { "name": "milk", "tags": ["liquid", "dairy"] },
+  { "name": "flour", "tags": ["dry", "powder"] },
+  { "name": "steak", "tags": ["protein"] }
 ]
