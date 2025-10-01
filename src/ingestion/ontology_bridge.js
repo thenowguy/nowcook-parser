@@ -16,7 +16,7 @@
 */
 /* eslint-disable */
 
-import { loadOntology } from "..loadOntology.js";
+import { loadOntology } from ".loadontology.js";
 
 let ONTOLOGY_ENABLED = true; // flip from AuthoringPanel toggle if desired
 export function setOntologyEnabled(v) { ONTOLOGY_ENABLED = !!v; }
