@@ -4,7 +4,7 @@
    - Leaves timing/attention alone; rely on verbs.en.json defaults after upgrade
 */
 /* eslint-disable */
-import { loadOntology } from "./ontology/loadOntology";
+import { loadOntology } from "./ontology/loadOntology.js";
 
 // simple normalizer
 function norm(s) {
