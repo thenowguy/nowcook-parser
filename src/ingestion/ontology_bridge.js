@@ -16,7 +16,12 @@
 */
 /* eslint-disable */
 
-import { loadOntology } from "./ontology/loadOntology.js";
+/* ontology_bridge.js — fixed path imports */
+/* eslint-disable */
+
+import VERBS_MASTER from "../ontology/verbs.master.json";
+import INGREDIENTS_MASTER from "../ontology/ingredients.master.json";
+import APPLICABILITY_OVERRIDES from "../ontology/verbs.applicability.overrides.json";
 
 let ONTOLOGY_ENABLED = true;
 export function setOntologyEnabled(v) { ONTOLOGY_ENABLED = !!v; }
