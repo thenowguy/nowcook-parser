@@ -1,12 +1,16 @@
-/* AuthoringPanel.jsx — v1.1.2 (Phase 1.1b)
-   - Keeps Phase 1.1a pre-ingestion heuristics (ingredient/meta cleanup, duration coercion)
-   - Safe verb detection: pack patterns first, then light heuristics
-   - NEW: Auto-title guesser (fills the title if the field is blank)
-     * Picks the first non-meta, non-section line near the top
-     * Skips "Ingredients", "Directions", and time/author/yield blocks
+/* AuthoringPanel.jsx — v1.2.0 (Phase 1.2)
+   - Auto-title (from first plausible heading) — unchanged from 1.1.2
+   - NEW: Auto-author detection (e.g., "By Jane Doe", "Author: Jane Doe", "Recipe by …")
+   - NEW: Rich duration parsing:
+       * seconds ("30 sec", "45 seconds") → ceil to minutes
+       * composite ("1 hour 30 minutes", "1 hr 15 min")
+       * hour ranges ("1–2 hours", "1 to 2 hrs") → take upper bound
+       * fuzzy words ("a few minutes") → 3 min
+       * "overnight" → 8 hours (480 min)
+   - Keeps pre-ingestion heuristics and URL/HTML import hook
 */
 /* eslint-disable */
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { ingestFromUrlOrHtml } from "../ingestion/url_or_text";
 import { getPacks } from "../ingestion/packs_bridge";
 
@@ -51,7 +55,7 @@ function extractDurationEntries(pack) {
 }
 const DEFAULTS_BY_VERB = Object.fromEntries(extractDurationEntries(DURATIONS_PACK));
 
-/* -------------------- verb matching helpers -------------------- */
+// --- verb matching helpers ---
 const findVerb = (text) => {
   for (const v of CANONICAL) for (const re of v.patterns) if (re.test(text)) return v;
   return null;
@@ -90,34 +94,57 @@ function findVerbSmart(text) {
   return findVerb(text) || guessVerbHeuristic(text);
 }
 
-/* -------------------------- small helpers -------------------------- */
+// small helpers
 const toDurationObj = (min) => (min == null ? null : { value: min });
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 
-/** Parse explicit "— 5 min" / "3-5 minutes" / "~10 min" suffixes */
-function parseDurationMin(input) {
+/* -------------------- Phase 1.2: duration parsing core -------------------- */
+function extractCompositeMinutes(input) {
   if (!input) return null;
-  const s = String(input).toLowerCase().replace(/[–—]/g, "-"); // normalize dashes
+  const s = String(input).toLowerCase().replace(/[–—]/g, "-");
 
-  // Range: "3-5 min", "3 to 5 minutes"
-  const range = s.match(
-    /(?:~|about|approx(?:\.|imately)?|around)?\s*(\d{1,4})\s*(?:-|to)\s*(\d{1,4})\s*(?:m(?:in(?:ute)?s?)?)\b/
-  );
-  if (range) {
-    const hi = parseInt(range[2], 10);
+  // "overnight"
+  if (/\bover\s*night\b/.test(s) || /\bovernight\b/.test(s)) return 480; // 8h default
+
+  // "a few minutes"
+  if (/\ba\s+few\s+minutes?\b/.test(s)) return 3;
+
+  // seconds → ceil to minutes
+  const sec = s.match(/(\d{1,4})\s*(?:sec(?:onds?)?)\b/);
+  if (sec) return clamp(Math.ceil(parseInt(sec[1], 10) / 60), 1, 24 * 60);
+
+  // composite hours + minutes (order-insensitive)
+  const hm = s.match(/(\d+(?:\.\d+)?)\s*(?:hours?|hrs?)\b(?:[^0-9]{0,10}(\d{1,2})\s*(?:m(?:in(?:ute)?s?)?)\b)?/);
+  if (hm) {
+    const h = parseFloat(hm[1]);
+    const m = hm[2] ? parseInt(hm[2], 10) : 0;
+    return clamp(Math.round(h * 60 + m), 1, 24 * 60);
+  }
+
+  // hour range: "1-2 hours", "1 to 2 hrs" → take upper bound
+  const hrRange = s.match(/(\d+(?:\.\d+)?)\s*(?:-|to)\s*(\d+(?:\.\d+)?)\s*(?:hours?|hrs?)\b/);
+  if (hrRange) {
+    const hi = parseFloat(hrRange[2]);
+    return clamp(Math.round(hi * 60), 1, 24 * 60);
+  }
+
+  // minute range: "3-5 min" / "3 to 5 minutes"
+  const mRange = s.match(/(?:~|about|approx(?:\.|imately)?|around)?\s*(\d{1,4})\s*(?:-|to)\s*(\d{1,4})\s*(?:m(?:in(?:ute)?s?)?)\b/);
+  if (mRange) {
+    const hi = parseInt(mRange[2], 10);
     return clamp(isNaN(hi) ? 0 : hi, 1, 24 * 60);
   }
 
-  // Single value: "~3 min", "about 10 minutes", "5m"
-  const single = s.match(
-    /(?:~|about|approx(?:\.|imately)?|around)?\s*(\d{1,4})\s*(?:m(?:in(?:ute)?s?)?)\b/
-  );
-  if (single) {
-    const v = parseInt(single[1], 10);
-    return clamp(isNaN(v) ? 0 : v, 1, 24 * 60);
-  }
+  // single minutes: "~10 min", "about 5 minutes", "5m"
+  const singleM = s.match(/(?:~|about|approx(?:\.|imately)?|around)?\s*(\d{1,4})\s*(?:m(?:in(?:ute)?s?)?)\b/);
+  if (singleM) return clamp(parseInt(singleM[1], 10), 1, 24 * 60);
 
   return null;
+}
+
+// Parse explicit durations in the line
+function parseDurationMin(input) {
+  return extractCompositeMinutes(input);
 }
 
 /* -------------------------- Phase 1.1 helpers -------------------------- */
@@ -136,20 +163,11 @@ function stripStepPrefix(s) {
   return s.replace(/^\s*step\s*\d+\s*[:.\-\u2013\u2014]\s*/i, "");
 }
 
-// Coerce "for 5 minutes" / "about 1 hour" → append "— X min"
+// Coerce "for 5 minutes" / "about 1 hour" / "30 sec" / "overnight" → append "— X min"
 function coerceDurationSuffix(s) {
   let line = s;
-  let min = null;
-
-  const hr = line.match(/(\d+(?:\.\d+)?)\s*(?:hours?|hrs?)\b/i);
-  const mn = line.match(/(\d+(?:\.\d+)?)\s*(?:minutes?|mins?)\b/i);
-
-  if (hr) min = Math.round(parseFloat(hr[1]) * 60);
-  if (mn) min = (min ?? 0) + Math.round(parseFloat(mn[1]));
-
-  if (min && !/—\s*\d+\s*min/i.test(line)) {
-    line = `${line} — ${min} min`;
-  }
+  const min = extractCompositeMinutes(line);
+  if (min && !/—\s*\d+\s*min/i.test(line)) line = `${line} — ${min} min`;
   return line;
 }
 
@@ -165,14 +183,16 @@ const ING_LIKE_RE = new RegExp(
 );
 
 // Metadata we should skip
-const META_SKIP_RE = /^\s*(author:|serves?\b|yield\b|prep time\b|cook time\b|total time\b|course\b|notes?:?)\s*/i;
+const META_SKIP_RE = /^\s*(author:|serves?\b|yield\b|prep time\b|cook time\b|total time\b|notes?:?)\s*/i;
 
-/** Final polish for preview lines */
 function cleanLine(line) {
   return line
+    // drop section headers
     .replace(/^ingredients[:]?$/i, "")
     .replace(/^For the .*?:\s*/i, "")
+    // drop "Step X" markers
     .replace(/^Step\s*\d+[:.]?\s*/i, "")
+    // downgrade "Note:" → keep text but remove the label
     .replace(/^[-*]?\s*Note[:.]?\s*/i, "")
     .trim();
 }
@@ -196,7 +216,7 @@ function prefilterLines(rawText) {
     // Skip ingredient lines while in ingredients (or pre-directions lists)
     if (inIngredients || (!seenDirections && ING_LIKE_RE.test(line))) continue;
 
-    // Leading bullets with ingredient-like content
+    // Leading bullets and leftover commas look like ingredients
     if (/^•\s+/.test(line) && ING_LIKE_RE.test(line)) continue;
 
     // Step cleanup + duration coercion
@@ -216,41 +236,30 @@ function prefilterLines(rawText) {
   return out.length ? out : src.map((l) => l.trim()).filter(Boolean);
 }
 
-/* -------------------------- Auto-title guesser -------------------------- */
-/** Try to pick a sensible title from the top of the pasted recipe. */
+/* ----------------------- Title & Author detection ----------------------- */
+
+// Title guess: first non-empty non-meta, not ingredients/directions
 function guessTitle(rawText) {
-  if (!rawText) return "";
-  const lines = rawText.split(/\r?\n/);
-
-  // Consider only the first ~12 non-empty lines for the title scan
-  const candidates = [];
-  for (const raw of lines) {
-    let s = normalizeText(raw);
-    if (!s) continue;
-
-    // ignore common meta & section headings
-    if (META_SKIP_RE.test(s)) continue;
-    if (SECTION_START_ING.test(s) || SECTION_START_DIRS.test(s)) break;
-
-    // if it looks like a step or an ingredient, stop scanning
-    if (/^\s*(?:step\s*\d+[:.]?|•)/i.test(s)) break;
-    if (ING_LIKE_RE.test(s)) break;
-
-    // avoid lines that clearly look like sentences/instructions
-    if (/[.?!]\s*$/.test(s) && s.split(/\s+/).length > 6) continue;
-
-    // avoid super long headings
-    if (s.length > 80) continue;
-
-    // avoid "by Jane Doe" / author style
-    if (/^\s*by\s+\w+/i.test(s)) continue;
-
-    // simple, title-ish line (letters/spaces/slashes/hyphens)
-    if (/[A-Za-z]/.test(s)) candidates.push(s);
+  const lines = rawText.split(/\r?\n/).map((l) => normalizeText(l));
+  for (const l of lines) {
+    if (!l) continue;
+    if (SECTION_START_ING.test(l) || SECTION_START_DIRS.test(l) || META_SKIP_RE.test(l)) continue;
+    // Avoid obvious steps
+    if (/^(step\s*\d+|directions?|method|instructions?)\b/i.test(l)) continue;
+    // Likely a heading (short and Title Case-ish)
+    if (l.length <= 80 && /[A-Za-z]/.test(l)) return l.replace(/^\W+|\W+$/g, "");
   }
+  return "";
+}
 
-  // Prefer the first candidate that isn’t all meta-ish
-  return candidates.length ? candidates[0] : "";
+function guessAuthor(rawText) {
+  const s = rawText;
+  // Patterns: "By Jane Doe", "Recipe by Jane Doe", "Author: Jane Doe"
+  const m1 = s.match(/\b(?:by|recipe by)\s+([A-Z][\w'.-]+(?:\s+[A-Z][\w'.-]+){0,4})\b/i);
+  if (m1) return m1[1].trim();
+  const m2 = s.match(/\bauthor\s*:\s*([A-Z][\w'.-]+(?:\s+[A-Z][\w'.-]+){0,4})\b/i);
+  if (m2) return m2[1].trim();
+  return "";
 }
 
 /* --------------------------------------------------------------------- */
@@ -260,31 +269,29 @@ export default function AuthoringPanel({ onLoadMeal }) {
     "Slice garlic and parsley; set out chili flakes — 3 min\nBring a large pot of water to a boil — 10 min\n…"
   );
   const [title, setTitle] = useState("");
+  const [authorGuess, setAuthorGuess] = useState("");
   const [autoDeps, setAutoDeps] = useState(true);
   const [preview, setPreview] = useState([]);
 
-  // Phase 1.1: prefilter lines for the preview/parser
+  // Phase 1.2: prefilter lines for the preview/parser
   const rows = useMemo(() => prefilterLines(text), [text]);
+
+  // Auto-fill title (if empty) and detect author whenever source text changes
+  useEffect(() => {
+    if (!title) {
+      const g = guessTitle(text);
+      if (g) setTitle(g);
+    }
+    setAuthorGuess(guessAuthor(text) || "");
+  }, [text]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function importFromUrlOrHtml() {
     const packs = await getPacks(); // reserved for future pack-aware transforms
     const draft = await ingestFromUrlOrHtml(text, packs);
-    setText(draft); // preview table reacts via rows
-
-    // If user hasn't typed a title yet, try to guess one from imported text
-    if (!title.trim()) {
-      const t = guessTitle(draft);
-      if (t) setTitle(t);
-    }
+    setText(draft); // preview table reacts via rows + useEffect will (re)guess title/author
   }
 
   function parseLines() {
-    // If title is blank, make a best-effort guess from current textarea
-    if (!title.trim()) {
-      const t = guessTitle(text);
-      if (t) setTitle(t);
-    }
-
     const tasks = rows.map((raw, idx) => {
       const line = cleanLine(raw);
       const vMeta = findVerbSmart(line);
@@ -318,7 +325,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
     if (preview.length === 0) parseLines();
     const meal = {
       title: title || "Untitled Meal",
-      author: { name: "Draft" },
+      author: { name: authorGuess || "Draft" },
       tasks: preview.length ? preview : [],
       packs_meta: {},
     };
@@ -335,7 +342,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ fontWeight: 700 }}>Author Ingestion (v1.1.2</div>
+        <div style={{ fontWeight: 700 }}>Author Ingestion (v1.2)</div>
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={parseLines}>Parse → Draft</button>
           <button onClick={loadAsMeal}>Load into Preview</button>
@@ -387,11 +394,16 @@ export default function AuthoringPanel({ onLoadMeal }) {
               border: "1px solid #e5e7eb",
               borderRadius: 10,
               padding: "10px 12px",
-              marginBottom: 8,
+              marginBottom: 6,
               boxSizing: "border-box",
               background: "#fff",
             }}
           />
+          {authorGuess && (
+            <div style={{ fontSize: 12, color: "#4b5563", marginBottom: 6 }}>
+              Detected author: <b>{authorGuess}</b>
+            </div>
+          )}
           <div
             style={{
               fontSize: 14,
