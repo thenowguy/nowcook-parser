@@ -1,10 +1,11 @@
-/* AuthoringPanel.jsx — v1.6.13 (Phase 1.6d)
-   - Stronger Chef Notes extraction:
-     • Splits leading qualifiers (When/While/Once/After/Before/Until/If/Unless/As soon as/Meanwhile/During/As …,)
-     • Splits leading participles (“Stirring frequently, …”) into notes
-     • Prefers imperative on the right of “;”, “, then …”, “then …” as the action; left becomes note
-     • Keeps tail advice (“— be careful…”, “, if needed”, “— as needed …”) as note
-   - Keeps prior phases (cleanup, fractions, action-splitting, duration rounding, packs, optional ontology)
+/* AuthoringPanel.jsx — v1.6.14 (Phase 1.6e)
+   Fixes:
+     • Qualifier lines (While/When/If/After/Before/Until/…) now split into note + action
+       BEFORE treating them as pure notes.
+     • Expanded imperative detector: peel, mince, chop, slice, grate, season, set, put,
+       melt, transfer, use, toss, etc.
+     • Notes now auto-depend on the previous task so they stay visually attached.
+   Keeps prior phases (cleanup, fractions, action-splitting, duration rounding, packs, optional ontology).
 */
 /* eslint-disable */
 import React, { useMemo, useState } from "react";
@@ -67,9 +68,10 @@ const HEUR_RULES = [
   { re: /\b(season(?:\s+to\s+taste)?)\b/i, canon: "season" },
   { re: /\b(drain|strain)\b/i, canon: "drain" },
   { re: /\b(serve|plate)\b/i, canon: "plate" },
-  { re: /\b(slice|chop|mince|dice)\b/i, canon: "slice" },
+  { re: /\b(slice|chop|mince|dice|peel|grate)\b/i, canon: "slice" },
   { re: /\b(preheat)\b/i, canon: "preheat" },
   { re: /\b(bake|roast)\b/i, canon: "bake" },
+  { re: /\b(toss)\b/i, canon: "toss" },
 ];
 function guessVerbHeuristic(text) {
   if (!text) return null;
@@ -199,40 +201,44 @@ function explodeActions(lines){
 }
 
 /* ---------------- Chef Notes: improved splitter ---------------- */
-// Leading qualifier patterns → note, then action
+// Leading qualifier patterns → note + action (if action is imperative)
 const LEAD_QUALIFIER_RE = /^(?:when|while|once|after|before|until|if|unless|as soon as|meanwhile|during|as)\b[^,]*,\s*/i;
-// Leading participle clause (“Stirring frequently,”) → note then action
+// Leading participle clause (“Stirring frequently, …”) → note + action
 const LEAD_PARTICIPLE_RE = /^(?:stirring|cooking|simmering|whisking|mixing|seasoning|chopping|adding|working|continuing|heating|preheating|boiling|draining|baking|roasting)\b[^,]*,\s*/i;
-// Tail becomes note if advisory
+// Tail advisory → note
 const NOTE_TAIL_RE = /\b(?:be careful|do(?:n’|')t\b|do not\b|avoid\b|so it\b|so they\b|so you\b|as needed\b|if needed\b|if desired\b|if using\b|to taste\b)\b/i;
-// Hard note leads (“Note: …”, “If …” entire line)
-const NOTE_LEAD_RE = /^(?:note[:.]?|if\b.+|when\b.+|while\b.+)\s*/i;
-// Imperative detector to prefer as action
-const IMPERATIVE_RE = /\b(?:add|stir|mix|combine|whisk|cook|sauté|saute|simmer|reduce|increase|bring|boil|drain|strain|season|transfer|remove|plate|serve|heat|preheat)\b/i;
+// Soft note lead
+const NOTE_LEAD_RE = /^note[:.]?\s*/i;
+
+// **Expanded** imperative detector (for splitting only)
+const IMPERATIVE_RE = /\b(?:add|stir|mix|combine|whisk|cook|sauté|saute|simmer|reduce|increase|bring|boil|drain|strain|season|transfer|remove|plate|serve|heat|preheat|peel|mince|chop|slice|grate|set|put|melt|use|toss)\b/i;
 
 function splitActionAndNote(line){
   if(!line) return {action: line, note: null};
 
-  // 1) Explicit note leads
-  if (NOTE_LEAD_RE.test(line)) {
-    const cleaned = line.replace(/^note[:.]?\s*/i, "").trim();
-    return { action: null, note: cleaned || line };
-  }
-
-  // 2) Leading qualifier (When/If/After/Before/Until/…,)
+  // 1) Qualifier at start? (While/When/If/After/Before/Until/…,)
   if (LEAD_QUALIFIER_RE.test(line)) {
     const idx = line.indexOf(",");
     const lead = line.slice(0, idx).trim();
     const rest = line.slice(idx + 1).trim();
     if (IMPERATIVE_RE.test(rest)) return { action: rest, note: lead };
+    // no imperative on right → whole line is a note
+    return { action: null, note: line };
   }
 
-  // 3) Leading participle clause (“Stirring frequently, …”)
+  // 2) Leading participle clause?
   if (LEAD_PARTICIPLE_RE.test(line)) {
     const idx = line.indexOf(",");
     const lead = line.slice(0, idx).trim();
     const rest = line.slice(idx + 1).trim();
     if (IMPERATIVE_RE.test(rest)) return { action: rest, note: lead };
+    return { action: null, note: line };
+  }
+
+  // 3) Explicit "Note:" lead after other checks
+  if (NOTE_LEAD_RE.test(line)) {
+    const cleaned = line.replace(NOTE_LEAD_RE, "").trim();
+    return { action: null, note: cleaned || line };
   }
 
   // 4) “; then <verb …>” or “; <verb …>”
@@ -248,7 +254,7 @@ function splitActionAndNote(line){
     return { action: thenMatch[1].trim(), note: before || null };
   }
 
-  // 6) Advisory tails (“— …”, “, …”) → note
+  // 6) Advisory tails
   const mDash=line.match(/\s[–—-]\s(.+)$/);
   if(mDash && NOTE_TAIL_RE.test(mDash[1])){
     return {action: line.replace(/\s[–—-]\s(.+)$/,"").trim(), note: mDash[1].trim()};
@@ -289,6 +295,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
   function parseLines() {
     const tasks = [];
     let idx = 0;
+    let lastTaskId = null;
 
     for (const raw of rows) {
       const line = cleanLine(raw);
@@ -299,7 +306,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
       // Pure note line
       if (!action && note) {
         idx += 1;
-        tasks.push({
+        const noteTask = {
           id: `draft_${idx}`,
           name: note,
           is_note: true,
@@ -311,7 +318,9 @@ export default function AuthoringPanel({ onLoadMeal }) {
           inputs: [],
           outputs: [],
           edges: [],
-        });
+        };
+        if (lastTaskId) noteTask.edges.push({ from: lastTaskId, type: "FS" });
+        tasks.push(noteTask);
         continue;
       }
 
@@ -322,7 +331,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
       const planned_min = durMin ?? vMeta?.default_planned ?? DEFAULTS_BY_VERB[verb] ?? null;
 
       idx += 1;
-      tasks.push({
+      const mainTask = {
         id: `draft_${idx}`,
         name: useText.replace(/\s*—\s*\d+\s*min(?:utes?)?$/i, ""),
         canonical_verb: verb,
@@ -333,11 +342,14 @@ export default function AuthoringPanel({ onLoadMeal }) {
         inputs: [],
         outputs: [],
         edges: [],
-      });
+      };
+      if (autoDeps && lastTaskId) mainTask.edges.push({ from: lastTaskId, type: "FS" });
+      tasks.push(mainTask);
+      lastTaskId = mainTask.id;
 
       if (note) {
         idx += 1;
-        tasks.push({
+        const noteTask = {
           id: `draft_${idx}`,
           name: note,
           is_note: true,
@@ -348,12 +360,12 @@ export default function AuthoringPanel({ onLoadMeal }) {
           self_running_after_start: false,
           inputs: [],
           outputs: [],
-          edges: [],
-        });
+          edges: [{ from: mainTask.id, type: "FS" }],
+        };
+        tasks.push(noteTask);
+        lastTaskId = noteTask.id;
       }
     }
-
-    if (autoDeps) for (let i = 1; i < tasks.length; i++) tasks[i].edges.push({ from: tasks[i - 1].id, type: "FS" });
 
     setPreview(tasks);
   }
@@ -372,7 +384,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
   return (
     <div style={{ border: "1px solid #ddd", borderRadius: 12, padding: 12, background: "#ffe7b3" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ fontWeight: 700 }}>Author Ingestion (v1.6.13)</div>
+        <div style={{ fontWeight: 700 }}>Author Ingestion (v1.6.14)</div>
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={parseLines}>Parse → Draft</button>
           <button onClick={loadAsMeal}>Load into Preview</button>
