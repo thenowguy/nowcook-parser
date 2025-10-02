@@ -1,14 +1,10 @@
-/* AuthoringPanel.jsx — v1.6.12 (Phase 1.6c)
-   - Restores Chef Notes extraction & rendering:
-     • Splits helpful/non-imperative tails (“be careful…”, “if …”, “Note: …”) into note rows
-     • Note rows render indented, italic, muted, with an 🗒️ icon and “note” verb
-   - Keeps prior phases:
-     • Pre-ingestion cleanup (skip Ingredients/meta, normalize bullets/dashes, strip Step X)
-     • Coerce “for 5 minutes / ~10 min / 3–5 min” → planned mins (with optional rounding)
-     • Fraction normalization; strip measurement-only parentheticals
-     • Action splitting (., ;, then/and then) not inside (…)  (v1.5)
-     • Safe verb detection (pack patterns, then light heuristics)
-   - Optional (experimental) verb upgrade via ontology (if available)
+/* AuthoringPanel.jsx — v1.6.13 (Phase 1.6d)
+   - Stronger Chef Notes extraction:
+     • Splits leading qualifiers (When/While/Once/After/Before/Until/If/Unless/As soon as/Meanwhile/During/As …,)
+     • Splits leading participles (“Stirring frequently, …”) into notes
+     • Prefers imperative on the right of “;”, “, then …”, “then …” as the action; left becomes note
+     • Keeps tail advice (“— be careful…”, “, if needed”, “— as needed …”) as note
+   - Keeps prior phases (cleanup, fractions, action-splitting, duration rounding, packs, optional ontology)
 */
 /* eslint-disable */
 import React, { useMemo, useState } from "react";
@@ -16,32 +12,25 @@ import React, { useMemo, useState } from "react";
 import { ingestFromUrlOrHtml } from "../ingestion/url_or_text.js";
 import { getPacks } from "../ingestion/packs_bridge.js";
 
-// Optional ontology bridge (safe if missing)
+// Optional ontology bridge
 let mapVerbOntology = null;
 try {
   const ob = await import("../ingestion/ontology_bridge.js");
   mapVerbOntology = ob?.mapVerb || null;
-} catch (_) { /* no-op if file not present */ }
+} catch (_) {}
 
-// Packs
 import VERB_PACK from "../packs/verbs.en.json";
 import DURATIONS_PACK from "../packs/durations.en.json";
 
-/* ---------------- Canonical verbs from pack ---------------- */
-const VERBS_ARRAY = Array.isArray(VERB_PACK)
-  ? VERB_PACK
-  : Array.isArray(VERB_PACK?.verbs)
-  ? VERB_PACK.verbs
-  : [];
-
+/* ---------------- Canonical verbs ---------------- */
+const VERBS_ARRAY = Array.isArray(VERB_PACK) ? VERB_PACK : Array.isArray(VERB_PACK?.verbs) ? VERB_PACK.verbs : [];
 const CANONICAL =
   VERBS_ARRAY.map((v) => ({
     name: v.canon,
-    attention: v.attention, // "attended" | "unattended_after_start"
+    attention: v.attention,
     patterns: (v.patterns || []).map((p) => new RegExp(p, "i")),
     default_planned: v?.defaults?.planned_min ?? null,
   })) ?? [];
-
 const CANON_BY_NAME = new Map(CANONICAL.map((v) => [String(v.name).toLowerCase(), v]));
 
 /* ---------------- Duration defaults ---------------- */
@@ -49,10 +38,7 @@ function extractDurationEntries(pack) {
   const asEntryList = (arr) =>
     (arr || [])
       .filter((d) => d && (d.verb || d.canon || d.name))
-      .map((d) => [
-        d.verb ?? d.canon ?? d.name,
-        d.planned_min ?? d.default_planned ?? d.min ?? d.value,
-      ])
+      .map((d) => [d.verb ?? d.canon ?? d.name, d.planned_min ?? d.default_planned ?? d.min ?? d.value])
       .filter(([, v]) => Number.isFinite(v));
   if (Array.isArray(pack?.durations)) return asEntryList(pack.durations);
   if (Array.isArray(pack)) return asEntryList(pack);
@@ -87,40 +73,29 @@ const HEUR_RULES = [
 ];
 function guessVerbHeuristic(text) {
   if (!text) return null;
-  for (const r of HEUR_RULES) {
-    if (r.re.test(text)) {
-      const v = CANON_BY_NAME.get(r.canon.toLowerCase());
-      if (v) return v;
-    }
-  }
+  for (const r of HEUR_RULES) if (r.re.test(text)) return CANON_BY_NAME.get(r.canon.toLowerCase()) || null;
   return null;
 }
 function findVerbSmart(text, useOntologyUpgrade) {
   let meta = findVerbByPack(text) || guessVerbHeuristic(text);
   if (useOntologyUpgrade && mapVerbOntology) {
     const up = mapVerbOntology(text, meta?.name || null);
-    if (up && CANON_BY_NAME.has(String(up).toLowerCase())) {
-      meta = CANON_BY_NAME.get(String(up).toLowerCase());
-    }
+    if (up && CANON_BY_NAME.has(String(up).toLowerCase())) meta = CANON_BY_NAME.get(String(up).toLowerCase());
   }
   return meta;
 }
 
-/* ---------------- Small helpers ---------------- */
+/* ---------------- Helpers ---------------- */
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 const toDurationObj = (min) => (min == null ? null : { value: min });
 
 function parseDurationMin(input, roundAbout) {
   if (!input) return null;
   const s = String(input).toLowerCase().replace(/[–—]/g, "-");
-  const mRange = s.match(
-    /(?:~|about|approx(?:\.|imately)?|around)?\s*(\d{1,4})\s*(?:-|to)\s*(\d{1,4})\s*(?:m(?:in(?:ute)?s?)?)\b/
-  );
+  const mRange = s.match(/(?:~|about|approx(?:\.|imately)?|around)?\s*(\d{1,4})\s*(?:-|to)\s*(\d{1,4})\s*m(?:in(?:ute)?s?)?\b/);
   if (mRange) {
-    const a = parseInt(mRange[1], 10);
-    const b = parseInt(mRange[2], 10);
-    const hi = Math.max(a, b);
-    const lo = Math.min(a, b);
+    const a = parseInt(mRange[1], 10), b = parseInt(mRange[2], 10);
+    const hi = Math.max(a, b), lo = Math.min(a, b);
     const val = roundAbout ? hi : Math.round((lo + hi) / 2);
     return clamp(val, 1, 24 * 60);
   }
@@ -134,13 +109,11 @@ function parseDurationMin(input, roundAbout) {
   return null;
 }
 
-/* ---------------- Phase 1.1 helpers ---------------- */
+/* ---------------- Phase 1.1 cleanup ---------------- */
 function normalizeText(s) {
   return s.replace(/\u2013|\u2014/g, "—").replace(/\u2022|\u25CF|\u2219|\*/g, "•").replace(/\s+/g, " ").trim();
 }
-function stripStepPrefix(s) {
-  return s.replace(/^\s*step\s*\d+\s*[:.\-\u2013\u2014]\s*/i, "");
-}
+function stripStepPrefix(s) { return s.replace(/^\s*step\s*\d+\s*[:.\-\u2013\u2014]\s*/i, ""); }
 function coerceDurationSuffix(s) {
   let line = s, min = null;
   const hr = line.match(/(\d+(?:\.\d+)?)\s*(?:hours?|hrs?)\b/i);
@@ -152,11 +125,11 @@ function coerceDurationSuffix(s) {
 }
 const SECTION_START_ING = /^(ingredients?|what you need)\b/i;
 const SECTION_START_DIRS = /^(directions?|method|instructions?)\b/i;
-const UNIT = "(cups?|cup|tbsp|tablespoons?|tsp|teaspoons?|oz|ounce|ounces|g|gram|grams|kg|ml|l|liters?|pounds?|lbs?|cloves?|sticks?|slices?|dash|pinch|sprigs?|leaves?)";
-const AMOUNT = "(?:\\d+\\/\\d+|\\d+(?:\\.\\d+)?)";
-const ING_LIKE_RE = new RegExp(`^(?:•\\s*)?(?:${AMOUNT}\\s*(?:${UNIT})\\b|\\d+\\s*(?:${UNIT})\\b)`, "i");
+const UNIT="(cups?|cup|tbsp|tablespoons?|tsp|teaspoons?|oz|ounce|ounces|g|gram|grams|kg|ml|l|liters?|pounds?|lbs?|cloves?|sticks?|slices?|dash|pinch|sprigs?|leaves?)";
+const AMOUNT="(?:\\d+\\/\\d+|\\d+(?:\\.\\d+)?)";
+const ING_LIKE_RE = new RegExp(`^(?:•\\s*)?(?:${AMOUNT}\\s*(?:${UNIT})\\b|\\d+\\s*(?:${UNIT})\\b)`,"i");
 const META_SKIP_RE = /^\s*(author:|serves?\b|yield\b|prep time\b|cook time\b|total time\b|notes?:?)\s*/i;
-const FRACTION_MAP = {"¼":"1/4","½":"1/2","¾":"3/4","⅐":"1/7","⅑":"1/9","⅒":"1/10","⅓":"1/3","⅔":"2/3","⅕":"1/5","⅖":"2/5","⅗":"3/5","⅘":"4/5","⅙":"1/6","⅚":"5/6","⅛":"1/8","⅜":"3/8","⅝":"5/8","⅞":"7/8"};
+const FRACTION_MAP={"¼":"1/4","½":"1/2","¾":"3/4","⅐":"1/7","⅑":"1/9","⅒":"1/10","⅓":"1/3","⅔":"2/3","⅕":"1/5","⅖":"2/5","⅗":"3/5","⅘":"4/5","⅙":"1/6","⅚":"5/6","⅛":"1/8","⅜":"3/8","⅝":"5/8","⅞":"7/8"};
 function normalizeFractions(s){return s.replace(/[¼½¾⅐⅑⅒⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]/g,(m)=>FRACTION_MAP[m]||m);}
 const UNIT_WORDS="(?:cup|cups|tbsp|tablespoon|tablespoons|tsp|teaspoon|teaspoons|oz|ounce|ounces|g|gram|grams|kg|ml|l|liter|liters|pound|pounds|lb|lbs)";
 function stripMeasurementParens(s){
@@ -197,7 +170,7 @@ function prefilterLines(rawText){
   return out.length?out:src.map((l)=>l.trim()).filter(Boolean);
 }
 
-/* ---------------- Phase 1.5 action-splitting ---------------- */
+/* ---------------- v1.5 action-splitting ---------------- */
 const ABBRV=/(?:e\.g|i\.e|approx|vs|min|hr|hrs)\.$/i;
 function explodeActions(lines){
   const out=[];
@@ -225,15 +198,57 @@ function explodeActions(lines){
   return out;
 }
 
-/* ---------------- Chef Notes extraction ---------------- */
-const NOTE_TAIL_RE = /\b(?:be careful|don’t\b|do not\b|avoid\b|so it|so they|so you|as needed|if needed|if desired|if using)\b/i;
+/* ---------------- Chef Notes: improved splitter ---------------- */
+// Leading qualifier patterns → note, then action
+const LEAD_QUALIFIER_RE = /^(?:when|while|once|after|before|until|if|unless|as soon as|meanwhile|during|as)\b[^,]*,\s*/i;
+// Leading participle clause (“Stirring frequently,”) → note then action
+const LEAD_PARTICIPLE_RE = /^(?:stirring|cooking|simmering|whisking|mixing|seasoning|chopping|adding|working|continuing|heating|preheating|boiling|draining|baking|roasting)\b[^,]*,\s*/i;
+// Tail becomes note if advisory
+const NOTE_TAIL_RE = /\b(?:be careful|do(?:n’|')t\b|do not\b|avoid\b|so it\b|so they\b|so you\b|as needed\b|if needed\b|if desired\b|if using\b|to taste\b)\b/i;
+// Hard note leads (“Note: …”, “If …” entire line)
 const NOTE_LEAD_RE = /^(?:note[:.]?|if\b.+|when\b.+|while\b.+)\s*/i;
+// Imperative detector to prefer as action
+const IMPERATIVE_RE = /\b(?:add|stir|mix|combine|whisk|cook|sauté|saute|simmer|reduce|increase|bring|boil|drain|strain|season|transfer|remove|plate|serve|heat|preheat)\b/i;
+
 function splitActionAndNote(line){
-  if(!line) return {action:line, note:null};
-  if(NOTE_LEAD_RE.test(line)){
-    const cleaned=line.replace(/^note[:.]?\s*/i,"").trim();
-    return {action:null, note: cleaned||line};
+  if(!line) return {action: line, note: null};
+
+  // 1) Explicit note leads
+  if (NOTE_LEAD_RE.test(line)) {
+    const cleaned = line.replace(/^note[:.]?\s*/i, "").trim();
+    return { action: null, note: cleaned || line };
   }
+
+  // 2) Leading qualifier (When/If/After/Before/Until/…,)
+  if (LEAD_QUALIFIER_RE.test(line)) {
+    const idx = line.indexOf(",");
+    const lead = line.slice(0, idx).trim();
+    const rest = line.slice(idx + 1).trim();
+    if (IMPERATIVE_RE.test(rest)) return { action: rest, note: lead };
+  }
+
+  // 3) Leading participle clause (“Stirring frequently, …”)
+  if (LEAD_PARTICIPLE_RE.test(line)) {
+    const idx = line.indexOf(",");
+    const lead = line.slice(0, idx).trim();
+    const rest = line.slice(idx + 1).trim();
+    if (IMPERATIVE_RE.test(rest)) return { action: rest, note: lead };
+  }
+
+  // 4) “; then <verb …>” or “; <verb …>”
+  const semi = line.split(/;\s*(?:then\s+)?/i);
+  if (semi.length === 2 && IMPERATIVE_RE.test(semi[1])) {
+    return { action: semi[1].trim(), note: semi[0].trim() };
+  }
+
+  // 5) “, then <verb …>”
+  const thenMatch = line.match(/,?\s+then\s+(.+)$/i);
+  if (thenMatch && IMPERATIVE_RE.test(thenMatch[1])) {
+    const before = line.slice(0, thenMatch.index).replace(/,\s*$/,"").trim();
+    return { action: thenMatch[1].trim(), note: before || null };
+  }
+
+  // 6) Advisory tails (“— …”, “, …”) → note
   const mDash=line.match(/\s[–—-]\s(.+)$/);
   if(mDash && NOTE_TAIL_RE.test(mDash[1])){
     return {action: line.replace(/\s[–—-]\s(.+)$/,"").trim(), note: mDash[1].trim()};
@@ -248,6 +263,7 @@ function splitActionAndNote(line){
     const head=line.slice(0,commaIdx).trim(); const tail=line.slice(commaIdx+2).trim();
     if(NOTE_TAIL_RE.test(tail)) return {action: head, note: tail};
   }
+
   return {action: line, note: null};
 }
 
@@ -280,6 +296,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
 
       const { action, note } = splitActionAndNote(line);
 
+      // Pure note line
       if (!action && note) {
         idx += 1;
         tasks.push({
@@ -298,15 +315,16 @@ export default function AuthoringPanel({ onLoadMeal }) {
         continue;
       }
 
-      const vMeta = findVerbSmart(action || line, useOntology);
+      const useText = action || line;
+      const vMeta = findVerbSmart(useText, useOntology);
       const verb = vMeta?.name || "free_text";
-      const durMin = parseDurationMin(action || line, roundAbout);
+      const durMin = parseDurationMin(useText, roundAbout);
       const planned_min = durMin ?? vMeta?.default_planned ?? DEFAULTS_BY_VERB[verb] ?? null;
 
       idx += 1;
       tasks.push({
         id: `draft_${idx}`,
-        name: (action || line).replace(/\s*—\s*\d+\s*min(?:utes?)?$/i, ""),
+        name: useText.replace(/\s*—\s*\d+\s*min(?:utes?)?$/i, ""),
         canonical_verb: verb,
         duration_min: toDurationObj(durMin),
         planned_min,
@@ -354,7 +372,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
   return (
     <div style={{ border: "1px solid #ddd", borderRadius: 12, padding: 12, background: "#ffe7b3" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ fontWeight: 700 }}>Author Ingestion (v1.6.12)</div>
+        <div style={{ fontWeight: 700 }}>Author Ingestion (v1.6.13)</div>
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={parseLines}>Parse → Draft</button>
           <button onClick={loadAsMeal}>Load into Preview</button>
@@ -429,7 +447,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
                 return (
                   <tr key={`note_${idx}`} style={{ background: i % 2 ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.35)" }}>
                     <td style={td}>{idx}</td>
-                    <td style={{ ...td, paddingLeft: 60, fontStyle: "italic", color: "#475569", borderLeft: "3px solid #27282aff", background: "rgba(59, 112, 196, 0.04)" }}>
+                    <td style={{ ...td, paddingLeft: 28, fontStyle: "italic", color: "#475569", borderLeft: "3px solid #dbeafe", background: "rgba(59,130,246,0.04)" }}>
                       <span style={{ opacity: 0.9, marginRight: 6 }}>🗒️</span>
                       {t.name}
                     </td>
@@ -445,9 +463,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
               const planned = t.planned_min ?? DEFAULTS_BY_VERB[verb] ?? "";
               const attention =
                 t.requires_driver != null
-                  ? t.requires_driver
-                    ? "attended"
-                    : "unattended"
+                  ? t.requires_driver ? "attended" : "unattended"
                   : (findVerbByPack(t.name)?.attention === "unattended_after_start" ? "unattended" : "attended");
               const dep = t.edges?.[0]?.from ? `#${Number(String(t.edges[0].from).split("_").pop())}` : "—";
 
