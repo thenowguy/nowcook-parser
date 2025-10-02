@@ -1,11 +1,8 @@
-/* AuthoringPanel.jsx — v1.6.14 (Phase 1.6e)
-   Fixes:
-     • Qualifier lines (While/When/If/After/Before/Until/…) now split into note + action
-       BEFORE treating them as pure notes.
-     • Expanded imperative detector: peel, mince, chop, slice, grate, season, set, put,
-       melt, transfer, use, toss, etc.
-     • Notes now auto-depend on the previous task so they stay visually attached.
-   Keeps prior phases (cleanup, fractions, action-splitting, duration rounding, packs, optional ontology).
+/* AuthoringPanel.jsx — v1.6.15 (Phase 1.6f)
+   Change: “Meanwhile / While that’s in the works / In the meantime …,” are concurrency cues,
+           not chef notes. We strip the cue, tag the task with a “meanwhile” badge, and DO NOT
+           create a note row.
+   Also keeps the improved note splitter from v1.6.14, duration rounding, action splitting, etc.
 */
 /* eslint-disable */
 import React, { useMemo, useState } from "react";
@@ -200,77 +197,90 @@ function explodeActions(lines){
   return out;
 }
 
-/* ---------------- Chef Notes: improved splitter ---------------- */
-// Leading qualifier patterns → note + action (if action is imperative)
-const LEAD_QUALIFIER_RE = /^(?:when|while|once|after|before|until|if|unless|as soon as|meanwhile|during|as)\b[^,]*,\s*/i;
+/* ---------------- Chef Notes vs Concurrency cues ---------------- */
+// Concurrency (strip, no note): “Meanwhile…,” “While that’s in the works…,” “In the meantime…,”
+const MEANWHILE_RE = /^(?:meanwhile|in the meantime|while that[’']?s in the works)\b[^,]*,\s*/i;
+
+// General qualifier that CAN become a note if the trailing part is imperative
+const LEAD_QUALIFIER_RE = /^(?:when|while|once|after|before|until|if|unless|as soon as|during|as)\b[^,]*,\s*/i;
+
 // Leading participle clause (“Stirring frequently, …”) → note + action
 const LEAD_PARTICIPLE_RE = /^(?:stirring|cooking|simmering|whisking|mixing|seasoning|chopping|adding|working|continuing|heating|preheating|boiling|draining|baking|roasting)\b[^,]*,\s*/i;
+
 // Tail advisory → note
 const NOTE_TAIL_RE = /\b(?:be careful|do(?:n’|')t\b|do not\b|avoid\b|so it\b|so they\b|so you\b|as needed\b|if needed\b|if desired\b|if using\b|to taste\b)\b/i;
-// Soft note lead
+
+// Explicit note prefix
 const NOTE_LEAD_RE = /^note[:.]?\s*/i;
 
-// **Expanded** imperative detector (for splitting only)
+// Expanded imperative detector
 const IMPERATIVE_RE = /\b(?:add|stir|mix|combine|whisk|cook|sauté|saute|simmer|reduce|increase|bring|boil|drain|strain|season|transfer|remove|plate|serve|heat|preheat|peel|mince|chop|slice|grate|set|put|melt|use|toss)\b/i;
 
-function splitActionAndNote(line){
-  if(!line) return {action: line, note: null};
+function splitActionAndNoteOrBadge(line){
+  if(!line) return {action: line, note: null, badge: null};
 
-  // 1) Qualifier at start? (While/When/If/After/Before/Until/…,)
+  // A) MEANWHILE-style → concurrency badge, no note
+  if (MEANWHILE_RE.test(line)) {
+    const idx = line.indexOf(",");
+    const rest = line.slice(idx + 1).trim();
+    return { action: rest || line, note: null, badge: "meanwhile" };
+  }
+
+  // B) General qualifiers → prefer note + action (if action is imperative)
   if (LEAD_QUALIFIER_RE.test(line)) {
     const idx = line.indexOf(",");
     const lead = line.slice(0, idx).trim();
     const rest = line.slice(idx + 1).trim();
-    if (IMPERATIVE_RE.test(rest)) return { action: rest, note: lead };
-    // no imperative on right → whole line is a note
-    return { action: null, note: line };
+    if (IMPERATIVE_RE.test(rest)) return { action: rest, note: lead, badge: null };
+    // no imperative → whole line behaves like a note
+    return { action: null, note: line, badge: null };
   }
 
-  // 2) Leading participle clause?
+  // C) Leading participle clause
   if (LEAD_PARTICIPLE_RE.test(line)) {
     const idx = line.indexOf(",");
     const lead = line.slice(0, idx).trim();
     const rest = line.slice(idx + 1).trim();
-    if (IMPERATIVE_RE.test(rest)) return { action: rest, note: lead };
-    return { action: null, note: line };
+    if (IMPERATIVE_RE.test(rest)) return { action: rest, note: lead, badge: null };
+    return { action: null, note: line, badge: null };
   }
 
-  // 3) Explicit "Note:" lead after other checks
+  // D) Explicit “Note:”
   if (NOTE_LEAD_RE.test(line)) {
     const cleaned = line.replace(NOTE_LEAD_RE, "").trim();
-    return { action: null, note: cleaned || line };
+    return { action: null, note: cleaned || line, badge: null };
   }
 
-  // 4) “; then <verb …>” or “; <verb …>”
+  // E) “; then <verb …>” or “; <verb …>”
   const semi = line.split(/;\s*(?:then\s+)?/i);
   if (semi.length === 2 && IMPERATIVE_RE.test(semi[1])) {
-    return { action: semi[1].trim(), note: semi[0].trim() };
+    return { action: semi[1].trim(), note: semi[0].trim(), badge: null };
   }
 
-  // 5) “, then <verb …>”
+  // F) “, then <verb …>”
   const thenMatch = line.match(/,?\s+then\s+(.+)$/i);
   if (thenMatch && IMPERATIVE_RE.test(thenMatch[1])) {
     const before = line.slice(0, thenMatch.index).replace(/,\s*$/,"").trim();
-    return { action: thenMatch[1].trim(), note: before || null };
+    return { action: thenMatch[1].trim(), note: before || null, badge: null };
   }
 
-  // 6) Advisory tails
+  // G) Advisory tails
   const mDash=line.match(/\s[–—-]\s(.+)$/);
   if(mDash && NOTE_TAIL_RE.test(mDash[1])){
-    return {action: line.replace(/\s[–—-]\s(.+)$/,"").trim(), note: mDash[1].trim()};
+    return {action: line.replace(/\s[–—-]\s(.+)$/,"").trim(), note: mDash[1].trim(), badge: null};
   }
   const semiIdx=line.lastIndexOf("; ");
   if(semiIdx>0){
     const head=line.slice(0,semiIdx).trim(); const tail=line.slice(semiIdx+2).trim();
-    if(NOTE_TAIL_RE.test(tail)) return {action: head, note: tail};
+    if(NOTE_TAIL_RE.test(tail)) return {action: head, note: tail, badge: null};
   }
   const commaIdx=line.lastIndexOf(", ");
   if(commaIdx>0){
     const head=line.slice(0,commaIdx).trim(); const tail=line.slice(commaIdx+2).trim();
-    if(NOTE_TAIL_RE.test(tail)) return {action: head, note: tail};
+    if(NOTE_TAIL_RE.test(tail)) return {action: head, note: tail, badge: null};
   }
 
-  return {action: line, note: null};
+  return {action: line, note: null, badge: null};
 }
 
 /* ---------------- Component ---------------- */
@@ -301,7 +311,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
       const line = cleanLine(raw);
       if (!line) continue;
 
-      const { action, note } = splitActionAndNote(line);
+      const { action, note, badge } = splitActionAndNoteOrBadge(line);
 
       // Pure note line
       if (!action && note) {
@@ -342,6 +352,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
         inputs: [],
         outputs: [],
         edges: [],
+        concurrency_hint: badge || null,
       };
       if (autoDeps && lastTaskId) mainTask.edges.push({ from: lastTaskId, type: "FS" });
       tasks.push(mainTask);
@@ -384,7 +395,7 @@ export default function AuthoringPanel({ onLoadMeal }) {
   return (
     <div style={{ border: "1px solid #ddd", borderRadius: 12, padding: 12, background: "#ffe7b3" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ fontWeight: 700 }}>Author Ingestion (v1.6.14)</div>
+        <div style={{ fontWeight: 700 }}>Author Ingestion (v1.6.15)</div>
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={parseLines}>Parse → Draft</button>
           <button onClick={loadAsMeal}>Load into Preview</button>
@@ -482,7 +493,14 @@ export default function AuthoringPanel({ onLoadMeal }) {
               return (
                 <tr key={idx} style={{ background: i % 2 ? "rgba(255,255,255,0.45)" : "transparent" }}>
                   <td style={td}>{idx}</td>
-                  <td style={td}>{t.name || t}</td>
+                  <td style={td}>
+                    {t.concurrency_hint === "meanwhile" && (
+                      <span style={{ fontSize: 11, border: "1px solid #cbd5e1", padding: "1px 6px", borderRadius: 999, marginRight: 8, background: "#f8fafc" }}>
+                        meanwhile
+                      </span>
+                    )}
+                    {t.name || t}
+                  </td>
                   <td style={td}>{verb}</td>
                   <td style={td}>{planned || "—"}</td>
                   <td style={td}>
