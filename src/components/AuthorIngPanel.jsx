@@ -34,10 +34,9 @@ export default function AuthoringPanel({ onLoadMeal, recipeText, onRecipeTextCha
     "Slice garlic and parsley; set out chili flakes — 3 min\nBring a large pot of water to a boil — 10 min\n…"
   );
   const [title, setTitle] = useState("");
-  const [autoDeps, setAutoDeps] = useState(true);
   const [preview, setPreview] = useState([]);
   const [roundAboutUp, setRoundAboutUp] = useState(true);
-  const [smartDependencies, setSmartDependencies] = useState(false);
+  const [smartDependencies, setSmartDependencies] = useState(true);
 
   // Sync with external recipeText prop when it changes
   React.useEffect(() => {
@@ -63,7 +62,7 @@ export default function AuthoringPanel({ onLoadMeal, recipeText, onRecipeTextCha
   async function parseLines() {
     // Use the new local parser
     const meal = await parseRecipe(text, title || "Preview", {
-      autoDependencies: autoDeps,
+      autoDependencies: false,
       smartDependencies,
       roundAboutUp
     });
@@ -154,18 +153,13 @@ export default function AuthoringPanel({ onLoadMeal, recipeText, onRecipeTextCha
 
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <input type="checkbox" checked={autoDeps} onChange={(e) => setAutoDeps(e.target.checked)} />
-              Auto-create sequential dependencies (FS)
-            </label>
-
-            <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <input type="checkbox" checked={roundAboutUp} onChange={(e) => setRoundAboutUp(e.target.checked)} />
               Round "about/approx/range" durations up
             </label>
 
             <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <input type="checkbox" checked={smartDependencies} onChange={(e) => setSmartDependencies(e.target.checked)} />
-              Smart dependency inference (vs sequential)
+              Smart dependency inference
             </label>
 
             <div>
