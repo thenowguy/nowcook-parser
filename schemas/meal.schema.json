@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nowcook.local/schemas/meal.schema.json",
+  "title": "Meal (recipe) schema",
+  "type": "object",
+  "required": ["title", "tasks"],
+  "additionalProperties": true,
+  "properties": {
+    "title": { "type": "string" },
+    "author": {
+      "anyOf": [
+        { "type": "string" },
+        {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" }
+          },
+          "additionalProperties": true
+        }
+      ]
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "canonical_verb": { "type": "string" },
+          "duration_min": {
+            "anyOf": [
+              { "type": "null" },
+              { "type": "object", "properties": { "value": { "type": "number", "minimum": 0 } }, "required": ["value"], "additionalProperties": true }
+            ]
+          },
+          "planned_min": { "type": ["null", "number"] },
+          "requires_driver": { "type": "boolean" },
+          "self_running_after_start": { "type": "boolean" },
+          "readiness_signal": { "type": ["null", "string", "object"] },
+          "inputs": { "type": "array", "items": { "type": "string" } },
+          "outputs": { "type": "array", "items": { "type": "string" } },
+          "edges": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["from", "type"],
+              "properties": {
+                "from": { "type": "string" },
+                "type": { "type": "string", "enum": ["FS", "SS", "FF", "SF"] },
+                "lag_min": { "type": "number", "minimum": 0 }
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "meta": { "type": "object", "additionalProperties": true }
+  }
+}

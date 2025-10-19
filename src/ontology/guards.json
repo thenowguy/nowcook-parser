@@ -1,0 +1,223 @@
+{
+  "version": "1.0.0",
+  "description": "Safety redirects and verb substitutions - based on Google Sheets Edge_Guards",
+  "guards": [
+    {
+      "id": "boil_chicken_breast",
+      "trigger": {
+        "verb": "boil",
+        "ingredient": "chicken_breast"
+      },
+      "redirect_to": "simmer",
+      "rationale": "Boiling chicken breast makes it tough and dry. Gentle simmering or poaching preserves tenderness.",
+      "severity": "warning",
+      "suggested_parameters": {
+        "heat_level": "low",
+        "time_min": [12, 18]
+      }
+    },
+    {
+      "id": "high_heat_garlic",
+      "trigger": {
+        "verb": "sauté",
+        "ingredient": "garlic",
+        "heat_level": ["high", "medium_high"]
+      },
+      "redirect_to": null,
+      "rationale": "Garlic burns easily at high heat, becoming bitter. Use medium-low heat or add after other ingredients.",
+      "severity": "caution",
+      "suggested_parameters": {
+        "heat_level": "medium_low"
+      }
+    },
+    {
+      "id": "grill_stew_meat",
+      "trigger": {
+        "verb": "grill",
+        "ingredient": ["beef_stew_meat", "chuck", "tough_cut"]
+      },
+      "redirect_to": "braise",
+      "rationale": "Tough cuts need slow, moist cooking to become tender. Grilling will make them chewy.",
+      "severity": "warning",
+      "suggested_verb": "simmer"
+    },
+    {
+      "id": "overcook_pasta",
+      "trigger": {
+        "verb": "boil",
+        "ingredient": "pasta",
+        "time_min": [">15"]
+      },
+      "redirect_to": null,
+      "rationale": "Most pasta cooks in 8-12 minutes. Longer cooking makes it mushy.",
+      "severity": "info",
+      "suggested_parameters": {
+        "time_min": [8, 12]
+      }
+    },
+    {
+      "id": "butter_high_heat",
+      "trigger": {
+        "verb": "heat_oil",
+        "ingredient": "butter",
+        "heat_level": ["high", "medium_high"]
+      },
+      "redirect_to": null,
+      "rationale": "Butter burns at high heat. Use medium heat or mix with oil for higher smoke point.",
+      "severity": "caution",
+      "suggested_parameters": {
+        "heat_level": "medium"
+      }
+    },
+    {
+      "id": "raw_tomato_simmer",
+      "trigger": {
+        "verb": "simmer",
+        "ingredient": "tomato",
+        "time_min": ["<20"]
+      },
+      "redirect_to": null,
+      "rationale": "Tomatoes need at least 20-30 minutes of simmering to break down and develop flavor for sauce.",
+      "severity": "info",
+      "suggested_parameters": {
+        "time_min": [25, 35]
+      }
+    },
+    {
+      "id": "fresh_herbs_early",
+      "trigger": {
+        "verb": "simmer",
+        "ingredient": ["parsley", "cilantro", "basil"],
+        "note": "added early"
+      },
+      "redirect_to": null,
+      "rationale": "Delicate fresh herbs lose flavor when cooked too long. Add in last 5 minutes or as garnish.",
+      "severity": "info"
+    },
+    {
+      "id": "undercook_poultry",
+      "trigger": {
+        "verb": ["roast", "bake", "grill"],
+        "ingredient": ["chicken", "turkey", "poultry"],
+        "readiness_cue": ["missing_temp_check"]
+      },
+      "redirect_to": null,
+      "rationale": "Poultry MUST reach 165°F internal temperature for food safety. Use a thermometer.",
+      "severity": "critical"
+    },
+    {
+      "id": "quick_roast_root_vegetables",
+      "trigger": {
+        "verb": "roast",
+        "ingredient": ["potato", "carrot", "beet", "root_vegetable"],
+        "time_min": ["<20"]
+      },
+      "redirect_to": null,
+      "rationale": "Root vegetables need 30-45 minutes at 400-425°F to become tender inside and crispy outside.",
+      "severity": "info",
+      "suggested_parameters": {
+        "time_min": [30, 45],
+        "temp_f": [400, 425]
+      }
+    },
+    {
+      "id": "low_temp_roast_chicken",
+      "trigger": {
+        "verb": "roast",
+        "ingredient": "chicken",
+        "temp_f": ["<350"]
+      },
+      "redirect_to": null,
+      "rationale": "Roasting chicken below 350°F takes very long and may not crisp skin. Use 375-425°F for best results.",
+      "severity": "info",
+      "suggested_parameters": {
+        "temp_f": [375, 425]
+      }
+    },
+    {
+      "id": "salt_early_ground_meat",
+      "trigger": {
+        "verb": "season",
+        "ingredient": ["ground_beef", "ground_meat"],
+        "timing": "before_forming"
+      },
+      "redirect_to": null,
+      "rationale": "Salting ground meat before forming burgers/meatballs can make texture dense. Salt after forming or just before cooking.",
+      "severity": "info"
+    },
+    {
+      "id": "oil_in_pasta_water",
+      "trigger": {
+        "verb": "add",
+        "ingredient": "oil",
+        "context": "pasta_water"
+      },
+      "redirect_to": null,
+      "rationale": "Oil in pasta water doesn't prevent sticking and makes sauce slide off. Just stir occasionally instead.",
+      "severity": "myth"
+    },
+    {
+      "id": "rinse_pasta",
+      "trigger": {
+        "verb": "rinse",
+        "ingredient": "pasta",
+        "context": "after_draining"
+      },
+      "redirect_to": null,
+      "rationale": "Rinsing pasta removes starch that helps sauce cling. Only rinse for cold pasta salads.",
+      "severity": "caution"
+    },
+    {
+      "id": "crowd_pan_saute",
+      "trigger": {
+        "verb": "sauté",
+        "note_keywords": ["overcrowded", "too much"]
+      },
+      "redirect_to": null,
+      "rationale": "Overcrowding the pan causes steaming instead of browning. Cook in batches if needed.",
+      "severity": "technique"
+    },
+    {
+      "id": "cold_pan_sear",
+      "trigger": {
+        "verb": "sear",
+        "note_keywords": ["cold pan", "not preheated"]
+      },
+      "redirect_to": null,
+      "rationale": "Searing requires a very hot pan. Preheat for 3-5 minutes before adding food.",
+      "severity": "technique"
+    }
+  ],
+  "severity_levels": {
+    "critical": {
+      "description": "Food safety issue - must be addressed",
+      "color": "red",
+      "block_execution": true
+    },
+    "warning": {
+      "description": "Will likely produce poor results",
+      "color": "orange",
+      "block_execution": false
+    },
+    "caution": {
+      "description": "Suboptimal technique but not harmful",
+      "color": "yellow",
+      "block_execution": false
+    },
+    "info": {
+      "description": "Helpful suggestion for improvement",
+      "color": "blue",
+      "block_execution": false
+    },
+    "myth": {
+      "description": "Common misconception",
+      "color": "purple",
+      "block_execution": false
+    },
+    "technique": {
+      "description": "Technique improvement suggestion",
+      "color": "green",
+      "block_execution": false
+    }
+  }
+}

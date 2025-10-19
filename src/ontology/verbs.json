@@ -1,0 +1,422 @@
+{
+  "schema_version": "2.0.0",
+  "locale": "en",
+  "description": "Unified verb ontology - consolidated from Google Sheets + packs/ + ontology/. See parameters.json for parameter definitions.",
+  "verbs": [
+    {
+      "canon": "sauté",
+      "attention": "attended",
+      "patterns": [
+        "\\bsauté\\b",
+        "\\bsaute\\b",
+        "\\bpan[- ]fry\\b",
+        "\\bstir[- ]fry\\b",
+        "\\bcook.*(?:until|till).*(?:soft|golden|translucent)\\b",
+        "\\bbrown.*in.*(?:pan|skillet)\\b"
+      ],
+      "defaults": { "planned_min": 8 }
+    },
+    {
+      "canon": "simmer",
+      "attention": "unattended_after_start",
+      "patterns": [
+        "\\bsimmer\\b",
+        "\\breduce.*heat.*(?:to )?(?:low|medium[- ]low)\\b",
+        "\\bgentle.*boil\\b",
+        "\\bcook.*(?:gently|slowly)\\b"
+      ],
+      "defaults": { "planned_min": 20 }
+    },
+    {
+      "canon": "boil",
+      "attention": "unattended_after_start",
+      "patterns": [
+        "\\bboil\\b",
+        "\\bbring.*to.*(?:a )?boil\\b",
+        "\\bboiling.*water\\b"
+      ],
+      "defaults": { "planned_min": 10 }
+    },
+    {
+      "canon": "roast",
+      "attention": "unattended_after_start",
+      "patterns": [
+        "\\broast\\b",
+        "\\broast.*until\\b",
+        "\\boven.*roast\\b"
+      ],
+      "defaults": { "planned_min": 45 }
+    },
+    {
+      "canon": "bake",
+      "attention": "unattended_after_start",
+      "patterns": [
+        "\\bbake\\b",
+        "\\bbake.*for\\b",
+        "\\bplace.*in.*oven\\b",
+        "\\btransfer.*to.*oven\\b"
+      ],
+      "defaults": { "planned_min": 30 }
+    },
+    {
+      "canon": "slice",
+      "attention": "attended",
+      "patterns": [
+        "\\bslice\\b",
+        "\\bthinly\\s+slice\\b",
+        "\\bslice\\s+the\\b"
+      ],
+      "defaults": { "planned_min": 3 }
+    },
+    {
+      "canon": "dice",
+      "attention": "attended",
+      "patterns": [
+        "\\bdice\\b",
+        "\\bcube\\b",
+        "\\bchop.*(?:into|to).*(?:small|fine).*pieces\\b"
+      ],
+      "defaults": { "planned_min": 3 }
+    },
+    {
+      "canon": "chop",
+      "attention": "attended",
+      "patterns": [
+        "\\bchop\\b",
+        "\\bcut.*into.*pieces\\b",
+        "\\bcut.*up\\b"
+      ],
+      "defaults": { "planned_min": 2 }
+    },
+    {
+      "canon": "mince",
+      "attention": "attended",
+      "patterns": [
+        "\\bmince\\b",
+        "\\bfinely.*chop\\b",
+        "\\bchop.*finely\\b"
+      ],
+      "defaults": { "planned_min": 3 }
+    },
+    {
+      "canon": "preheat_oven",
+      "attention": "unattended_after_start",
+      "patterns": [
+        "\\bpreheat.*oven\\b",
+        "\\bheat.*oven.*to\\b",
+        "\\bset.*oven.*to\\b"
+      ],
+      "defaults": { "planned_min": 12 }
+    },
+    {
+      "canon": "season",
+      "attention": "attended",
+      "patterns": [
+        "\\bseason\\b",
+        "\\bsalt.*(?:and|&).*pepper\\b",
+        "\\badd.*(?:salt|seasoning)\\b",
+        "\\bsprinkle\\s+with\\b"
+      ],
+      "defaults": { "planned_min": 1 }
+    },
+    {
+      "canon": "stir",
+      "attention": "attended",
+      "patterns": [
+        "\\bstir\\b",
+        "\\bstir\\s+in\\b",
+        "\\bstir\\s+until\\b",
+        "\\bmix\\b"
+      ],
+      "defaults": { "planned_min": 1 }
+    },
+    {
+      "canon": "whisk",
+      "attention": "attended",
+      "patterns": [
+        "\\bwhisk\\b",
+        "\\bbeat\\b",
+        "\\bbeat\\s+together\\b"
+      ],
+      "defaults": { "planned_min": 2 }
+    },
+    {
+      "canon": "drain",
+      "attention": "attended",
+      "patterns": [
+        "\\bdrain\\b",
+        "\\bdrain\\s+well\\b",
+        "\\bstrain\\b",
+        "\\bpour.*off.*(?:liquid|water)\\b"
+      ],
+      "defaults": { "planned_min": 1 }
+    },
+    {
+      "canon": "add",
+      "attention": "attended",
+      "patterns": [
+        "\\badd\\b",
+        "\\bstir.*in\\b",
+        "\\bpour.*in\\b",
+        "\\bfold.*in\\b",
+        "\\bincorporate\\b"
+      ],
+      "defaults": { "planned_min": 1 }
+    },
+    {
+      "canon": "pour",
+      "attention": "attended",
+      "patterns": [
+        "\\bpour\\b",
+        "\\btransfer.*liquid\\b"
+      ],
+      "defaults": { "planned_min": 1 }
+    },
+    {
+      "canon": "plate",
+      "attention": "attended",
+      "patterns": [
+        "\\bserve\\b",
+        "\\bplate\\b",
+        "\\bdish\\s+up\\b",
+        "\\btransfer.*to.*(?:plate|platter|serving dish)\\b"
+      ],
+      "defaults": { "planned_min": 2 }
+    },
+    {
+      "canon": "rest",
+      "attention": "unattended",
+      "patterns": [
+        "\\brest\\b",
+        "\\blet.*stand\\b",
+        "\\bcool.*for\\b",
+        "\\bset aside.*for\\b",
+        "\\ballow\\s+to\\s+rest\\b"
+      ],
+      "defaults": { "planned_min": 10 }
+    },
+    {
+      "canon": "bring_to_boil",
+      "attention": "unattended_after_start",
+      "patterns": [
+        "\\bbring.*to.*(?:a )?boil\\b",
+        "\\bheat.*until.*boiling\\b",
+        "\\bbring\\s+up\\s+to\\s+a\\s+boil\\b"
+      ],
+      "defaults": { "planned_min": 8 }
+    },
+    {
+      "canon": "reduce_heat",
+      "attention": "attended",
+      "patterns": [
+        "\\breduce.*heat\\b",
+        "\\blower.*heat\\b",
+        "\\bturn.*(?:down|to low)\\b"
+      ],
+      "defaults": { "planned_min": 1 }
+    },
+    {
+      "canon": "heat_oil",
+      "attention": "attended",
+      "patterns": [
+        "\\bheat.*oil\\b",
+        "\\bwarm.*(?:oil|butter)\\b",
+        "\\bmelt.*butter\\b",
+        "\\bheat\\s+(?:the\\s+)?(?:olive\\s+)?oil\\b"
+      ],
+      "defaults": { "planned_min": 3 }
+    },
+    {
+      "canon": "cover",
+      "attention": "attended",
+      "patterns": [
+        "\\bcover\\b",
+        "\\bput.*lid.*on\\b",
+        "\\bcover.*with.*(?:lid|foil)\\b"
+      ],
+      "defaults": { "planned_min": 1 }
+    },
+    {
+      "canon": "grill",
+      "attention": "attended",
+      "patterns": [
+        "\\bgrill\\b",
+        "\\bbarbecue\\b",
+        "\\bcook.*on.*grill\\b"
+      ],
+      "defaults": { "planned_min": 12 }
+    },
+    {
+      "canon": "marinate",
+      "attention": "unattended",
+      "patterns": [
+        "\\bmarinate\\b",
+        "\\bsoak.*in.*marinade\\b",
+        "\\blet.*marinate\\b"
+      ],
+      "defaults": { "planned_min": 30 }
+    },
+    {
+      "canon": "toss",
+      "attention": "attended",
+      "patterns": [
+        "\\btoss\\b",
+        "\\bshuffle\\s+the\\s+vegetables\\b",
+        "\\bstir\\s+around\\b"
+      ],
+      "defaults": { "planned_min": 1 }
+    },
+    {
+      "canon": "arrange",
+      "attention": "attended",
+      "patterns": [
+        "\\barrange\\b",
+        "\\bplace\\s+the\\b",
+        "\\bplace\\s+on\\b",
+        "\\bplace\\s+in\\b",
+        "\\bset\\s+on\\s+top\\s+of\\b",
+        "\\bspread\\s+the\\b"
+      ],
+      "defaults": { "planned_min": 2 }
+    },
+    {
+      "canon": "stuff",
+      "attention": "attended",
+      "patterns": [
+        "\\bstuff\\b",
+        "\\bfill\\s+cavity\\b",
+        "\\binsert\\s+into\\s+the\\s+cavity\\b"
+      ],
+      "defaults": { "planned_min": 3 }
+    },
+    {
+      "canon": "truss",
+      "attention": "attended",
+      "patterns": [
+        "\\btruss\\b",
+        "\\btie\\s+legs\\b",
+        "\\bbind\\s+chicken\\b"
+      ],
+      "defaults": { "planned_min": 2 }
+    },
+    {
+      "canon": "drizzle",
+      "attention": "attended",
+      "patterns": [
+        "\\bdrizzle\\b",
+        "\\bdrizzle\\s+with\\b",
+        "\\bdrizzle\\s+over\\b"
+      ],
+      "defaults": { "planned_min": 1 }
+    },
+    {
+      "canon": "julienne",
+      "attention": "attended",
+      "patterns": [
+        "\\bjulienne\\b",
+        "\\bcut.*into.*matchsticks\\b"
+      ],
+      "defaults": { "planned_min": 5 }
+    },
+    {
+      "canon": "sear",
+      "attention": "attended",
+      "patterns": [
+        "\\bsear\\b",
+        "\\bbrown.*quickly\\b",
+        "\\bcook.*over.*high.*heat\\b"
+      ],
+      "defaults": { "planned_min": 5 }
+    },
+    {
+      "canon": "deglaze",
+      "attention": "attended",
+      "patterns": [
+        "\\bdeglaze\\b",
+        "\\badd.*wine.*scrape\\b",
+        "\\bscrape.*brown.*bits\\b"
+      ],
+      "defaults": { "planned_min": 2 }
+    },
+    {
+      "canon": "reduce",
+      "attention": "attended",
+      "patterns": [
+        "\\breduce\\b",
+        "\\breduce.*by.*half\\b",
+        "\\bcook.*until.*thickened\\b"
+      ],
+      "defaults": { "planned_min": 15 }
+    },
+    {
+      "canon": "blanch",
+      "attention": "attended",
+      "patterns": [
+        "\\bblanch\\b",
+        "\\bboil.*briefly\\b",
+        "\\bboil.*then.*ice.*water\\b"
+      ],
+      "defaults": { "planned_min": 3 }
+    },
+    {
+      "canon": "shock",
+      "attention": "attended",
+      "patterns": [
+        "\\bshock\\b",
+        "\\bplunge.*into.*ice.*water\\b",
+        "\\bstop.*cooking.*ice\\b"
+      ],
+      "defaults": { "planned_min": 2 }
+    },
+    {
+      "canon": "peel",
+      "attention": "attended",
+      "patterns": [
+        "\\bpeel\\b",
+        "\\bremove.*skin\\b",
+        "\\bpeel.*and.*discard\\b"
+      ],
+      "defaults": { "planned_min": 2 }
+    },
+    {
+      "canon": "zest",
+      "attention": "attended",
+      "patterns": [
+        "\\bzest\\b",
+        "\\bgrate.*(?:lemon|lime|orange).*peel\\b"
+      ],
+      "defaults": { "planned_min": 2 }
+    },
+    {
+      "canon": "combine",
+      "attention": "attended",
+      "patterns": [
+        "\\bcombine\\b",
+        "\\bmix.*together\\b",
+        "\\bblend.*together\\b"
+      ],
+      "defaults": { "planned_min": 2 }
+    },
+    {
+      "canon": "fold",
+      "attention": "attended",
+      "patterns": [
+        "\\bfold\\b",
+        "\\bgently.*fold\\b",
+        "\\bfold.*in\\b"
+      ],
+      "defaults": { "planned_min": 2 }
+    },
+    {
+      "canon": "rest_meat",
+      "attention": "unattended_after_start",
+      "patterns": [
+        "\\brest\\s+(?:with\\s+the\\s+heat\\s+off|off\\s+the\\s+heat)\\b",
+        "\\ballow\\s+to\\s+rest\\b",
+        "\\blet\\s+rest\\b",
+        "\\bleave\\s+to\\s+rest\\b"
+      ],
+      "defaults": { "planned_min": 15 }
+    }
+  ]
+}

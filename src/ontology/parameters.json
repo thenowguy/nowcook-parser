@@ -1,0 +1,247 @@
+{
+  "version": "1.0.0",
+  "description": "Parameter definitions for cooking verbs - consolidated from Google Sheets Param_Dictionary",
+  "parameters": {
+    "heat_level": {
+      "type": "enum",
+      "allowed_values": ["low", "medium_low", "medium", "medium_high", "high"],
+      "description": "Stovetop heat setting",
+      "verbs": ["sauté", "simmer", "boil", "heat_oil", "grill", "sear"]
+    },
+    "time_min": {
+      "type": "range",
+      "min": 1,
+      "max": 1440,
+      "description": "Duration in minutes",
+      "verbs": ["*"]
+    },
+    "temp_f": {
+      "type": "range",
+      "min": 150,
+      "max": 550,
+      "description": "Oven or cooking temperature in Fahrenheit",
+      "verbs": ["roast", "bake", "preheat_oven", "grill"]
+    },
+    "temp_c": {
+      "type": "range",
+      "min": 65,
+      "max": 290,
+      "description": "Oven or cooking temperature in Celsius",
+      "verbs": ["roast", "bake", "preheat_oven", "grill"]
+    },
+    "thickness_mm": {
+      "type": "range",
+      "min": 1,
+      "max": 50,
+      "description": "Slice thickness in millimeters",
+      "verbs": ["slice"]
+    },
+    "size_mm": {
+      "type": "range",
+      "min": 1,
+      "max": 50,
+      "description": "Dice or chop size in millimeters",
+      "verbs": ["dice", "chop", "mince", "julienne"]
+    },
+    "cut_style": {
+      "type": "enum",
+      "allowed_values": ["slice", "dice", "mince", "chop", "julienne", "cube", "wedge", "matchstick"],
+      "description": "Style of cutting",
+      "verbs": ["slice", "dice", "chop", "mince"]
+    },
+    "stir_frequency": {
+      "type": "enum",
+      "allowed_values": ["constant", "frequent", "occasional", "rare", "never"],
+      "description": "How often to stir during cooking",
+      "verbs": ["sauté", "simmer", "reduce", "stir"]
+    },
+    "covered": {
+      "type": "boolean",
+      "description": "Whether to cover the pot/pan",
+      "verbs": ["simmer", "boil", "bake", "rest", "marinate"]
+    },
+    "vigor": {
+      "type": "enum",
+      "allowed_values": ["gentle", "moderate", "vigorous", "rolling", "rapid"],
+      "description": "Intensity of action",
+      "verbs": ["boil", "stir", "whisk"]
+    },
+    "turn_halfway": {
+      "type": "boolean",
+      "description": "Whether to flip/turn food halfway through cooking",
+      "verbs": ["roast", "bake", "grill"]
+    },
+    "rack_position": {
+      "type": "enum",
+      "allowed_values": ["lower", "middle", "upper"],
+      "description": "Oven rack placement",
+      "verbs": ["roast", "bake"]
+    },
+    "seasoning_type": {
+      "type": "array",
+      "allowed_values": ["salt", "pepper", "herbs", "spices", "garlic", "onion"],
+      "description": "Types of seasoning to add",
+      "verbs": ["season"]
+    },
+    "to_taste": {
+      "type": "boolean",
+      "description": "Season according to personal preference",
+      "default": true,
+      "verbs": ["season"]
+    },
+    "method": {
+      "type": "enum",
+      "allowed_values": ["stir", "whisk", "fold", "beat", "mix", "blend"],
+      "description": "Method of combining ingredients",
+      "verbs": ["stir", "whisk", "combine", "mix"]
+    },
+    "reserve_liquid": {
+      "type": "boolean",
+      "description": "Save the drained liquid for later use",
+      "default": false,
+      "verbs": ["drain"]
+    },
+    "timing": {
+      "type": "enum",
+      "allowed_values": ["all_at_once", "gradually", "one_at_a_time", "slowly"],
+      "description": "How to add ingredients",
+      "verbs": ["add", "pour"]
+    },
+    "speed": {
+      "type": "enum",
+      "allowed_values": ["slow", "steady", "quick", "drizzle"],
+      "description": "Rate of pouring",
+      "verbs": ["pour", "drizzle"]
+    },
+    "garnish": {
+      "type": "boolean",
+      "description": "Add garnish when plating",
+      "default": false,
+      "verbs": ["plate"]
+    },
+    "cover_type": {
+      "type": "enum",
+      "allowed_values": ["lid", "foil", "plastic_wrap", "parchment", "towel"],
+      "description": "What to cover with",
+      "verbs": ["cover", "rest"]
+    },
+    "flip_halfway": {
+      "type": "boolean",
+      "description": "Flip food halfway through cooking",
+      "default": true,
+      "verbs": ["grill", "sear", "roast"]
+    },
+    "refrigerate": {
+      "type": "boolean",
+      "description": "Keep in refrigerator",
+      "default": true,
+      "verbs": ["marinate", "rest"]
+    },
+    "oil_type": {
+      "type": "enum",
+      "allowed_values": ["olive", "vegetable", "canola", "butter", "coconut", "avocado", "peanut"],
+      "description": "Type of oil or fat to use",
+      "verbs": ["heat_oil", "sauté"]
+    },
+    "target_heat": {
+      "type": "enum",
+      "allowed_values": ["off", "low", "medium_low", "medium"],
+      "description": "Heat level to reduce to",
+      "verbs": ["reduce_heat"]
+    }
+  },
+  "readiness_cues": {
+    "softened": {
+      "description": "Ingredients have become tender",
+      "verbs": ["sauté", "simmer"]
+    },
+    "translucent": {
+      "description": "Onions or similar items become see-through",
+      "verbs": ["sauté"]
+    },
+    "golden": {
+      "description": "Light golden brown color achieved",
+      "verbs": ["sauté", "bake", "roast"]
+    },
+    "golden_brown": {
+      "description": "Deep golden to light brown color",
+      "verbs": ["roast", "bake", "sauté", "sear"]
+    },
+    "fragrant": {
+      "description": "Aromatic compounds released, smells good",
+      "verbs": ["sauté", "heat_oil", "roast"]
+    },
+    "reduced_by_half": {
+      "description": "Liquid volume decreased by 50%",
+      "verbs": ["simmer", "reduce"]
+    },
+    "thickened": {
+      "description": "Liquid has become thicker, coats spoon",
+      "verbs": ["simmer", "reduce"]
+    },
+    "tender": {
+      "description": "Food is soft and easily pierced",
+      "verbs": ["simmer", "roast", "bake", "grill"]
+    },
+    "cooked_through": {
+      "description": "No raw parts remain inside",
+      "verbs": ["roast", "bake", "grill", "sear"]
+    },
+    "boiling": {
+      "description": "Large bubbles breaking the surface",
+      "verbs": ["boil", "bring_to_boil"]
+    },
+    "bubbling_vigorously": {
+      "description": "Rapid, active bubbling",
+      "verbs": ["boil"]
+    },
+    "crispy": {
+      "description": "Exterior is crunchy",
+      "verbs": ["roast", "bake", "grill"]
+    },
+    "internal_temp_165f": {
+      "description": "Safe internal temperature for poultry",
+      "verbs": ["roast", "bake", "grill"]
+    },
+    "juices_run_clear": {
+      "description": "No pink liquid when pierced",
+      "verbs": ["roast", "bake", "grill"]
+    },
+    "shimmering": {
+      "description": "Oil moves fluidly with light reflection",
+      "verbs": ["heat_oil"]
+    },
+    "well_combined": {
+      "description": "Ingredients fully mixed together",
+      "verbs": ["stir", "whisk", "combine"]
+    },
+    "smooth": {
+      "description": "No lumps or chunks",
+      "verbs": ["whisk", "stir", "blend"]
+    },
+    "incorporated": {
+      "description": "Ingredients integrated into mixture",
+      "verbs": ["add", "fold", "stir"]
+    },
+    "preheated": {
+      "description": "Oven reached target temperature",
+      "verbs": ["preheat_oven"]
+    },
+    "grill_marks": {
+      "description": "Char lines visible on food",
+      "verbs": ["grill", "sear"]
+    },
+    "charred": {
+      "description": "Darkened, caramelized exterior",
+      "verbs": ["grill", "sear", "roast"]
+    },
+    "rested": {
+      "description": "Juices redistributed after cooking",
+      "verbs": ["rest", "rest_meat"]
+    },
+    "evenly_cut": {
+      "description": "All pieces similar size and shape",
+      "verbs": ["slice", "dice", "chop", "julienne"]
+    }
+  }
+}

@@ -1,0 +1,190 @@
+--- a/src/components/AuthoringPanel.jsx  (v1.0.2)
++++ b/src/components/AuthoringPanel.jsx  (v1.1)
+@@
+-/* AuthoringPanel.jsx — v1.0.2
+-   - Fixes overlap by using a responsive two-column grid (no absolute positioning)
++/* AuthoringPanel.jsx — v1.1
++   - Adds: (1) light prefilter to normalize long-form recipe text
++           (2) "Import from URL/HTML" minimal hook
++   - Keeps: responsive two-column layout (no absolute positioning)
+    - Left: recipe textarea. Right: meal title + tips + controls.
+    - Stacks to one column automatically on narrow widths.
+ */
+ /* eslint-disable */
+-import React, { useMemo, useState } from "react";
++import React, { useMemo, useState } from "react";
++// NEW (optional ingestion hooks – safe no-ops if not used)
++import { ingestFromUrlOrHtml } from "../ingestion/url_or_text";
++import { getPacks } from "../ingestion/packs_bridge";
+ 
+ // Packs (reuse like App)
+ import VERB_PACK from "../packs/verbs.en.json";
+ import DURATIONS_PACK from "../packs/durations.en.json";
+@@
+ export default function AuthoringPanel({ onLoadMeal }) {
+   const [text, setText] = useState(
+     "Slice garlic and parsley; set out chili flakes — 3 min\nBring a large pot of water to a boil — 10 min\n…"
+   );
+   const [title, setTitle] = useState("");
+   const [autoDeps, setAutoDeps] = useState(true);
+   const [preview, setPreview] = useState([]);
++  // NEW: lazily pull packs (future-proofing; not required for core parse)
++  const packs = useMemo(() => getPacks?.() ?? { verbs: VERB_PACK, durations: DURATIONS_PACK }, []);
+ 
+   const rows = useMemo(() => {
+-    return text
+-      .split(/\r?\n/)
+-      .map((l) => l.trim())
+-      .filter(Boolean);
++    return text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+   }, [text]);
+ 
++  // NEW: small normalizer for long-form recipes
++  function normalizeText(raw) {
++    if (!raw) return "";
++    // collapse Windows newlines, trim extra spaces
++    let s = String(raw).replace(/\r/g, "").trim();
++    // turn "Step X" blocks & bullets into single lines
++    s = s
++      .replace(/^\s*step\s*\d+\s*:?\s*/gim, "")           // remove "Step 1:"
++      .replace(/^\s*[-*•]\s*/gim, "")                    // remove bullets
++      .replace(/\s+—\s+/g, " — ")                        // tidy em-dash spaces
++      .replace(/\s{2,}/g, " ");                          // collapse spaces
++    return s;
++  }
++
+   function parseLines() {
+-    const tasks = rows.map((line, idx) => {
++    const tasks = rows.map((line, idx) => {
+       const vMeta = findVerb(line);
+       const verb = vMeta?.name || "free_text";
+       const durMin = parseDurationMin(line);
+       const planned_min = durMin ?? vMeta?.default_planned ?? DEFAULTS_BY_VERB[verb] ?? null;
+ 
+       return {
+         id: `draft_${idx + 1}`,
+         name: line.replace(/\s*—\s*\d+\s*min(?:utes?)?$/i, ""),
+         canonical_verb: verb,
+         duration_min: toDurationObj(durMin),
+         planned_min,
+         requires_driver: vMeta ? vMeta.attention === "attended" : true,
+         self_running_after_start: vMeta ? vMeta.attention === "unattended_after_start" : false,
+         inputs: [],
+         outputs: [],
+         edges: [],
+       };
+     });
+@@
+     setPreview(tasks);
+   }
+ 
++  // NEW: import from URL/HTML (optional – safe if helpers are absent)
++  async function handleImportUrlOrHtml() {
++    try {
++      const v = window.prompt("Paste a recipe URL or HTML snippet:");
++      if (!v) return;
++      const raw = await ingestFromUrlOrHtml?.(v);
++      const cleaned = normalizeText(raw || v);
++      setText(cleaned);
++    } catch (e) {
++      console.error(e);
++      alert("Import failed. Paste raw text into the left box instead.");
++    }
++  }
++
+   function loadAsMeal() {
+     if (preview.length === 0) parseLines();
+     const meal = {
+       title: title || "Untitled Meal",
+       author: { name: "Draft" },
+       tasks: preview.length ? preview : [],
+       packs_meta: {},
+     };
+     onLoadMeal?.(meal);
+   }
+ 
+   return (
+     <div
+       style={{
+         border: "1px solid #ddd",
+         borderRadius: 12,
+         padding: 12,
+-        background: "#ffe7b3", // authoring panel color
++        background: "#ffe7b3", // authoring panel color
+       }}
+     >
+       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+-        <div style={{ fontWeight: 700 }}>Author Ingestion (v1.0)</div>
++        <div style={{ fontWeight: 700 }}>Author Ingestion (v1.1)</div>
+         <button
+           onClick={loadAsMeal}
+           title="Load the parsed draft into the runtime preview below"
+           style={{ display: "none" }}
+         >
+           Load
+         </button>
+       </div>
+@@
+-          <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
+-            Recipe text (one step per line)
++          <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
++            Recipe text (one step per line) — or paste a URL/HTML, and click “Import from URL/HTML”.
+           </div>
+         </div>
+ 
+         {/* Right: title + tip + actions */}
+         <div>
+@@
+           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+             <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+               <input
+                 type="checkbox"
+                 checked={autoDeps}
+                 onChange={(e) => setAutoDeps(e.target.checked)}
+               />
+               Auto-create sequential dependencies (FS)
+             </label>
+ 
+             <button onClick={parseLines}>Parse → Draft</button>
+             <button onClick={loadAsMeal}>Load into Preview</button>
++            {/* NEW: URL/HTML import button */}
++            <button onClick={handleImportUrlOrHtml}>Import from URL/HTML</button>
+           </div>
+         </div>
+       </div>
+@@
+-            {(preview.length ? preview : rows.map((line, i) => ({ name: line, _row: i })) ).map((t, i) => {
++            {(preview.length ? preview : rows.map((line, i) => ({ name: line, _row: i })) ).map((t, i) => {
+               const idx = i + 1;
+               const verb = t.canonical_verb || findVerb(t.name)?.name || "free_text";
+               const planned = t.planned_min ?? DEFAULTS_BY_VERB[verb] ?? "";
+               const attention =
+                 t.requires_driver != null
+                   ? t.requires_driver
+                     ? "attended"
+                     : "unattended"
+                   : (findVerb(t.name)?.attention === "unattended_after_start" ? "unattended" : "attended");
+               const dep = t.edges?.[0]?.from ? `#${Number(String(t.edges[0].from).split("_").pop())}` : "—";
+               return (
+                 <tr key={idx} style={{ background: i % 2 ? "rgba(255,255,255,0.45)" : "transparent" }}>
+                   <td style={td}>{idx}</td>
+                   <td style={td}>{t.name || t}</td>
+                   <td style={td}>{verb}</td>
+                   <td style={td}>{planned || "—"}</td>
+                   <td style={td}>
+                     <span
+                       style={{
+                         padding: "2px 8px",
+                         borderRadius: 999,
+                         border: "1px solid #d1d5db",
+                         background: attention === "attended" ? "#eef5ff" : "#ecfdf5",
+                         fontSize: 12,
+                       }}
+                     >
+                       {attention}
+                     </span>
+                   </td>
+                   <td style={td}>{dep}</td>
+                 </tr>
+               );
+             })}

@@ -1,0 +1,442 @@
+/* ============================================================================
+   NowCook Theme System
+   Centralized colors, spacing, and utility classes
+   Edit colors here to customize the entire app appearance
+   ============================================================================ */
+
+/* ============================================================================
+   COLOR PALETTE - CSS Variables
+   ============================================================================ */
+
+:root {
+  /* ========== Page & Panel Backgrounds ========== */
+  --color-page-bg: #4f5b66;              /* Dark gray - main page background */
+  --color-panel-author: #ffe7b3;         /* Tan/yellow - Author Ingestion panel */
+  --color-panel-meals: #c0efff;          /* Light blue - Meals browser panel */
+  --color-panel-budget: #b3ffb3;         /* Light green - Time Budget panel */
+  --color-panel-runtime: #ffffff;        /* White - Runtime preview panel */
+  
+  /* ========== Border Colors ========== */
+  --color-border-light: #f1f5f9;         /* Very light gray */
+  --color-border-medium: #e5e7eb;        /* Medium gray */
+  --color-border-dark: #ddd;             /* Standard gray */
+  --color-border-darker: #eee;           /* Slightly darker */
+  
+  /* ========== Text Colors ========== */
+  --color-text-primary: #111827;         /* Near black - primary text */
+  --color-text-secondary: #374151;       /* Dark gray - secondary text */
+  --color-text-muted: #6b7280;           /* Medium gray - muted text */
+  --color-text-subtle: #888;             /* Light gray - subtle text */
+  --color-text-light: #475569;           /* For timeline labels */
+  
+  /* ========== Timeline Colors ========== */
+  --color-timeline-now: #ef4444;         /* Red - NowLine */
+  --color-timeline-past: #fafafa;        /* Very light gray - past area */
+  --color-timeline-grid-major: #e5e7eb;  /* Major grid lines */
+  --color-timeline-grid-minor: #f1f5f9;  /* Minor grid lines */
+  
+  /* ========== Task Bar Colors (Timeline) ========== */
+  --color-task-attended-bg: #bfdbfe;     /* Blue - attended task background */
+  --color-task-attended-border: #60a5fa; /* Blue - attended task border */
+  --color-task-unattended-bg: #d1fae5;   /* Green - unattended task background */
+  --color-task-unattended-border: #34d399; /* Green - unattended task border */
+  --color-task-ghost-bg: #fef3c7;        /* Yellow - ghost/ready task */
+  --color-task-ghost-border: #f59e0b;    /* Orange - ghost border */
+  --color-task-ghost-text: #92400e;      /* Brown - ghost text */
+  --color-task-finished-border: #cbd5e1; /* Gray - finished task border */
+  
+  /* ========== Status & Feedback Colors ========== */
+  --color-success-bg: #e6ffed;           /* Light green - success state */
+  --color-error-bg: #fff5f5;             /* Light red - error state */
+  --color-warning-bg: #fffbeb;           /* Light yellow - warning state */
+  --color-warning-border: #eab308;       /* Yellow - warning border */
+  --color-queue-hint-bg: #fff7ed;        /* Peach - queue hint background */
+  --color-queue-hint-border: #fdba74;    /* Orange - queue hint border */
+  --color-blocked-indicator: #f59e0b;    /* Orange - blocked task indicator */
+  
+  /* ========== Chip/Badge Colors ========== */
+  --color-chip-bg: #fff;                 /* White - default chip background */
+  --color-chip-border: #ddd;             /* Gray - chip border */
+  
+  /* ========== Card/Panel White Overlays ========== */
+  --color-card-bg: #ffffffcc;            /* Semi-transparent white - meal cards */
+  
+  /* ========== Spacing Scale ========== */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  
+  /* ========== Border Radius ========== */
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-full: 999px;
+  
+  /* ========== Font Weights ========== */
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  
+  /* ========== Font Sizes ========== */
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 20px;
+}
+
+
+/* ============================================================================
+   LAYOUT UTILITIES
+   ============================================================================ */
+
+/* Page container */
+.page-container {
+  min-height: 100vh;
+  padding: var(--space-lg);
+  display: grid;
+  gap: 14px;
+  background: var(--color-page-bg);
+}
+
+/* Panel base styles */
+.panel {
+  border: 1px solid var(--color-border-dark);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+}
+
+.panel-author {
+  background: var(--color-panel-author);
+}
+
+.panel-meals {
+  background: var(--color-panel-meals);
+}
+
+.panel-budget {
+  background: var(--color-panel-budget);
+}
+
+.panel-runtime {
+  background: var(--color-panel-runtime);
+  max-width: 1600px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* Two column grid */
+.grid-two-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-lg);
+}
+
+/* Auto-fit grid */
+.grid-auto-fit {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-md);
+}
+
+
+/* ============================================================================
+   TEXT UTILITIES
+   ============================================================================ */
+
+.text-primary {
+  color: var(--color-text-primary);
+}
+
+.text-secondary {
+  color: var(--color-text-secondary);
+}
+
+.text-muted {
+  color: var(--color-text-muted);
+}
+
+.text-subtle {
+  color: var(--color-text-subtle);
+}
+
+.font-bold {
+  font-weight: var(--font-bold);
+}
+
+.font-semibold {
+  font-weight: var(--font-semibold);
+}
+
+.font-medium {
+  font-weight: var(--font-medium);
+}
+
+.text-xs {
+  font-size: var(--text-xs);
+}
+
+.text-sm {
+  font-size: var(--text-sm);
+}
+
+.text-lg {
+  font-size: var(--text-lg);
+}
+
+
+/* ============================================================================
+   COMPONENT STYLES
+   ============================================================================ */
+
+/* Panel header */
+.panel-header {
+  font-weight: var(--font-bold);
+  margin-bottom: var(--space-sm);
+}
+
+/* Section header (h3) */
+.section-header {
+  margin: 0;
+  margin-bottom: 6px;
+}
+
+/* Meal card */
+.meal-card {
+  border: 1px solid var(--color-border-darker);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  background: var(--color-card-bg);
+}
+
+.meal-card-title {
+  font-weight: var(--font-semibold);
+}
+
+.meal-card-author {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-sm);
+}
+
+.meal-card-chips {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+/* Chip/Badge component */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-chip-border);
+  border-radius: var(--radius-full);
+  padding: 4px 10px;
+  font-size: var(--text-sm);
+  margin-right: var(--space-sm);
+  margin-bottom: var(--space-sm);
+  background: var(--color-chip-bg);
+}
+
+.chip-success {
+  background: var(--color-success-bg);
+}
+
+.chip-error {
+  background: var(--color-error-bg);
+}
+
+/* Search/filter bar */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: var(--space-sm);
+}
+
+.search-input {
+  flex: 1;
+  border: 1px solid var(--color-border-medium);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+}
+
+/* Budget display */
+.budget-time-display {
+  border: 1px solid var(--color-border-medium);
+  border-radius: var(--radius-full);
+  padding: 6px 12px;
+  width: fit-content;
+  margin-top: 6px;
+}
+
+/* Runtime header */
+.runtime-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.runtime-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Queue hint (warning banner) */
+.queue-hint {
+  margin-top: var(--space-sm);
+  padding: var(--space-sm);
+  border: 1px dashed var(--color-warning-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-warning-bg);
+}
+
+.queue-hint-title {
+  font-weight: var(--font-semibold);
+  margin-bottom: 6px;
+}
+
+.queue-hint-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.queue-hint-chip {
+  background: var(--color-queue-hint-bg);
+  border-color: var(--color-queue-hint-border);
+}
+
+/* Task lists */
+.task-list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.task-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.task-item-blocked {
+  border-left: 3px solid var(--color-blocked-indicator);
+  padding-left: var(--space-sm);
+}
+
+.task-item-normal {
+  border-left: 3px solid transparent;
+  padding-left: var(--space-sm);
+}
+
+/* Timeline container */
+.timeline-container {
+  border: 1px solid var(--color-border-medium);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  overflow-x: auto;
+  overflow-y: visible;
+  max-width: 1600px;
+  margin-inline: auto;
+}
+
+.timeline-title {
+  font-weight: var(--font-bold);
+  margin-bottom: var(--space-sm);
+}
+
+.timeline-tip {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: var(--space-sm);
+}
+
+/* Export buttons container */
+.export-buttons {
+  margin-top: 10px;
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+
+/* ============================================================================
+   FLEX UTILITIES
+   ============================================================================ */
+
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.gap-sm {
+  gap: var(--space-sm);
+}
+
+.gap-md {
+  gap: var(--space-md);
+}
+
+
+/* ============================================================================
+   SPACING UTILITIES
+   ============================================================================ */
+
+.m-0 { margin: 0; }
+.mt-8 { margin-top: var(--space-sm); }
+.mt-10 { margin-top: 10px; }
+.mt-14 { margin-top: 14px; }
+.mb-6 { margin-bottom: 6px; }
+.mb-8 { margin-bottom: var(--space-sm); }
+.mb-10 { margin-bottom: 10px; }
+
+
+/* ============================================================================
+   OPACITY UTILITIES
+   ============================================================================ */
+
+.opacity-70 {
+  opacity: 0.7;
+}
+
+.opacity-75 {
+  opacity: 0.75;
+}
+
+.opacity-80 {
+  opacity: 0.8;
+}
+
+
+/* ============================================================================
+   LABEL STYLES
+   ============================================================================ */
+
+label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-sm);
+}

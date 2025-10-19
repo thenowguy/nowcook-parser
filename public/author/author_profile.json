@@ -1,0 +1,48 @@
+{
+  "id": "chef_demo",
+  "display_name": "Jamie Sample",
+  "avatar_url": "https://picsum.photos/seed/chef/160",
+  "hero_image_url": "https://picsum.photos/seed/kitchen/1600/600",
+  "bio_short": "Chef, writer, herb obsessive. Weeknight comfort with restaurant tricks.",
+  "bio_long": "Twenty years in professional kitchens distilled into practical, joyful cooking at home. Seasonal, unfussy, timed to real life.",
+  "cuisine_tags": ["modern-british", "italian-ish", "weeknight"],
+  "socials": {
+    "website": "https://example.com",
+    "instagram": "jamiesample",
+    "youtube": "jamie.cooks"
+  },
+  "theme": "classic",
+  "brand_color": "#2e7d32",
+  "featured_mealmaps": [
+    {
+      "id": "meal_roast_chicken_veg_pan",
+      "title": "One-Pan Roast Chicken & Vegetables",
+      "subtitle": "crispy skin, caramelized veg",
+      "hero_image_url": "https://picsum.photos/seed/roast/900/600",
+      "tags": ["roast", "family", "one-pan"],
+      "serve_time_min": 110,
+      "price_usd": 4.95,
+      "rating": 4.8
+    },
+    {
+      "id": "meal_pasta_garlic_butter",
+      "title": "Pasta with Garlic Butter Sauce",
+      "subtitle": "al dente, silky, 20-minute",
+      "hero_image_url": "https://picsum.photos/seed/pasta/900/600",
+      "tags": ["pasta", "weeknight"],
+      "serve_time_min": 20,
+      "price_usd": 2.95,
+      "rating": 4.7
+    },
+    {
+      "id": "meal_risotto_porcinis",
+      "title": "Porcini Mushroom Risotto",
+      "subtitle": "loose, creamy, umami",
+      "hero_image_url": "https://picsum.photos/seed/risotto/900/600",
+      "tags": ["risotto"],
+      "serve_time_min": 45,
+      "price_usd": 3.95,
+      "rating": 4.9
+    }
+  ]
+}

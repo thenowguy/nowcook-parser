@@ -1,0 +1,4 @@
+[
+  { "canonical": "slice", "ingredient": "tomato", "parameters": { "shape": "rounds" } },
+  { "canonical": "cut into wedges", "ingredient": "tomato", "parameters": { "count": 6 } }
+]

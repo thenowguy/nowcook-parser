@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nowcook.dev/schema/durations-pack",
+  "title": "NowCook Durations Pack",
+  "description": "Durations for verbs. Supports multiple historical shapes.",
+  "type": ["object", "array"],
+  "anyOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": { "type": "number" },
+        "locale": { "type": "string" },
+        "defaults": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "number",
+            "minimum": 1
+          },
+          "description": "Map of verb/canon/name to planned minutes."
+        },
+        "durations": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/entry" }
+        }
+      },
+      "anyOf": [
+        { "required": ["defaults"] },
+        { "required": ["durations"] }
+      ]
+    },
+    {
+      "type": "array",
+      "items": { "$ref": "#/$defs/entry" },
+      "description": "Legacy: bare array of entries."
+    },
+    {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "number",
+        "minimum": 1
+      },
+      "description": "Legacy: bare map of verb -> minutes."
+    }
+  ],
+  "$defs": {
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "verb": { "type": "string", "minLength": 1 },
+        "canon": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "planned_min": { "type": "number", "minimum": 1 },
+        "default_planned": { "type": "number", "minimum": 1 },
+        "min": { "type": "number", "minimum": 1 },
+        "value": { "type": "number", "minimum": 1 }
+      },
+      "anyOf": [
+        { "required": ["verb"] },
+        { "required": ["canon"] },
+        { "required": ["name"] }
+      ]
+    }
+  }
+}

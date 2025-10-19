@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nowcook.local/schemas/packs/synonyms.schema.json",
+  "title": "Synonyms Pack",
+  "anyOf": [
+    {
+      "type": "object",
+      "properties": {
+        "schema_version": { "type": ["number", "string"] },
+        "locale": { "type": "string" },
+        "aliases": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      },
+      "required": ["aliases"],
+      "additionalProperties": true
+    },
+    {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": { "type": "string" }
+      }
+    },
+    {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["head", "aliases"],
+        "properties": {
+          "head": { "type": "string" },
+          "aliases": { "type": "array", "items": { "type": "string" } }
+        },
+        "additionalProperties": true
+      }
+    }
+  ]
+}

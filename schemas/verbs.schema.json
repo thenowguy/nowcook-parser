@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nowcook.local/schemas/packs/verbs.schema.json",
+  "title": "Verb Pack",
+  "type": "object",
+  "properties": {
+    "schema_version": { "type": ["number", "string"] },
+    "locale": { "type": "string" },
+    "verbs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["canon"],
+        "properties": {
+          "canon": { "type": "string" },
+          "attention": { "type": "string", "enum": ["attended", "unattended_after_start"] },
+          "patterns": { "type": "array", "items": { "type": "string" } },
+          "defaults": {
+            "type": "object",
+            "properties": {
+              "planned_min": { "type": "number", "minimum": 0 }
+            },
+            "additionalProperties": true
+          },
+          "examples": { "type": "array", "items": { "type": "string" } },
+          "negates": { "type": ["boolean", "string", "array", "object", "null"] }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "required": ["verbs"],
+  "additionalProperties": true
+}

@@ -1,0 +1,178 @@
+{
+  "version": "1.0.0",
+  "description": "Ingredient ontology with classes, traits, and verb applicability - based on Google Sheets Ingredient_Sheets",
+  "ingredients": {
+    "tomato": {
+      "classes": ["vegetable", "fruit", "nightshade"],
+      "traits": ["acidic", "juicy", "versatile"],
+      "compatible_verbs": ["slice", "dice", "chop", "roast", "sauté", "simmer", "blanch", "peel"],
+      "incompatible_verbs": ["grill_raw", "deep_fry"],
+      "typical_parameters": {
+        "slice": { "thickness_mm": [3, 6] },
+        "dice": { "size_mm": [6, 12] },
+        "roast": { "temp_f": [400, 425], "time_min": [20, 30] }
+      }
+    },
+    "onion": {
+      "classes": ["vegetable", "allium"],
+      "traits": ["pungent", "aromatic", "layered"],
+      "compatible_verbs": ["slice", "dice", "chop", "mince", "sauté", "caramelize", "roast"],
+      "readiness_markers": {
+        "sauté": ["softened", "translucent", "golden"]
+      },
+      "typical_parameters": {
+        "dice": { "size_mm": [6, 10] },
+        "sauté": { "time_min": [8, 12], "heat_level": "medium" }
+      }
+    },
+    "garlic": {
+      "classes": ["vegetable", "allium", "aromatics"],
+      "traits": ["pungent", "aromatic", "potent"],
+      "compatible_verbs": ["mince", "slice", "chop", "sauté", "roast"],
+      "warnings": {
+        "sauté": "Burns easily - add after other vegetables or use low heat"
+      },
+      "typical_parameters": {
+        "mince": { "size_mm": [1, 2] },
+        "sauté": { "time_min": [1, 2], "heat_level": "medium_low" }
+      }
+    },
+    "chicken_breast": {
+      "classes": ["protein", "poultry", "meat"],
+      "traits": ["lean", "mild", "quick_cooking"],
+      "compatible_verbs": ["slice", "dice", "sear", "sauté", "bake", "grill", "poach"],
+      "incompatible_verbs": ["boil"],
+      "safety_redirects": {
+        "boil": "simmer - boiling makes chicken breast tough and dry"
+      },
+      "typical_parameters": {
+        "bake": { "temp_f": [375, 400], "time_min": [20, 30] },
+        "grill": { "time_min": [12, 18], "heat_level": "medium_high" }
+      },
+      "readiness_markers": {
+        "bake": ["internal_temp_165f", "juices_run_clear"],
+        "grill": ["grill_marks", "internal_temp_165f"]
+      }
+    },
+    "beef_stew_meat": {
+      "classes": ["protein", "beef", "meat", "tough_cut"],
+      "traits": ["tough", "flavorful", "needs_slow_cooking"],
+      "compatible_verbs": ["sear", "simmer", "braise", "stew"],
+      "incompatible_verbs": ["grill", "sauté_quick"],
+      "typical_parameters": {
+        "sear": { "time_min": [5, 8], "heat_level": "high" },
+        "simmer": { "time_min": [90, 180], "heat_level": "low" }
+      }
+    },
+    "pasta": {
+      "classes": ["grain", "starch", "dry_good"],
+      "traits": ["shelf_stable", "versatile"],
+      "compatible_verbs": ["boil", "drain", "toss"],
+      "typical_parameters": {
+        "boil": { "time_min": [8, 12] }
+      },
+      "readiness_markers": {
+        "boil": ["al_dente", "tender"]
+      }
+    },
+    "potato": {
+      "classes": ["vegetable", "starch", "root_vegetable"],
+      "traits": ["starchy", "versatile", "filling"],
+      "compatible_verbs": ["slice", "dice", "cube", "peel", "boil", "roast", "bake", "mash"],
+      "typical_parameters": {
+        "roast": { "temp_f": [425, 450], "time_min": [30, 45] },
+        "boil": { "time_min": [15, 25] }
+      }
+    },
+    "carrot": {
+      "classes": ["vegetable", "root_vegetable"],
+      "traits": ["sweet", "crunchy", "colorful"],
+      "compatible_verbs": ["slice", "dice", "julienne", "peel", "roast", "boil", "sauté"],
+      "typical_parameters": {
+        "julienne": { "thickness_mm": [3, 4] },
+        "roast": { "temp_f": [400, 425], "time_min": [25, 35] }
+      }
+    },
+    "butter": {
+      "classes": ["dairy", "fat"],
+      "traits": ["rich", "flavorful"],
+      "compatible_verbs": ["melt", "heat_oil", "add"],
+      "warnings": {
+        "heat_oil": "Burns at high heat - use medium or add oil"
+      }
+    },
+    "olive_oil": {
+      "classes": ["fat", "oil"],
+      "traits": ["flavorful", "versatile"],
+      "compatible_verbs": ["heat_oil", "drizzle", "add"],
+      "typical_parameters": {
+        "heat_oil": { "heat_level": "medium" }
+      }
+    },
+    "salt": {
+      "classes": ["seasoning", "mineral"],
+      "compatible_verbs": ["season", "add"],
+      "typical_parameters": {
+        "season": { "to_taste": true }
+      }
+    },
+    "pepper": {
+      "classes": ["seasoning", "spice"],
+      "compatible_verbs": ["season", "add"],
+      "typical_parameters": {
+        "season": { "to_taste": true }
+      }
+    },
+    "lemon": {
+      "classes": ["citrus", "fruit", "acid"],
+      "traits": ["acidic", "bright", "aromatic"],
+      "compatible_verbs": ["zest", "juice", "slice"],
+      "typical_parameters": {
+        "slice": { "thickness_mm": [3, 6] }
+      }
+    },
+    "parsley": {
+      "classes": ["herb", "fresh", "aromatics"],
+      "traits": ["fresh", "bright", "delicate"],
+      "compatible_verbs": ["chop", "mince"],
+      "warnings": {
+        "cook": "Add at end - loses flavor when cooked too long"
+      }
+    },
+    "wine_red": {
+      "classes": ["liquid", "alcohol", "deglazing_liquid"],
+      "compatible_verbs": ["deglaze", "add", "pour", "reduce"],
+      "typical_parameters": {
+        "reduce": { "time_min": [10, 20] }
+      }
+    }
+  },
+  "classes": {
+    "vegetable": {
+      "description": "Plant-based produce"
+    },
+    "fruit": {
+      "description": "Sweet or tart plant products"
+    },
+    "protein": {
+      "description": "Meat, poultry, fish, or plant protein"
+    },
+    "starch": {
+      "description": "Carbohydrate-rich foods"
+    },
+    "fat": {
+      "description": "Oils, butter, or other fats"
+    },
+    "seasoning": {
+      "description": "Flavor enhancers"
+    },
+    "aromatics": {
+      "description": "Ingredients that provide base flavors",
+      "common_members": ["onion", "garlic", "celery", "carrot", "parsley"]
+    },
+    "allium": {
+      "description": "Onion family",
+      "common_members": ["onion", "garlic", "shallot", "leek"]
+    }
+  }
+}

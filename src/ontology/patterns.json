@@ -1,0 +1,226 @@
+{
+  "version": "1.0.0",
+  "description": "Natural language patterns for parsing recipe instructions - based on Google Sheets Phrase_Canon",
+  "patterns": [
+    {
+      "pattern": "\\b(?:heat|warm).*(?:oil|butter).*(?:in|over).*(?:pan|skillet)\\b",
+      "canonical_verb": "heat_oil",
+      "confidence": "high",
+      "parameters": {
+        "heat_level": "medium"
+      }
+    },
+    {
+      "pattern": "\\bbrown.*onions?\\b",
+      "canonical_verb": "sauté",
+      "confidence": "high",
+      "parameters": {
+        "heat_level": "medium",
+        "time_min": [8, 12]
+      },
+      "readiness_cue": "golden"
+    },
+    {
+      "pattern": "\\bcook.*onions?.*(?:until|till).*(?:soft|translucent)\\b",
+      "canonical_verb": "sauté",
+      "confidence": "high",
+      "parameters": {
+        "heat_level": "medium",
+        "time_min": [5, 8]
+      },
+      "readiness_cue": "softened"
+    },
+    {
+      "pattern": "\\bbring.*water.*to.*boil\\b",
+      "canonical_verb": "bring_to_boil",
+      "confidence": "high",
+      "parameters": {
+        "heat_level": "high"
+      }
+    },
+    {
+      "pattern": "\\bpreheat.*oven.*to.*(?:(\\d+)°?[FC]?)\\b",
+      "canonical_verb": "preheat_oven",
+      "confidence": "high",
+      "extract_parameters": ["temp_f"],
+      "note": "Extract temperature from capture group"
+    },
+    {
+      "pattern": "\\bseason.*(?:with|to).*(?:salt|taste)\\b",
+      "canonical_verb": "season",
+      "confidence": "high",
+      "parameters": {
+        "to_taste": true
+      }
+    },
+    {
+      "pattern": "\\bcook.*(?:for|about|around)\\s*(\\d+)\\s*(?:min|minutes)\\b",
+      "extract_parameters": ["time_min"],
+      "note": "Extract duration from any cooking verb"
+    },
+    {
+      "pattern": "\\broast.*(?:for|about)\\s*(\\d+)\\s*(?:min|minutes)\\b",
+      "canonical_verb": "roast",
+      "confidence": "high",
+      "extract_parameters": ["time_min"]
+    },
+    {
+      "pattern": "\\bsimmer.*(?:for|about)\\s*(\\d+)\\s*(?:min|minutes)\\b",
+      "canonical_verb": "simmer",
+      "confidence": "high",
+      "extract_parameters": ["time_min"]
+    },
+    {
+      "pattern": "\\breduce.*(?:by|to).*half\\b",
+      "canonical_verb": "reduce",
+      "confidence": "high",
+      "readiness_cue": "reduced_by_half",
+      "parameters": {
+        "time_min": [15, 25]
+      }
+    },
+    {
+      "pattern": "\\bcook.*until.*(?:tender|soft)\\b",
+      "readiness_cue": "tender",
+      "note": "Applies to current verb - adds readiness marker"
+    },
+    {
+      "pattern": "\\bcook.*until.*(?:golden|browned)\\b",
+      "readiness_cue": "golden_brown",
+      "note": "Applies to current verb"
+    },
+    {
+      "pattern": "\\blet.*rest.*(?:for|about)\\s*(\\d+)\\s*(?:min|minutes)\\b",
+      "canonical_verb": "rest",
+      "confidence": "high",
+      "extract_parameters": ["time_min"]
+    },
+    {
+      "pattern": "\\btoss.*with.*(?:dressing|sauce|oil)\\b",
+      "canonical_verb": "toss",
+      "confidence": "medium"
+    },
+    {
+      "pattern": "\\bstir.*occasionally\\b",
+      "canonical_verb": "stir",
+      "parameters": {
+        "stir_frequency": "occasional"
+      }
+    },
+    {
+      "pattern": "\\bstir.*constantly\\b",
+      "canonical_verb": "stir",
+      "parameters": {
+        "stir_frequency": "constant"
+      }
+    },
+    {
+      "pattern": "\\bcover.*(?:and|,).*(?:simmer|cook)\\b",
+      "canonical_verb": "simmer",
+      "parameters": {
+        "covered": true
+      }
+    },
+    {
+      "pattern": "\\bfinely.*(?:chop|dice|mince)\\b",
+      "canonical_verb": "mince",
+      "confidence": "high"
+    },
+    {
+      "pattern": "\\bcoarsely.*chop\\b",
+      "canonical_verb": "chop",
+      "confidence": "high",
+      "parameters": {
+        "size_mm": [10, 15]
+      }
+    },
+    {
+      "pattern": "\\bthinly.*slice\\b",
+      "canonical_verb": "slice",
+      "confidence": "high",
+      "parameters": {
+        "thickness_mm": [2, 3]
+      }
+    },
+    {
+      "pattern": "\\bthickly.*slice\\b",
+      "canonical_verb": "slice",
+      "confidence": "high",
+      "parameters": {
+        "thickness_mm": [8, 12]
+      }
+    },
+    {
+      "pattern": "\\bwhisk.*until.*smooth\\b",
+      "canonical_verb": "whisk",
+      "confidence": "high",
+      "readiness_cue": "smooth"
+    },
+    {
+      "pattern": "\\bbeat.*until.*(?:fluffy|stiff)\\b",
+      "canonical_verb": "whisk",
+      "confidence": "high",
+      "parameters": {
+        "vigor": "vigorous"
+      }
+    },
+    {
+      "pattern": "\\bsear.*(?:on|over).*high.*heat\\b",
+      "canonical_verb": "sear",
+      "confidence": "high",
+      "parameters": {
+        "heat_level": "high",
+        "time_min": [3, 5]
+      }
+    },
+    {
+      "pattern": "\\bdeglaze.*(?:with|using).*(?:wine|stock|broth)\\b",
+      "canonical_verb": "deglaze",
+      "confidence": "high"
+    },
+    {
+      "pattern": "\\bflip.*halfway\\b",
+      "note": "Add flip_halfway parameter to current verb",
+      "parameters": {
+        "flip_halfway": true
+      }
+    },
+    {
+      "pattern": "\\bturn.*(?:every|each)\\s*(\\d+)\\s*(?:min|minutes)\\b",
+      "note": "Periodic turning during roasting/grilling"
+    },
+    {
+      "pattern": "\\buntil.*juices.*run.*clear\\b",
+      "readiness_cue": "juices_run_clear",
+      "note": "Safety marker for poultry"
+    },
+    {
+      "pattern": "\\buntil.*(?:internal.*temp|thermometer).*165\\b",
+      "readiness_cue": "internal_temp_165f",
+      "note": "Safety marker for poultry"
+    }
+  ],
+  "compound_actions": {
+    "description": "Patterns that indicate multiple sequential actions",
+    "patterns": [
+      {
+        "pattern": "\\b(?:heat.*then|first.*then|and then)\\b",
+        "note": "Indicates sequential dependency"
+      },
+      {
+        "pattern": "\\b(?:meanwhile|while|at the same time)\\b",
+        "note": "Indicates parallel tasks"
+      },
+      {
+        "pattern": "\\b(?:after|once|when).*(?:done|finished|ready)\\b",
+        "note": "Indicates dependency on completion"
+      }
+    ]
+  },
+  "temporal_markers": {
+    "description": "Phrases that indicate timing relationships",
+    "sequential": ["then", "next", "after", "following", "subsequently"],
+    "parallel": ["meanwhile", "while", "at the same time", "simultaneously"],
+    "conditional": ["when", "once", "after", "if", "until"]
+  }
+}

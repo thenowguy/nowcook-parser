@@ -1,0 +1,16 @@
+{
+  "title": "Quick Pasta with Garlic Oil",
+  "recipe_text": "Bring a large pot of water to a boil — 10 min\nSlice garlic and parsley; set out chili flakes — 3 min\nSalt the boiling water generously — 1 min\nBoil the pasta until al dente — 8 min\nHeat olive oil in a pan — 2 min\nSauté sliced garlic in the oil until fragrant — 2 min\nReserve a cup of pasta water — 1 min\nDrain the pasta — 1 min\nToss pasta with garlic oil (loosen with reserved water as needed) — 2 min\nPlate and finish (parsley, chili flakes, more oil) — 1 min",
+  "tasks": [
+    { "id": "t1", "name": "Bring a large pot of water to a boil", "canonical_verb": "free_text", "duration_min": { "value": 10 }, "requires_driver": false, "self_running_after_start": true, "edges": [] },
+    { "id": "t2", "name": "Slice garlic and parsley; set out chili flakes", "canonical_verb": "free_text", "duration_min": { "value": 3 },  "requires_driver": true,  "self_running_after_start": false, "edges": [] },
+    { "id": "t3", "name": "Salt the boiling water generously", "canonical_verb": "free_text", "duration_min": { "value": 1 },  "requires_driver": true,  "self_running_after_start": false, "edges": [ { "from": "t1", "to": "t3", "type": "SS" } ] },
+    { "id": "t4", "name": "Boil the pasta until al dente", "canonical_verb": "free_text", "duration_min": { "value": 8 },  "requires_driver": false, "self_running_after_start": true,  "edges": [ { "from": "t1", "to": "t4", "type": "FS" } ] },
+    { "id": "t5", "name": "Heat olive oil in a pan", "canonical_verb": "free_text", "duration_min": { "value": 2 },  "requires_driver": true,  "self_running_after_start": false, "edges": [ { "from": "t4", "to": "t5", "type": "SS" } ] },
+    { "id": "t6", "name": "Sauté sliced garlic in the oil until fragrant", "canonical_verb": "free_text", "duration_min": { "value": 2 },  "requires_driver": true,  "self_running_after_start": false, "edges": [ { "from": "t5", "to": "t6", "type": "FS" } ] },
+    { "id": "t7", "name": "Reserve a cup of pasta water", "canonical_verb": "free_text", "duration_min": { "value": 1 },  "requires_driver": true,  "self_running_after_start": false, "edges": [ { "from": "t4", "to": "t7", "type": "SS" } ] },
+    { "id": "t8", "name": "Drain the pasta", "canonical_verb": "free_text", "duration_min": { "value": 1 },  "requires_driver": true,  "self_running_after_start": false, "edges": [ { "from": "t4", "to": "t8", "type": "FF" } ] },
+    { "id": "t9", "name": "Toss pasta with garlic oil (loosen with reserved water as needed)", "canonical_verb": "free_text", "duration_min": { "value": 2 }, "requires_driver": true, "self_running_after_start": false, "edges": [ { "from": "t6", "to": "t9", "type": "FS" }, { "from": "t8", "to": "t9", "type": "FS" } ] },
+    { "id": "t10", "name": "Plate and finish (parsley, chili flakes, more oil)", "canonical_verb": "free_text", "duration_min": { "value": 1 }, "requires_driver": true, "self_running_after_start": false, "edges": [ { "from": "t9", "to": "t10", "type": "FS" } ] }
+  ]
+}

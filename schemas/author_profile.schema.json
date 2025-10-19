@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nowcook.dev/schema/author_profile.schema.json",
+  "title": "NowCook Author Profile",
+  "type": "object",
+  "required": ["id", "display_name", "theme", "bio_short", "featured_mealmaps"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9_\\-]+$" },
+    "display_name": { "type": "string", "minLength": 1 },
+    "avatar_url": { "type": "string", "format": "uri", "nullable": true },
+    "hero_image_url": { "type": "string", "format": "uri", "nullable": true },
+    "bio_short": { "type": "string" },
+    "bio_long": { "type": "string", "nullable": true },
+    "cuisine_tags": { "type": "array", "items": { "type": "string" }, "default": [] },
+    "socials": {
+      "type": "object",
+      "properties": {
+        "website": { "type": "string", "format": "uri", "nullable": true },
+        "instagram": { "type": "string", "nullable": true },
+        "youtube": { "type": "string", "nullable": true },
+        "tiktok": { "type": "string", "nullable": true }
+      },
+      "additionalProperties": false,
+      "default": {}
+    },
+    "theme": { "type": "string", "enum": ["classic", "minimal", "noir"] },
+    "brand_color": { "type": "string", "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$", "nullable": true },
+    "featured_mealmaps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "title"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "subtitle": { "type": "string", "nullable": true },
+          "hero_image_url": { "type": "string", "format": "uri", "nullable": true },
+          "tags": { "type": "array", "items": { "type": "string" }, "default": [] },
+          "serve_time_min": { "type": "integer", "minimum": 1, "nullable": true },
+          "price_usd": { "type": "number", "nullable": true },
+          "rating": { "type": "number", "minimum": 0, "maximum": 5, "nullable": true }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

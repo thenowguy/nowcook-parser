@@ -1,0 +1,9 @@
+[
+  { "name": "tomato", "tags": ["vegetable", "fruit"] },
+  { "name": "onion", "tags": ["vegetable", "aromatic"] },
+  { "name": "garlic", "tags": ["aromatic"] },
+  { "name": "water", "tags": ["liquid"] },
+  { "name": "milk", "tags": ["liquid", "dairy"] },
+  { "name": "flour", "tags": ["dry", "powder"] },
+  { "name": "steak", "tags": ["protein"] }
+]
