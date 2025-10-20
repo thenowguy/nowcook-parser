@@ -191,8 +191,19 @@ function computeCriticalPathMin(tasks) {
 // ----------------------------------------------------------------------
 // Runtime (driver semantics: unattended doesn't block)
 // ----------------------------------------------------------------------
-function consumesDriver(task) { return !!task.requires_driver; }
-function depsSatisfied(task, status) {
+function consumesDriver(task) {
+  return task.requires_driver || task.is_attended;
+}
+
+function hasTimeSensitivity(task) {
+  // Time-sensitive tasks must be done close to serve time
+  // Examples: steaming broccoli, removing from oven, plating
+  const timeSensitiveVerbs = ['steam', 'plate', 'serve', 'remove', 'flip', 'stir'];
+  const verb = (task.canonical_verb || '').toLowerCase();
+  return timeSensitiveVerbs.includes(verb);
+}
+
+function depsSatisfied(task, getPred) {
   const edges = Array.isArray(task.edges) ? task.edges : [];
   if (edges.length === 0) return true;
   return edges.every((e) => {
@@ -261,8 +272,8 @@ function useRuntime(tasks) {
     setCompleted([]);
   };
 
-  // Ready vs Blocked
-  const ready = [], blocked = [];
+  // Task classification: Could do now, Can do now, Can't do yet, Must do now
+  const couldDoNow = [], canDoNow = [], cantDoYet = [], mustDoNow = [];
   const runningIds = new Set(running.map((r) => r.id));
   
   for (const t of tasks) {
@@ -273,15 +284,41 @@ function useRuntime(tasks) {
       done: doneIds.has(id),
     }));
     
-    if (!depsOK) { blocked.push(t); continue; }
-    if (t.requires_driver && driverBusy) blocked.push(t);
-    else ready.push(t);
+    // Can't do yet: dependencies not satisfied
+    if (!depsOK) { 
+      cantDoYet.push(t); 
+      continue; 
+    }
+    
+    // Dependencies are satisfied - now classify by temporal flexibility
+    
+    // Could do now: unattended prep tasks with no time urgency
+    // These can be done anytime: night before, this morning, or right now
+    // Example: "Grate cheese" - could prep Thursday for Friday dinner
+    if (!t.requires_driver && !hasTimeSensitivity(t)) {
+      couldDoNow.push(t);
+      continue;
+    }
+    
+    // Can do now: ready to execute when driver becomes available
+    // These follow dependencies but aren't time-critical
+    if (t.requires_driver && driverBusy) {
+      cantDoYet.push(t);
+    } else {
+      canDoNow.push(t);
+    }
   }
+
+  // Legacy ready/blocked for backwards compatibility
+  const ready = [...canDoNow, ...couldDoNow];
+  const blocked = cantDoYet;
 
   return {
     started, setStarted, nowMs,
     running, doneIds, completed,
-    driverBusy, ready, blocked,
+    driverBusy, 
+    couldDoNow, canDoNow, cantDoYet, mustDoNow,
+    ready, blocked,
     startTask, finishTask, reset
   };
 }
@@ -816,6 +853,37 @@ export default function App() {
           </div>
         </div>
 
+        {/* Serve time prediction */}
+        {rt.started && (
+          <div style={{ 
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+            color: 'white',
+            padding: '16px 20px',
+            borderRadius: 8,
+            marginBottom: 16,
+            boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+          }}>
+            <div style={{ fontSize: '1.1em', fontWeight: 'bold', marginBottom: 4 }}>
+              🕐 You'll be serving at {(() => {
+                const remainingTasks = state.meal.tasks.filter(t => !rt.doneIds.has(t.id) && !rt.running.find(r => r.id === t.id));
+                const remainingMinutes = remainingTasks.reduce((sum, t) => sum + getPlannedMinutes(t), 0);
+                const runningMinutes = rt.running.reduce((sum, r) => sum + Math.ceil((r.endsAt - rt.nowMs) / 60000), 0);
+                const totalMinutes = remainingMinutes + runningMinutes;
+                const serveTime = new Date(Date.now() + totalMinutes * 60000);
+                return serveTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+              })()}
+            </div>
+            <div style={{ fontSize: '0.9em', opacity: 0.9 }}>
+              Estimated time remaining: {(() => {
+                const remainingTasks = state.meal.tasks.filter(t => !rt.doneIds.has(t.id) && !rt.running.find(r => r.id === t.id));
+                const remainingMinutes = remainingTasks.reduce((sum, t) => sum + getPlannedMinutes(t), 0);
+                const runningMinutes = rt.running.reduce((sum, r) => sum + Math.ceil((r.endsAt - rt.nowMs) / 60000), 0);
+                return remainingMinutes + runningMinutes;
+              })()} minutes
+            </div>
+          </div>
+        )}
+
         {/* Queue hint (during unattended) */}
         {queueHint.length > 0 && (
           <div className="queue-hint">
@@ -864,25 +932,51 @@ export default function App() {
           )}
         </div>
 
-        {/* Can do now */}
+        {/* Could do now - Flexible prep */}
+        <div className="task-section" style={{ background: '#f0f8ff', borderLeft: '4px solid #4682b4' }}>
+          <h3 className="task-section-title">⏰ Could do now</h3>
+          <div className="opacity-70" style={{ fontSize: '0.9em', marginBottom: 8 }}>
+            Flexible prep — do now, later, or even the night before
+          </div>
+          {rt.couldDoNow.length === 0 ? (
+            <div>No flexible prep tasks available.</div>
+          ) : (
+            <ul className="task-list">
+              {rt.couldDoNow.map((t) => (
+                <li key={t.id} className="task-item">
+                  <div>
+                    <b>{t.name}</b>{" "}
+                    <span className="opacity-80">— {getPlannedMinutes(t)}min {t.requires_driver ? "attended" : "unattended"}</span>
+                  </div>
+                  <button onClick={() => rt.startTask(t)}>Start</button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {/* Can do now - Ready to execute */}
         <div className="task-section">
-          <h3 className="task-section-title">Can do now</h3>
-          {rt.ready.length === 0 ? (
+          <h3 className="task-section-title">✅ Can do now</h3>
+          <div className="opacity-70" style={{ fontSize: '0.9em', marginBottom: 8 }}>
+            Dependencies met — ready when you are
+          </div>
+          {rt.canDoNow.length === 0 ? (
             <div>
-              No tasks are ready yet.
+              No tasks ready to execute.
               {!rt.driverBusy && rt.running.length > 0 && (
                 <span className="opacity-70">
-                  {" "}Driver is free, but all next steps are waiting on predecessors (e.g., current boil).
+                  {" "}Driver is free, but all next steps are waiting on predecessors.
                 </span>
               )}
             </div>
           ) : (
             <ul className="task-list">
-              {rt.ready.map((t) => (
+              {rt.canDoNow.map((t) => (
                 <li key={t.id} className="task-item">
                   <div>
                     <b>{t.name}</b>{" "}
-                    <span className="opacity-80">— {t.requires_driver ? "attended" : "unattended"}</span>
+                    <span className="opacity-80">— {getPlannedMinutes(t)}min {t.requires_driver ? "attended" : "unattended"}</span>
                   </div>
                   <button onClick={() => rt.startTask(t)} disabled={t.requires_driver && rt.driverBusy}>Start</button>
                 </li>
@@ -891,14 +985,17 @@ export default function App() {
           )}
         </div>
 
-        {/* Blocked */}
+        {/* Can't do yet - Blocked */}
         <div className="task-section">
-          <h3 className="task-section-title">Blocked</h3>
-          {rt.blocked.length === 0 ? (
+          <h3 className="task-section-title">⏸️ Can't do yet</h3>
+          <div className="opacity-70" style={{ fontSize: '0.9em', marginBottom: 8 }}>
+            Waiting on dependencies or too early to start
+          </div>
+          {rt.cantDoYet.length === 0 ? (
             <div>Nothing blocked.</div>
           ) : (
             <ul className="task-list">
-              {rt.blocked.map((t) => (
+              {rt.cantDoYet.map((t) => (
                 <li
                   key={t.id}
                   className={isBlockedByFinish(t) ? "task-blocked-finish" : "task-item"}
