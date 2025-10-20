@@ -821,7 +821,8 @@ export default function App() {
 
   return (
     <div className="page-container">
-      {/* NEW: Author Ingestion / Authoring Panel */}
+      {/* Author Ingestion / Authoring Panel - HIDDEN FOR ALPHA */}
+      {/* 
       <div className="panel panel-author">
         <AuthoringPanel 
           onLoadMeal={loadMealFromIngest} 
@@ -829,6 +830,7 @@ export default function App() {
           onRecipeTextChange={setRecipeText}
         />
       </div>
+      */}
 
       {/* Top: Meals & Time Budget */}
       <div className="grid-two-cols">
