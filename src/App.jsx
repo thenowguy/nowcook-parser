@@ -850,20 +850,25 @@ export default function App() {
             </label>
           </div>
           <div className="grid-auto-fit">
-            {cards.map((c) => (
-              <div key={c.idx} className="meal-card">
-                <div className="meal-card-title">{c.title}</div>
-                <div className="meal-card-author">by {c.author}</div>
-                <div className="meal-card-chips">
-                  <Chip>Min time:{Math.round(c.min)}min</Chip>
-                  <Chip className={c.fits ? "chip-success" : "chip-error"}>
-                    Fits:{c.fits ? "Yes" : "No"}
-                  </Chip>
-                  <Chip>Tasks:{c.tasks}</Chip>
+            {cards.map((c) => {
+              const serveTime = new Date(Date.now() + c.min * 60000);
+              const serveTimeStr = serveTime.toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit' 
+              });
+              
+              return (
+                <div key={c.idx} className="meal-card">
+                  <div className="meal-card-title">{c.title}</div>
+                  <div className="meal-card-author">by {c.author}</div>
+                  <div className="meal-card-chips">
+                    <Chip>Min cook time: {Math.round(c.min)} min</Chip>
+                    <Chip className="chip-info">Serve at: {serveTimeStr}</Chip>
+                  </div>
+                  <button onClick={() => loadMeal(c.idx)}>🍳 Cook now</button>
                 </div>
-                <button onClick={() => loadMeal(c.idx)}>Load this meal</button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
