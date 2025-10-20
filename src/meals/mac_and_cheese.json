@@ -1,7 +1,17 @@
 {
   "title": "Classic Mac & Cheese",
-  "description": "Comfort food with smooth sequential flow",
-  "recipe_text": "Bring large pot of salted water to a boil\nBoil elbow macaroni until al dente\nMelt butter in saucepan\nWhisk in flour to make roux\nGradually whisk in milk\nSimmer until sauce thickens\nStir in shredded cheddar cheese\nDrain pasta\nCombine pasta with cheese sauce\nSeason with salt, pepper, and paprika",
+  "description": "Comfort food with emergent ingredient demonstration",
+  "recipe_text": "Bring large pot of salted water to a boil\nBoil elbow macaroni until al dente\nGrate cheddar cheese\nMelt butter in saucepan\nWhisk in flour to make roux\nGradually whisk in milk\nSimmer until sauce thickens\nStir in grated cheese\nDrain pasta\nCombine pasta with cheese sauce\nSeason with salt, pepper, and paprika",
+  "ingredients": [
+    { "item": "elbow macaroni", "amount": "8 oz", "state": "raw" },
+    { "item": "sharp cheddar cheese", "amount": "2 cups (8 oz)", "state": "raw" },
+    { "item": "butter", "amount": "3 tbsp", "state": "raw" },
+    { "item": "all-purpose flour", "amount": "3 tbsp", "state": "raw" },
+    { "item": "milk", "amount": "2 cups", "state": "raw" },
+    { "item": "salt", "amount": "to taste", "state": "raw" },
+    { "item": "black pepper", "amount": "to taste", "state": "raw" },
+    { "item": "paprika", "amount": "1/4 tsp", "state": "raw" }
+  ],
   "tasks": [
     {
       "id": "t1",
@@ -58,58 +68,73 @@
     },
     {
       "id": "t6",
+      "name": "Grate cheddar cheese",
+      "canonical_verb": "grate",
+      "duration_min": 3,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": [{ "ingredient": "cheddar_cheese", "state": "raw" }],
+      "outputs": [{ "ingredient": "cheddar_cheese", "state": "grated", "emergent": true }],
+      "edges": [
+        { "from": "t2", "to": "t6", "type": "SS", "note": "Can grate while pasta boils" }
+      ]
+    },
+    {
+      "id": "t7",
       "name": "Simmer until sauce thickens",
       "canonical_verb": "simmer",
       "duration_min": 5,
       "requires_driver": false,
       "self_running_after_start": true,
       "edges": [
-        { "from": "t5", "to": "t6", "type": "FS" }
-      ]
-    },
-    {
-      "id": "t7",
-      "name": "Stir in shredded cheddar cheese",
-      "canonical_verb": "stir",
-      "duration_min": 2,
-      "requires_driver": true,
-      "self_running_after_start": false,
-      "edges": [
-        { "from": "t6", "to": "t7", "type": "FS" }
+        { "from": "t5", "to": "t7", "type": "FS" }
       ]
     },
     {
       "id": "t8",
-      "name": "Drain pasta",
-      "canonical_verb": "drain",
-      "duration_min": 1,
+      "name": "Stir in grated cheese",
+      "canonical_verb": "stir",
+      "duration_min": 2,
       "requires_driver": true,
       "self_running_after_start": false,
+      "inputs": [{ "ingredient": "cheddar_cheese", "state": "grated", "emergent": true }],
       "edges": [
-        { "from": "t2", "to": "t8", "type": "FF" }
+        { "from": "t6", "to": "t8", "type": "FS", "note": "Must have grated cheese" },
+        { "from": "t7", "to": "t8", "type": "FS", "note": "Sauce must be ready" }
       ]
     },
     {
       "id": "t9",
+      "name": "Drain pasta",
+      "canonical_verb": "drain",
+      "duration_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t2", "to": "t9", "type": "FF" }
+      ]
+    },
+    {
+      "id": "t10",
       "name": "Combine pasta with cheese sauce",
       "canonical_verb": "combine",
       "duration_min": 2,
       "requires_driver": true,
       "self_running_after_start": false,
       "edges": [
-        { "from": "t7", "to": "t9", "type": "FS" },
-        { "from": "t8", "to": "t9", "type": "FS" }
+        { "from": "t8", "to": "t10", "type": "FS", "note": "Cheese sauce complete" },
+        { "from": "t9", "to": "t10", "type": "FS", "note": "Pasta drained" }
       ]
     },
     {
-      "id": "t10",
+      "id": "t11",
       "name": "Season with salt, pepper, and paprika",
       "canonical_verb": "season",
       "duration_min": 1,
       "requires_driver": true,
       "self_running_after_start": false,
       "edges": [
-        { "from": "t9", "to": "t10", "type": "FS" }
+        { "from": "t10", "to": "t11", "type": "FS" }
       ]
     }
   ]
