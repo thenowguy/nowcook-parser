@@ -865,7 +865,36 @@ export default function App() {
                     <Chip>Min cook time: {Math.round(c.min)} min</Chip>
                     <Chip className="chip-info">Serve at: {serveTimeStr}</Chip>
                   </div>
-                  <button onClick={() => loadMeal(c.idx)}>🍳 Cook now</button>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <button onClick={() => loadMeal(c.idx)}>🍳 Cook now</button>
+                    <select 
+                      onChange={(e) => {
+                        if (e.target.value === 'now') {
+                          loadMeal(c.idx);
+                        } else {
+                          // TODO: Load meal with scheduled serve time
+                          console.log('Schedule meal for:', e.target.value);
+                          loadMeal(c.idx); // For now, just load it
+                        }
+                        e.target.value = ''; // Reset dropdown
+                      }}
+                      style={{ 
+                        padding: '8px 12px',
+                        borderRadius: '4px',
+                        border: '1px solid #ccc',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <option value="">or cook later...</option>
+                      <option value="now">Cook now</option>
+                      <option value="30min">Add 30 minutes</option>
+                      <option value="1hr">Add 1 hour</option>
+                      <option value="2hr">Add 2 hours</option>
+                      <option value="6pm">Tonight at 6pm</option>
+                      <option value="7pm">Tonight at 7pm</option>
+                      <option value="tomorrow7pm">Tomorrow at 7pm</option>
+                    </select>
+                  </div>
                 </div>
               );
             })}
