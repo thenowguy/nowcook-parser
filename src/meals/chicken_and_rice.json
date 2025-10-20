@@ -1,0 +1,158 @@
+{
+  "title": "Pan-Seared Chicken & Rice",
+  "description": "Protein and starch with smart parallelism",
+  "recipe_text": "Bring chicken stock to a boil in saucepan\nAdd rice to boiling stock\nSimmer rice covered until tender\nSeason chicken breasts with salt and pepper\nHeat oil in large skillet\nSear chicken breasts until golden\nFlip and cook chicken through\nDice onion\nMince garlic\nSauté onion in same pan\nAdd garlic and cook until fragrant\nFluff rice with fork\nServe chicken over rice with pan sauce",
+  "tasks": [
+    {
+      "id": "t1",
+      "name": "Bring chicken stock to a boil in saucepan",
+      "canonical_verb": "bring_to_boil",
+      "duration_min": 5,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "edges": []
+    },
+    {
+      "id": "t2",
+      "name": "Add rice to boiling stock",
+      "canonical_verb": "add",
+      "duration_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t1", "to": "t2", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t3",
+      "name": "Simmer rice covered until tender",
+      "canonical_verb": "simmer",
+      "duration_min": 18,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "edges": [
+        { "from": "t2", "to": "t3", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t4",
+      "name": "Season chicken breasts with salt and pepper",
+      "canonical_verb": "season",
+      "duration_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": []
+    },
+    {
+      "id": "t5",
+      "name": "Heat oil in large skillet",
+      "canonical_verb": "heat",
+      "duration_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t3", "to": "t5", "type": "SS" }
+      ]
+    },
+    {
+      "id": "t6",
+      "name": "Sear chicken breasts until golden",
+      "canonical_verb": "sear",
+      "duration_min": 6,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t4", "to": "t6", "type": "FS" },
+        { "from": "t5", "to": "t6", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t7",
+      "name": "Flip and cook chicken through",
+      "canonical_verb": "cook",
+      "duration_min": 8,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "edges": [
+        { "from": "t6", "to": "t7", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t8",
+      "name": "Dice onion",
+      "canonical_verb": "dice",
+      "duration_min": 3,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": []
+    },
+    {
+      "id": "t9",
+      "name": "Mince garlic",
+      "canonical_verb": "mince",
+      "duration_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": []
+    },
+    {
+      "id": "t10",
+      "name": "Remove chicken and rest",
+      "canonical_verb": "rest",
+      "duration_min": 5,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "edges": [
+        { "from": "t7", "to": "t10", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t11",
+      "name": "Sauté onion in same pan",
+      "canonical_verb": "saute",
+      "duration_min": 4,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t8", "to": "t11", "type": "FS" },
+        { "from": "t10", "to": "t11", "type": "SS" }
+      ]
+    },
+    {
+      "id": "t12",
+      "name": "Add garlic and cook until fragrant",
+      "canonical_verb": "cook",
+      "duration_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t9", "to": "t12", "type": "FS" },
+        { "from": "t11", "to": "t12", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t13",
+      "name": "Fluff rice with fork",
+      "canonical_verb": "fluff",
+      "duration_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t3", "to": "t13", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t14",
+      "name": "Serve chicken over rice with pan sauce",
+      "canonical_verb": "serve",
+      "duration_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t10", "to": "t14", "type": "FS" },
+        { "from": "t12", "to": "t14", "type": "FS" },
+        { "from": "t13", "to": "t14", "type": "FS" }
+      ]
+    }
+  ]
+}

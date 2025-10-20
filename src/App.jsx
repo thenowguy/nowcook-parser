@@ -17,11 +17,13 @@ import READINESS_PACK from "./packs/readiness.en.json";   // reserved (not used 
 import SYNONYMS_PACK from "./packs/synonyms.en.json";     // optional
 
 // ----------------------------------------------------------------------
-// Sample meals (src/meals) — underscore filenames
+// Sample meals (src/meals) — Alpha MVP Suite (5 perfect meals)
 // ----------------------------------------------------------------------
-import MEAL_PASTA from "./meals/quick_pasta.json";
-import MEAL_ROAST from "./meals/roast_chicken.json";
-import MEAL_STEW  from "./meals/slow_beef_stew.json";
+import MEAL_GARLIC_PASTA from "./meals/garlic_butter_pasta.json";
+import MEAL_MAC_CHEESE from "./meals/mac_and_cheese.json";
+import MEAL_CHICKEN_RICE from "./meals/chicken_and_rice.json";
+import MEAL_SALMON from "./meals/salmon_asparagus_couscous.json";
+import MEAL_STEAK from "./meals/steak_potatoes_beans.json";
 
 // ----------------------------------------------------------------------
 // Tiny helpers
@@ -560,9 +562,11 @@ function computeMealMinTime(meal) {
 // ----------------------------------------------------------------------
 export default function App() {
   const MEALS = useMemo(() => ([
-    { id: "pasta", title: "Quick Pasta with Garlic Oil", author: "Sample", data: MEAL_PASTA },
-    { id: "roast", title: "Easy One-pan Roast Chicken and Vegetables", author: "Nicole Maquire", data: MEAL_ROAST },
-    { id: "stew",  title: "Slow Beef Stew", author: "Sample", data: MEAL_STEW },
+    { id: "garlic-pasta", title: "Garlic Butter Pasta", author: "Alpha Suite", data: MEAL_GARLIC_PASTA },
+    { id: "mac-cheese", title: "Classic Mac & Cheese", author: "Alpha Suite", data: MEAL_MAC_CHEESE },
+    { id: "chicken-rice", title: "Pan-Seared Chicken & Rice", author: "Alpha Suite", data: MEAL_CHICKEN_RICE },
+    { id: "salmon", title: "Pan-Seared Salmon, Roasted Asparagus & Couscous", author: "Alpha Suite", data: MEAL_SALMON },
+    { id: "steak", title: "Seared Steak, Garlic Mashed Potatoes & Sautéed Green Beans", author: "Alpha Suite", data: MEAL_STEAK },
   ]), []);
 
   const [mealIdx, setMealIdx] = useState(0);

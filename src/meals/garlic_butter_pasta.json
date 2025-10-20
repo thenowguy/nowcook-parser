@@ -1,0 +1,114 @@
+{
+  "title": "Garlic Butter Pasta",
+  "description": "Simple 15-minute pasta showcasing basic parallelism",
+  "recipe_text": "Bring large pot of salted water to a boil\nSlice garlic thinly\nChop fresh parsley\nBoil pasta until al dente\nMelt butter in large pan\nSauté garlic in butter until fragrant\nReserve pasta water\nDrain pasta\nToss pasta with garlic butter\nFinish with parsley and cracked pepper",
+  "tasks": [
+    {
+      "id": "t1",
+      "name": "Bring large pot of salted water to a boil",
+      "canonical_verb": "bring_to_boil",
+      "duration_min": 8,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "edges": []
+    },
+    {
+      "id": "t2",
+      "name": "Slice garlic thinly",
+      "canonical_verb": "slice",
+      "duration_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": []
+    },
+    {
+      "id": "t3",
+      "name": "Chop fresh parsley",
+      "canonical_verb": "chop",
+      "duration_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": []
+    },
+    {
+      "id": "t4",
+      "name": "Boil pasta until al dente",
+      "canonical_verb": "boil",
+      "duration_min": 9,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "edges": [
+        { "from": "t1", "to": "t4", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t5",
+      "name": "Melt butter in large pan",
+      "canonical_verb": "melt",
+      "duration_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t4", "to": "t5", "type": "SS" }
+      ]
+    },
+    {
+      "id": "t6",
+      "name": "Sauté garlic in butter until fragrant",
+      "canonical_verb": "saute",
+      "duration_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t2", "to": "t6", "type": "FS" },
+        { "from": "t5", "to": "t6", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t7",
+      "name": "Reserve pasta water",
+      "canonical_verb": "reserve",
+      "duration_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t4", "to": "t7", "type": "SS" }
+      ]
+    },
+    {
+      "id": "t8",
+      "name": "Drain pasta",
+      "canonical_verb": "drain",
+      "duration_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t4", "to": "t8", "type": "FF" }
+      ]
+    },
+    {
+      "id": "t9",
+      "name": "Toss pasta with garlic butter",
+      "canonical_verb": "toss",
+      "duration_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t6", "to": "t9", "type": "FS" },
+        { "from": "t8", "to": "t9", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t10",
+      "name": "Finish with parsley and cracked pepper",
+      "canonical_verb": "finish",
+      "duration_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t3", "to": "t10", "type": "FS" },
+        { "from": "t9", "to": "t10", "type": "FS" }
+      ]
+    }
+  ]
+}

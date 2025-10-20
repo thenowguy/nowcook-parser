@@ -1,0 +1,116 @@
+{
+  "title": "Classic Mac & Cheese",
+  "description": "Comfort food with smooth sequential flow",
+  "recipe_text": "Bring large pot of salted water to a boil\nBoil elbow macaroni until al dente\nMelt butter in saucepan\nWhisk in flour to make roux\nGradually whisk in milk\nSimmer until sauce thickens\nStir in shredded cheddar cheese\nDrain pasta\nCombine pasta with cheese sauce\nSeason with salt, pepper, and paprika",
+  "tasks": [
+    {
+      "id": "t1",
+      "name": "Bring large pot of salted water to a boil",
+      "canonical_verb": "bring_to_boil",
+      "duration_min": 8,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "edges": []
+    },
+    {
+      "id": "t2",
+      "name": "Boil elbow macaroni until al dente",
+      "canonical_verb": "boil",
+      "duration_min": 8,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "edges": [
+        { "from": "t1", "to": "t2", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t3",
+      "name": "Melt butter in saucepan",
+      "canonical_verb": "melt",
+      "duration_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t2", "to": "t3", "type": "SS" }
+      ]
+    },
+    {
+      "id": "t4",
+      "name": "Whisk in flour to make roux",
+      "canonical_verb": "whisk",
+      "duration_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t3", "to": "t4", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t5",
+      "name": "Gradually whisk in milk",
+      "canonical_verb": "whisk",
+      "duration_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t4", "to": "t5", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t6",
+      "name": "Simmer until sauce thickens",
+      "canonical_verb": "simmer",
+      "duration_min": 5,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "edges": [
+        { "from": "t5", "to": "t6", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t7",
+      "name": "Stir in shredded cheddar cheese",
+      "canonical_verb": "stir",
+      "duration_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t6", "to": "t7", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t8",
+      "name": "Drain pasta",
+      "canonical_verb": "drain",
+      "duration_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t2", "to": "t8", "type": "FF" }
+      ]
+    },
+    {
+      "id": "t9",
+      "name": "Combine pasta with cheese sauce",
+      "canonical_verb": "combine",
+      "duration_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t7", "to": "t9", "type": "FS" },
+        { "from": "t8", "to": "t9", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t10",
+      "name": "Season with salt, pepper, and paprika",
+      "canonical_verb": "season",
+      "duration_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t9", "to": "t10", "type": "FS" }
+      ]
+    }
+  ]
+}
