@@ -75,9 +75,7 @@
       "self_running_after_start": false,
       "inputs": [{ "ingredient": "cheddar_cheese", "state": "raw" }],
       "outputs": [{ "ingredient": "cheddar_cheese", "state": "grated", "emergent": true }],
-      "edges": [
-        { "from": "t2", "to": "t6", "type": "SS", "note": "Can grate while pasta boils" }
-      ]
+      "edges": []
     },
     {
       "id": "t7",

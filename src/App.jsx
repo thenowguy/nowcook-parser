@@ -247,7 +247,7 @@ function depsSatisfied(task, getPred) {
   if (edges.length === 0) return true;
   return edges.every((e) => {
     const pred = getPred(e.from);
-    if (!pred) return true;
+    if (!pred) return true; // predecessor doesn't exist in our tracking
     switch (e.type) {
       case "SS": return pred.started || pred.done; // can start when predecessor starts
       case "FS":
@@ -319,13 +319,13 @@ function useRuntime(tasks) {
     if (doneIds.has(t.id) || runningIds.has(t.id)) continue;
     
     const depsOK = depsSatisfied(t, (id) => ({
-      started: runningIds.has(id),
+      started: runningIds.has(id) || doneIds.has(id),
       done: doneIds.has(id),
     }));
     
     // Can't do yet: dependencies not satisfied
     if (!depsOK) { 
-      cantDoYet.push(t); 
+      cantDoYet.push(t);
       continue; 
     }
     
