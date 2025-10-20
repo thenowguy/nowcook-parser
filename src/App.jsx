@@ -937,6 +937,86 @@ export default function App() {
           />
         </div>
 
+        {/* Meal Editor */}
+        <div className="meal-editor" style={{ marginTop: 24, padding: 16, background: '#fffbf0', borderRadius: 8, border: '2px solid #ffc107' }}>
+          <h3 style={{ marginBottom: 12, color: '#f57c00' }}>🛠️ Meal Editor (Beta)</h3>
+          <details open>
+            <summary style={{ cursor: 'pointer', fontWeight: 600, marginBottom: 12 }}>Edit Tasks</summary>
+            <div style={{ maxHeight: 400, overflowY: 'auto', padding: '8px 0' }}>
+              {state.meal.tasks.map((task, idx) => (
+                <div key={task.id} style={{ 
+                  marginBottom: 12, 
+                  padding: 12, 
+                  background: '#fff', 
+                  borderRadius: 6,
+                  border: '1px solid #e0e0e0'
+                }}>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
+                    <b style={{ minWidth: 30 }}>#{idx + 1}</b>
+                    <input 
+                      type="text" 
+                      value={task.name}
+                      onChange={(e) => {
+                        const newTasks = [...state.meal.tasks];
+                        newTasks[idx] = { ...task, name: e.target.value };
+                        setState({ ...state, meal: { ...state.meal, tasks: newTasks } });
+                      }}
+                      style={{ flex: 1, padding: 6, borderRadius: 4, border: '1px solid #ccc' }}
+                    />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, fontSize: 13 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      Duration (min):
+                      <input 
+                        type="number" 
+                        value={task.duration_min || 0}
+                        onChange={(e) => {
+                          const newTasks = [...state.meal.tasks];
+                          newTasks[idx] = { ...task, duration_min: parseInt(e.target.value) || 0 };
+                          setState({ ...state, meal: { ...state.meal, tasks: newTasks } });
+                        }}
+                        style={{ width: 60, padding: 4, borderRadius: 4, border: '1px solid #ccc' }}
+                        min="0"
+                      />
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <input 
+                        type="checkbox" 
+                        checked={!!task.requires_driver}
+                        onChange={(e) => {
+                          const newTasks = [...state.meal.tasks];
+                          newTasks[idx] = { 
+                            ...task, 
+                            requires_driver: e.target.checked,
+                            self_running_after_start: !e.target.checked
+                          };
+                          setState({ ...state, meal: { ...state.meal, tasks: newTasks } });
+                        }}
+                      />
+                      Attended
+                    </label>
+                    <div style={{ fontSize: 12, color: '#666' }}>
+                      Verb: <code>{task.canonical_verb || 'free_text'}</code>
+                    </div>
+                  </div>
+                  {task.edges && task.edges.length > 0 && (
+                    <div style={{ marginTop: 8, fontSize: 12, color: '#1976d2' }}>
+                      ↳ Depends on: {task.edges.map(e => {
+                        const depIdx = state.meal.tasks.findIndex(t => t.id === e.from);
+                        return `#${depIdx + 1} (${e.type})`;
+                      }).join(', ')}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </details>
+          <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
+            <button onClick={exportJson} style={{ flex: 1 }}>💾 Save as JSON</button>
+            <button onClick={() => navigator.clipboard.writeText(JSON.stringify(state.meal, null, 2))} style={{ flex: 1 }}>📋 Copy JSON</button>
+          </div>
+        </div>
+
         <div className="export-buttons">
           <button onClick={exportJson}>Export JSON</button>
           <button onClick={exportLogJSON}>Export runtime log (JSON)</button>
