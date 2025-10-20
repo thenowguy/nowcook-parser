@@ -4,18 +4,19 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-  "dev": "vite",
-  "build": "vite build",
-  "lint": "eslint .",
-  "preview": "vite preview",
-  "validate": "node scripts/validate.js",
-  "validate:ontology": "node scripts/validate-ontology.js",
-  "test:parser": "node scripts/test-parser.js",
-  "scaffold:meal": "node scripts/scaffold-meal.js"
-},
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "validate": "node scripts/validate.js",
+    "validate:ontology": "node scripts/validate-ontology.js",
+    "test:parser": "node scripts/test-parser.js",
+    "scaffold:meal": "node scripts/scaffold-meal.js"
+  },
   "dependencies": {
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-dom": "^19.1.1",
+    "react-router-dom": "^7.9.4"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
