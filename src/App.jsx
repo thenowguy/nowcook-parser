@@ -654,6 +654,9 @@ export default function App() {
 
   // NEW: Track recipe text for AuthoringPanel
   const [recipeText, setRecipeText] = useState("");
+  
+  // Modal state for meal scheduling
+  const [schedulingModal, setSchedulingModal] = useState(null); // { mealIdx, mealTitle, cookTime }
 
   // Serve-at input (15-min step)
   const [serveAt, setServeAt] = useState(() => {
@@ -856,48 +859,172 @@ export default function App() {
               });
               
               return (
-                <div key={c.idx} className="meal-card">
+                <div key={c.idx} className="meal-card" style={{ display: 'flex', flexDirection: 'column' }}>
                   <div className="meal-card-title">{c.title}</div>
                   <div className="meal-card-author">by {c.author}</div>
-                  <div className="meal-card-chips">
-                    <Chip>Min cook time: {Math.round(c.min)} min</Chip>
-                    <Chip className="chip-info">Serve at: {serveTimeStr}</Chip>
+                  <div style={{ 
+                    marginTop: '12px', 
+                    marginBottom: '16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '6px',
+                    fontSize: '14px',
+                    color: '#666'
+                  }}>
+                    <div>Min cook time: <strong>{Math.round(c.min)} min</strong></div>
+                    <div>Serve at: <strong>{serveTimeStr}</strong></div>
                   </div>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <button onClick={() => loadMeal(c.idx)}>🍳 Cook now</button>
-                    <select 
-                      onChange={(e) => {
-                        if (e.target.value === 'now') {
-                          loadMeal(c.idx);
-                        } else {
-                          // TODO: Load meal with scheduled serve time
-                          console.log('Schedule meal for:', e.target.value);
-                          loadMeal(c.idx); // For now, just load it
-                        }
-                        e.target.value = ''; // Reset dropdown
-                      }}
-                      style={{ 
-                        padding: '8px 12px',
-                        borderRadius: '4px',
-                        border: '1px solid #ccc',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      <option value="">or cook later...</option>
-                      <option value="now">Cook now</option>
-                      <option value="30min">Add 30 minutes</option>
-                      <option value="1hr">Add 1 hour</option>
-                      <option value="2hr">Add 2 hours</option>
-                      <option value="6pm">Tonight at 6pm</option>
-                      <option value="7pm">Tonight at 7pm</option>
-                      <option value="tomorrow7pm">Tomorrow at 7pm</option>
-                    </select>
-                  </div>
+                  <button 
+                    onClick={() => setSchedulingModal({ 
+                      mealIdx: c.idx, 
+                      mealTitle: c.title,
+                      cookTime: Math.round(c.min)
+                    })}
+                    style={{
+                      marginTop: 'auto',
+                      padding: '16px 32px',
+                      fontSize: '18px',
+                      fontWeight: 'bold',
+                      width: '100%',
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '12px',
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
+                      transition: 'transform 0.2s, box-shadow 0.2s',
+                      minHeight: '56px'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.transform = 'translateY(-2px)';
+                      e.target.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.6)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.transform = 'translateY(0)';
+                      e.target.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.4)';
+                    }}
+                  >
+                    🍳 COOK
+                  </button>
                 </div>
               );
             })}
           </div>
       </div>
+
+      {/* Scheduling Modal */}
+      {schedulingModal && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '20px'
+          }}
+          onClick={() => setSchedulingModal(null)}
+        >
+          <div 
+            style={{
+              background: 'white',
+              borderRadius: '12px',
+              padding: '24px',
+              maxWidth: '400px',
+              width: '100%',
+              boxShadow: '0 10px 40px rgba(0,0,0,0.2)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 style={{ margin: '0 0 8px 0', fontSize: '20px' }}>{schedulingModal.mealTitle}</h2>
+            <p style={{ margin: '0 0 24px 0', color: '#666' }}>Ready in {schedulingModal.cookTime} minutes</p>
+            
+            <div style={{ marginBottom: '16px', fontSize: '16px', fontWeight: '500' }}>
+              When would you like to serve?
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <button 
+                onClick={() => { loadMeal(schedulingModal.mealIdx); setSchedulingModal(null); }}
+                style={{ 
+                  padding: '16px', 
+                  fontSize: '16px', 
+                  borderRadius: '8px',
+                  border: '2px solid #4CAF50',
+                  background: '#4CAF50',
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontWeight: 'bold'
+                }}
+              >
+                🍳 Start now
+              </button>
+              
+              <button 
+                onClick={() => { loadMeal(schedulingModal.mealIdx); setSchedulingModal(null); }}
+                style={{ padding: '14px', fontSize: '15px', borderRadius: '8px', cursor: 'pointer' }}
+              >
+                ⏰ Add 30 minutes
+              </button>
+              
+              <button 
+                onClick={() => { loadMeal(schedulingModal.mealIdx); setSchedulingModal(null); }}
+                style={{ padding: '14px', fontSize: '15px', borderRadius: '8px', cursor: 'pointer' }}
+              >
+                ⏰ Add 1 hour
+              </button>
+              
+              <button 
+                onClick={() => { loadMeal(schedulingModal.mealIdx); setSchedulingModal(null); }}
+                style={{ padding: '14px', fontSize: '15px', borderRadius: '8px', cursor: 'pointer' }}
+              >
+                ⏰ Add 2 hours
+              </button>
+              
+              <button 
+                onClick={() => { loadMeal(schedulingModal.mealIdx); setSchedulingModal(null); }}
+                style={{ padding: '14px', fontSize: '15px', borderRadius: '8px', cursor: 'pointer' }}
+              >
+                🌙 Tonight at 6pm
+              </button>
+              
+              <button 
+                onClick={() => { loadMeal(schedulingModal.mealIdx); setSchedulingModal(null); }}
+                style={{ padding: '14px', fontSize: '15px', borderRadius: '8px', cursor: 'pointer' }}
+              >
+                🌙 Tonight at 7pm
+              </button>
+              
+              <button 
+                onClick={() => { loadMeal(schedulingModal.mealIdx); setSchedulingModal(null); }}
+                style={{ padding: '14px', fontSize: '15px', borderRadius: '8px', cursor: 'pointer' }}
+              >
+                📅 Tomorrow at 7pm
+              </button>
+            </div>
+            
+            <button 
+              onClick={() => setSchedulingModal(null)}
+              style={{ 
+                marginTop: '16px', 
+                padding: '12px', 
+                width: '100%',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#666'
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ------------------------ Runtime preview ------------------------ */}
       <div className="panel panel-runtime">
