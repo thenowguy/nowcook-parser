@@ -832,23 +832,21 @@ export default function App() {
       </div>
       */}
 
-      {/* Top: Meals & Time Budget */}
-      <div className="grid-two-cols">
-        {/* Meals browser */}
-        <div className="panel panel-meals">
-          <div className="panel-header">Meals</div>
-          <div className="search-bar">
-            <input
-              className="search-input"
-              placeholder="Search by title..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-            <label>
-              <input type="checkbox" checked={onlyFits} onChange={(e) => setOnlyFits(e.target.checked)} />
-              Only show meals that fit
-            </label>
-          </div>
+      {/* Meals browser */}
+      <div className="panel panel-meals">
+        <div className="panel-header">Meals</div>
+        <div className="search-bar">
+          <input
+            className="search-input"
+            placeholder="Search by title..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          <label>
+            <input type="checkbox" checked={onlyFits} onChange={(e) => setOnlyFits(e.target.checked)} />
+            Only show meals that fit
+          </label>
+        </div>
           <div className="grid-auto-fit">
             {cards.map((c) => {
               const serveTime = new Date(Date.now() + c.min * 60000);
@@ -899,23 +897,6 @@ export default function App() {
               );
             })}
           </div>
-        </div>
-
-        {/* Time Budget */}
-        <div className="panel panel-budget">
-          <div className="budget-title">Time Budget</div>
-          <div className="budget-serve-input">
-            Need to serve at:&nbsp;
-            <input type="time" step={900} value={serveAt} onChange={(e) => setServeAt(e.target.value)} />
-          </div>
-          <Chip>Minimum prep &amp; cook time:{Math.round(minBudget)}min</Chip>
-          <Chip className={fits ? "chip-success" : "chip-error"}>
-            Fits your window:{fits ? "Yes" : "No"}
-          </Chip>
-          <div className="budget-earliest-serve">
-            Earliest serve if you start now: <b>{earliestServe}</b>
-          </div>
-        </div>
       </div>
 
       {/* ------------------------ Runtime preview ------------------------ */}
