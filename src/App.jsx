@@ -207,7 +207,7 @@ function depsSatisfied(task, getPred) {
   const edges = Array.isArray(task.edges) ? task.edges : [];
   if (edges.length === 0) return true;
   return edges.every((e) => {
-    const pred = status(e.from);
+    const pred = getPred(e.from);
     if (!pred) return true;
     switch (e.type) {
       case "SS": return pred.started || pred.done; // can start when predecessor starts
