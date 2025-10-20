@@ -197,10 +197,49 @@ function consumesDriver(task) {
 
 function hasTimeSensitivity(task) {
   // Time-sensitive tasks must be done close to serve time
-  // Examples: steaming broccoli, removing from oven, plating
-  const timeSensitiveVerbs = ['steam', 'plate', 'serve', 'remove', 'flip', 'stir'];
+  // OR are part of active cooking (not just prep)
+  const timeSensitiveVerbs = [
+    'steam', 'plate', 'serve', 'remove', 'flip', 'stir',
+    'boil', 'simmer', 'cook', 'bake', 'roast', 'sauté', 'fry',
+    'drain', 'combine', 'whisk', 'melt', 'heat'
+  ];
   const verb = (task.canonical_verb || '').toLowerCase();
-  return timeSensitiveVerbs.includes(verb);
+  const name = (task.name || '').toLowerCase();
+  
+  // Check verb
+  if (timeSensitiveVerbs.includes(verb)) return true;
+  
+  // Check if name contains time-sensitive keywords
+  if (name.includes('boil') || name.includes('simmer') || name.includes('cook') ||
+      name.includes('bake') || name.includes('heat') || name.includes('melt') ||
+      name.includes('drain') || name.includes('combine') || name.includes('sauce')) {
+    return true;
+  }
+  
+  return false;
+}
+
+function isPrepTask(task) {
+  // Pure prep tasks that can be done way ahead of time
+  // Examples: grate, mince, dice, chop, peel, measure, trim
+  const prepVerbs = [
+    'grate', 'mince', 'dice', 'chop', 'slice', 'cube',
+    'peel', 'trim', 'julienne', 'measure', 'cut'
+  ];
+  const verb = (task.canonical_verb || '').toLowerCase();
+  const name = (task.name || '').toLowerCase();
+  
+  // Check verb
+  if (prepVerbs.includes(verb)) return true;
+  
+  // Check if name contains prep keywords
+  if (name.includes('grate') || name.includes('mince') || name.includes('dice') ||
+      name.includes('chop') || name.includes('measure') || name.includes('cut') ||
+      name.includes('peel') || name.includes('trim') || name.includes('slice')) {
+    return true;
+  }
+  
+  return false;
 }
 
 function depsSatisfied(task, getPred) {
@@ -292,16 +331,17 @@ function useRuntime(tasks) {
     
     // Dependencies are satisfied - now classify by temporal flexibility
     
-    // Could do now: unattended prep tasks with no time urgency
-    // These can be done anytime: night before, this morning, or right now
-    // Example: "Grate cheese" - could prep Thursday for Friday dinner
-    if (!t.requires_driver && !hasTimeSensitivity(t)) {
+    // Could do now: ONLY pure prep tasks (grate, mince, measure, chop, etc.)
+    // These are unattended AND can be done way ahead of time
+    // Must NOT be cooking/heating/combining tasks
+    const isPurePrep = isPrepTask(t);
+    if (!t.requires_driver && isPurePrep) {
       couldDoNow.push(t);
       continue;
     }
     
     // Can do now: ready to execute when driver becomes available
-    // These follow dependencies but aren't time-critical
+    // This includes all cooking tasks and attended prep
     if (t.requires_driver && driverBusy) {
       cantDoYet.push(t);
     } else {
