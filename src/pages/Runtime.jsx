@@ -49,53 +49,6 @@ export default function Runtime() {
       display: 'flex',
       flexDirection: 'column'
     }}>
-      {/* Header */}
-      <header style={{
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        color: 'white',
-        padding: '16px 20px',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
-      }}>
-        <button 
-          onClick={() => navigate('/')}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            color: 'white',
-            fontSize: '24px',
-            cursor: 'pointer',
-            padding: 0,
-            marginBottom: '8px'
-          }}
-        >
-          ← 
-        </button>
-        <h1 style={{ 
-          fontSize: '20px', 
-          margin: '0 0 4px 0',
-          fontWeight: 'bold'
-        }}>
-          {meal.title}
-        </h1>
-        <p style={{ margin: 0, fontSize: '14px', opacity: 0.9 }}>
-          by {meal.author}
-        </p>
-      </header>
-
-      {/* Serve Time Banner */}
-      {rt.started && serveTimeStr && (
-        <div style={{
-          background: '#4CAF50',
-          color: 'white',
-          padding: '12px 20px',
-          textAlign: 'center',
-          fontSize: '16px',
-          fontWeight: 'bold'
-        }}>
-          🍽️ Serving at {serveTimeStr}
-        </div>
-      )}
-
       {/* Start Screen */}
       {!rt.started && (
         <div style={{
@@ -137,11 +90,58 @@ export default function Runtime() {
       {/* Cooking Interface */}
       {rt.started && (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          {/* Hero Image */}
+          <div style={{
+            width: '100%',
+            height: '150px', // 300px physical / 2 = 150px logical
+            overflow: 'hidden',
+            background: '#000'
+          }}>
+            <img 
+              src="/mac-cheese-hero.png" 
+              alt={meal.title}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover'
+              }}
+            />
+          </div>
+
+          {/* Dark Panel with NOW Time Badge */}
+          <div style={{
+            position: 'relative',
+            width: '100%',
+            height: '50px', // 100px physical / 2 = 50px logical
+            background: '#575762'
+          }}>
+            {/* Time badge positioned over NowLine at 160px */}
+            <div style={{
+              position: 'absolute',
+              left: '160px',
+              top: '50%',
+              transform: 'translate(-50%, -50%)',
+              background: '#4caf50',
+              color: 'white',
+              padding: '6px 12px',
+              borderRadius: '12px',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              whiteSpace: 'nowrap'
+            }}>
+              {new Date().toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit',
+                second: '2-digit'
+              })}
+            </div>
+          </div>
+
           {/* Timeline - THE main interface */}
           <div style={{
             flex: 1,
             overflow: 'auto',
-            padding: '20px',
+            padding: 0,
             background: 'white'
           }}>
             <TimelineFlow

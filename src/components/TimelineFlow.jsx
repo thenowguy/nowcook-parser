@@ -12,6 +12,10 @@ export default function TimelineFlow({ tasks, running, ready = [], completed = [
   const NOWLINE_WIDTH = 2; // 4px physical / 2 = 2px logical
   const TEXT_PADDING = 15; // 30px physical / 2 = 15px logical (from NowLine)
   
+  // Get viewport width for full-width lozenges
+  const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 414;
+  const AVAILABLE_WIDTH = viewportWidth - NOWLINE_X; // Width from NowLine to right edge
+  
   const byId = useMemo(() => new Map(tasks.map((t) => [t.id, t])), [tasks]);
   
   const now = new Date();
@@ -34,7 +38,9 @@ export default function TimelineFlow({ tasks, running, ready = [], completed = [
       const elapsedMs = nowMs - r.startedAt;
       const remainingMs = durationMs - elapsedMs;
       
-      const lozengeWidth = (durationMs / 1000) * PIXELS_PER_SECOND;
+      const durationWidth = (durationMs / 1000) * PIXELS_PER_SECOND;
+      // Extend to fill available space or use duration width, whichever is larger
+      const lozengeWidth = Math.max(durationWidth, AVAILABLE_WIDTH);
       const elapsedPixels = (elapsedMs / 1000) * PIXELS_PER_SECOND;
       
       // Calculate position - slides left as time passes
@@ -66,7 +72,9 @@ export default function TimelineFlow({ tasks, running, ready = [], completed = [
       
       const durationMin = getPlannedMinutes(task);
       const durationMs = durationMin * 60000;
-      const lozengeWidth = (durationMs / 1000) * PIXELS_PER_SECOND;
+      const durationWidth = (durationMs / 1000) * PIXELS_PER_SECOND;
+      // Extend to fill available space or use duration width, whichever is larger
+      const lozengeWidth = Math.max(durationWidth, AVAILABLE_WIDTH);
       const lozengeX = NOWLINE_X; // Left edge AT NowLine
       
       tracks.push({
@@ -118,25 +126,6 @@ export default function TimelineFlow({ tasks, running, ready = [], completed = [
           zIndex: 4,
           pointerEvents: 'none'
         }} />
-        
-        {/* NowLine Time Badge */}
-        <div style={{
-          position: 'absolute',
-          left: `${NOWLINE_X}px`,
-          top: '10px',
-          transform: 'translateX(-50%)',
-          background: '#4caf50',
-          color: 'white',
-          padding: '6px 12px',
-          borderRadius: '12px',
-          fontSize: '14px',
-          fontWeight: 'bold',
-          whiteSpace: 'nowrap',
-          zIndex: 100,
-          pointerEvents: 'none'
-        }}>
-          {currentTimeStr}
-        </div>
         
         {/* Tracks Stack */}
         {allTracks.map((track) => (
