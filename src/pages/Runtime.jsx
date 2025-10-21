@@ -2,7 +2,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useMemo } from 'react';
 import { getMeal } from '../data/meals';
 import { useRuntime, mmss, getPlannedMinutes, orderForLanes, suggestQueue } from '../utils/runtime';
-import Timeline from '../components/Timeline';
+import TimelineFlow from '../components/TimelineFlow';
 
 export default function Runtime() {
   const navigate = useNavigate();
@@ -144,7 +144,7 @@ export default function Runtime() {
             padding: '20px',
             background: 'white'
           }}>
-            <Timeline
+            <TimelineFlow
               tasks={tasks}
               running={rt.running}
               ready={rt.ready}
