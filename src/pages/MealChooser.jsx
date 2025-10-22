@@ -63,82 +63,111 @@ export default function MealChooser() {
                 style={{
                   background: 'white',
                   borderRadius: '16px',
-                  padding: '20px',
+                  overflow: 'hidden',
                   boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
                   display: 'flex',
                   flexDirection: 'column'
                 }}
               >
-                <h2 style={{
-                  fontSize: '24px',
-                  margin: '0 0 8px 0',
-                  fontWeight: '700',
-                  color: '#1a1a1a',
-                  fontFamily: 'system-ui, -apple-system, sans-serif'
-                }}>
-                  {meal.title || 'Untitled Meal'}
-                </h2>
-                <p style={{
-                  fontSize: '14px',
-                  color: '#666',
-                  margin: '0 0 16px 0'
-                }}>
-                  by {meal.author}
-                </p>
-                
-                <div style={{ 
-                  marginBottom: '16px',
+                {/* Hero Image */}
+                <div style={{
+                  width: '100%',
+                  height: '200px',
+                  background: '#f0f0f0',
                   display: 'flex',
-                  flexDirection: 'column',
-                  gap: '6px',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   fontSize: '14px',
-                  color: '#666'
+                  color: '#999'
                 }}>
-                  <div>Min cook time: <strong>{Math.round(min)} min</strong></div>
-                  <div>Serve at: <strong>{serveTimeStr}</strong></div>
+                  {/* Placeholder - will be replaced with actual images */}
+                  <img 
+                    src={`/meals/${meal.idx}.jpg`} 
+                    alt={meal.title}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover'
+                    }}
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.parentElement.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:#999;">Image Coming Soon</div>';
+                    }}
+                  />
                 </div>
 
-                <div style={{
-                  display: 'flex',
-                  gap: '12px',
-                  marginTop: 'auto'
-                }}>
-                  <button 
-                    onClick={() => navigate(`/shop/${meal.idx}`)}
-                    style={{
-                      flex: 1,
-                      padding: '16px 24px',
-                      fontSize: '16px',
-                      fontWeight: 'bold',
-                      background: '#88aa55',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '12px',
-                      cursor: 'pointer',
-                      boxShadow: '0 4px 15px rgba(136, 170, 85, 0.4)',
-                      minHeight: '56px'
-                    }}
-                  >
-                    🛒 SHOP
-                  </button>
-                  <button 
-                    onClick={() => handleCookClick(meal)}
-                    style={{
-                      flex: 1,
-                      padding: '16px 24px',
-                      fontSize: '16px',
-                      fontWeight: 'bold',
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '12px',
-                      cursor: 'pointer',
-                      boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
-                      minHeight: '56px'
-                    }}
-                  >
-                    🍳 COOK
-                  </button>
+                <div style={{ padding: '20px' }}>
+                  <h2 style={{
+                    fontSize: '24px',
+                    margin: '0 0 8px 0',
+                    fontWeight: '700',
+                    color: '#1a1a1a',
+                    fontFamily: 'system-ui, -apple-system, sans-serif'
+                  }}>
+                    {meal.title || 'Untitled Meal'}
+                  </h2>
+                  <p style={{
+                    fontSize: '14px',
+                    color: '#666',
+                    margin: '0 0 16px 0'
+                  }}>
+                    by {meal.author}
+                  </p>
+                  
+                  <div style={{ 
+                    marginBottom: '16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '6px',
+                    fontSize: '14px',
+                    color: '#666'
+                  }}>
+                    <div>Min cook time: <strong>{Math.round(min)} min</strong></div>
+                    <div>Serve at: <strong>{serveTimeStr}</strong></div>
+                  </div>
+
+                  <div style={{
+                    display: 'flex',
+                    gap: '12px',
+                    marginTop: 'auto'
+                  }}>
+                    <button 
+                      onClick={() => navigate(`/shop/${meal.idx}`)}
+                      style={{
+                        flex: 1,
+                        padding: '16px 24px',
+                        fontSize: '16px',
+                        fontWeight: 'bold',
+                        background: '#88aa55',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 15px rgba(136, 170, 85, 0.4)',
+                        minHeight: '56px'
+                      }}
+                    >
+                      🛒 SHOP
+                    </button>
+                    <button 
+                      onClick={() => handleCookClick(meal)}
+                      style={{
+                        flex: 1,
+                        padding: '16px 24px',
+                        fontSize: '16px',
+                        fontWeight: 'bold',
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
+                        minHeight: '56px'
+                      }}
+                    >
+                      🍳 COOK
+                    </button>
+                  </div>
                 </div>
               </div>
             );

@@ -91,6 +91,24 @@ export default function Runtime() {
       display: 'flex',
       flexDirection: 'column'
     }}>
+      {/* Mobile Background Image - CSS in head */}
+      <style>{`
+        @media (max-width: 768px) {
+          .timeline-background {
+            background-image: url('/TimelineBG.jpg') !important;
+            background-size: cover !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            background-color: #2a2a2a !important;
+          }
+        }
+        @media (min-width: 769px) {
+          .timeline-background {
+            background: #2a2a2a !important;
+          }
+        }
+      `}</style>
+
       {/* Start Screen */}
       {!rt.started && (
         <div style={{
@@ -276,12 +294,15 @@ export default function Runtime() {
           </div>
 
           {/* Timeline - THE main interface */}
-          <div style={{
-            flex: 1,
-            overflow: 'auto',
-            padding: 0,
-            background: '#2a2a2a'
-          }}>
+          <div 
+            className="timeline-background"
+            style={{
+              flex: 1,
+              overflow: 'auto',
+              padding: 0,
+              background: '#2a2a2a'
+            }}
+          >
             <TimelineFlow
               tasks={tasks}
               ingredients={meal.data.ingredients || []}

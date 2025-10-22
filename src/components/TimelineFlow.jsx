@@ -124,8 +124,8 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
         const elapsedMs = nowMs - runningState.startedAt;
         const remainingMs = durationMs - elapsedMs;
         
-        const durationWidth = (durationMs / 1000) * PIXELS_PER_SECOND;
-        const lozengeWidth = Math.max(durationWidth, AVAILABLE_WIDTH);
+        // Linear width: 1 minute = 200px (2:1 ratio with 100px height)
+        const lozengeWidth = durationMin * 200;
         const elapsedPixels = (elapsedMs / 1000) * PIXELS_PER_SECOND;
         
         let lozengeX = NOWLINE_X - elapsedPixels;
@@ -152,9 +152,9 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
       } else if (ready.find(t => t.id === task.id)) {
         // READY
         const durationMin = getPlannedMinutes(task);
-        const durationMs = durationMin * 60000;
-        const durationWidth = (durationMs / 1000) * PIXELS_PER_SECOND;
-        const lozengeWidth = Math.max(durationWidth, AVAILABLE_WIDTH);
+        
+        // Linear width: 1 minute = 200px (2:1 ratio with 100px height)
+        const lozengeWidth = durationMin * 200;
         const lozengeX = NOWLINE_X;
         
         tracks.push({
@@ -170,9 +170,9 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
       } else if (driverBusy.find(t => t.id === task.id)) {
         // DRIVER-BUSY
         const durationMin = getPlannedMinutes(task);
-        const durationMs = durationMin * 60000;
-        const durationWidth = (durationMs / 1000) * PIXELS_PER_SECOND;
-        const lozengeWidth = Math.max(durationWidth, AVAILABLE_WIDTH);
+        
+        // Linear width: 1 minute = 200px (2:1 ratio with 100px height)
+        const lozengeWidth = durationMin * 200;
         const lozengeX = NOWLINE_X;
         
         tracks.push({
@@ -363,7 +363,7 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
       <div style={{
         position: 'relative',
         width: '100%', // Full width of viewport
-        background: '#2a2a2a',
+        background: 'transparent', // Allow background image from parent to show through
         overflow: 'hidden',
         paddingTop: '20px'
       }}>
@@ -413,7 +413,7 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
             <div style={{
               position: 'absolute',
               inset: 0,
-              background: '#2a2a2a',
+              background: 'transparent', // Allow background image to show through
               zIndex: 0,
               pointerEvents: 'none'
             }} />
