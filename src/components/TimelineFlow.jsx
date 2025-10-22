@@ -57,6 +57,11 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
     }
     
     if (mode === 'time') {
+      // Show 'DONE' for finished tasks
+      if (task.status === 'finished' || task.status === 'completed') {
+        return 'DONE';
+      }
+      
       // Show countdown for running tasks, planned time for others
       if (remainingMs !== null && remainingMs > 0) {
         const totalSeconds = Math.ceil(remainingMs / 1000);
@@ -215,16 +220,20 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
   };
   
   const handleSwipeLeft = (trackId, status) => {
+    // Prevent multiple swipes on the same task
+    if (swipingId === trackId) return;
+    
     // Allow swipe on: stopped-waiting (completed), ready (early-finish), or running (early-finish)
     if ((status === 'stopped-waiting' || status === 'ready' || status === 'running') && onDismissTask) {
-      // Swipe out animation
+      // Start swipe animation
       setSwipingId(trackId);
       
-      // Dismiss task after animation
+      // Wait for complete animation sequence before dismissing
+      // 1s swipe + 1s pause + 1s collapse = 3s total
       setTimeout(() => {
         onDismissTask(trackId);
         setSwipingId(null);
-      }, 300);
+      }, 3100); // Slight buffer to ensure animations complete
     }
   };
   
@@ -249,18 +258,18 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
       const deltaX = touch.clientX - touchStartRef.current.x;
       const deltaY = touch.clientY - touchStartRef.current.y;
       
-      // Detect swipe left (must move > 50px left, and not too much vertical)
-      if (deltaX < -50 && Math.abs(deltaY) < 30) {
+      // Detect swipe left (must move > 40px left, and not too much vertical)
+      if (deltaX < -40 && Math.abs(deltaY) < 50) {
         handleSwipeLeft(track.id, track.status);
         return;
       }
       
-      // Detect double-tap (two taps within 300ms, minimal movement)
-      if (Math.abs(deltaX) < 10 && Math.abs(deltaY) < 10) {
+      // Detect double-tap (two taps within 500ms, minimal movement)
+      if (Math.abs(deltaX) < 20 && Math.abs(deltaY) < 20) {
         const now = Date.now();
         const timeSinceLastTap = now - lastTapRef.current;
         
-        if (timeSinceLastTap < 300 && timeSinceLastTap > 0) {
+        if (timeSinceLastTap < 500 && timeSinceLastTap > 50) {
           // Double tap detected
           handleDoubleTap(track.id, track.status);
           lastTapRef.current = 0; // Reset
@@ -297,7 +306,7 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
           animation: isFlashing 
             ? 'flash 0.3s ease-out'
             : isSwiping
-            ? 'swipeOut 0.3s ease-out forwards'
+            ? 'swipeOut 1s ease-out forwards'
             : 'none',
           display: 'flex',
           alignItems: 'center',
@@ -329,9 +338,30 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
               transform: translateX(0);
               opacity: 1;
             }
-            100% { 
-              transform: translateX(-100px);
+            70% {
+              transform: translateX(-120px);
               opacity: 0;
+            }
+            100% { 
+              transform: translateX(-120px);
+              opacity: 0;
+            }
+          }
+          
+          @keyframes collapseTrack {
+            0% {
+              height: 115px;
+              opacity: 1;
+            }
+            20% {
+              height: 115px;
+              opacity: 0.3;
+            }
+            100% {
+              height: 0;
+              opacity: 0;
+              margin: 0;
+              padding: 0;
             }
           }
         `}
@@ -370,17 +400,21 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
         }} />
         
         {/* Tracks Stack */}
-        {allTracks.map((track) => (
-          <div
-            key={track.id}
-            style={{
-              position: 'relative',
-              width: '100%',
-              height: `${TRACK_HEIGHT}px`,
-              overflow: 'hidden',
-              pointerEvents: 'none' // Allow touches to pass through to lower tracks
-            }}
-          >
+        {allTracks.map((track) => {
+          const isSwiping = swipingId === track.id;
+          
+          return (
+            <div
+              key={track.id}
+              style={{
+                position: 'relative',
+                width: '100%',
+                height: `${TRACK_HEIGHT}px`,
+                overflow: 'hidden',
+                pointerEvents: 'none', // Allow touches to pass through to lower tracks
+                animation: isSwiping ? 'collapseTrack 1s ease-out 2s forwards' : 'none'
+              }}
+            >
             {/* Z-Layer 0: Track Background */}
             <div style={{
               position: 'absolute',
@@ -441,7 +475,7 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
               paddingRight: `${TEXT_PADDING + 10}px`,
               paddingLeft: '10px',
               fontFamily: textMode === 'time' ? 'monospace' : 'Verdana, sans-serif',
-              fontSize: '18px',
+              fontSize: textMode === 'time' ? '22px' : '18px',
               color: '#ffffff',
               opacity: (track.status === 'blocked' || track.status === 'driver-busy') ? 0.5 : 1.0,
               textAlign: 'right',
@@ -455,7 +489,8 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
               {track.taskName}
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </>
   );

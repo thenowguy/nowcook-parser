@@ -5,7 +5,8 @@ export default function MealChooser() {
   const navigate = useNavigate();
 
   const handleCookClick = (meal) => {
-    navigate(`/schedule/${meal.idx}`, { 
+    // For alpha testing: skip scheduling modal, go straight to runtime
+    navigate(`/runtime/${meal.idx}`, { 
       state: { meal } 
     });
   };

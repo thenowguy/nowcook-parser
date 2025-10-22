@@ -1,5 +1,5 @@
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { getMeal } from '../data/meals';
 import { useRuntime, mmss, getPlannedMinutes, orderForLanes, suggestQueue } from '../utils/runtime';
 import TimelineFlow from '../components/TimelineFlow';
@@ -19,16 +19,52 @@ export default function Runtime() {
   const tasks = meal.data.tasks || [];
   const rt = useRuntime(tasks);
   
+  // Auto-start cooking interface immediately for alpha testing
+  useEffect(() => {
+    rt.setStarted(true);
+  }, []);
+  
   // Toggle state for showing/hiding blocked tasks
   const [showBlocked, setShowBlocked] = useState(true);
   
   // Toggle state for text display mode: 'instructions' | 'ingredients' | 'time'
   const [textMode, setTextMode] = useState('instructions');
   
+  // Auto-reset timer for text mode
+  const textModeTimerRef = useRef(null);
+  
+  // Auto-reset textMode to 'instructions' after 5 seconds
+  useEffect(() => {
+    if (textMode !== 'instructions') {
+      // Clear any existing timer
+      if (textModeTimerRef.current) {
+        clearTimeout(textModeTimerRef.current);
+      }
+      
+      // Set new timer to reset after 5 seconds
+      textModeTimerRef.current = setTimeout(() => {
+        setTextMode('instructions');
+      }, 5000);
+    }
+    
+    // Cleanup on unmount
+    return () => {
+      if (textModeTimerRef.current) {
+        clearTimeout(textModeTimerRef.current);
+      }
+    };
+  }, [textMode]);
+  
   const byId = useMemo(() => 
     new Map(tasks.map((t) => [t.id, t])), 
     [tasks]
   );
+
+  // Wrapper for startTask that also resets text mode to instructions
+  const handleStartTask = (taskId) => {
+    setTextMode('instructions');
+    rt.startTask(taskId);
+  };
 
   const handleStart = () => {
     rt.setStarted(true);
@@ -257,7 +293,7 @@ export default function Runtime() {
               completed={rt.completed}
               doneIds={rt.doneIds}
               nowMs={rt.nowMs}
-              onStartTask={rt.startTask}
+              onStartTask={handleStartTask}
               onDismissTask={rt.finishTask}
             />
           </div>
