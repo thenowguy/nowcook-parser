@@ -110,5 +110,61 @@
         { "from": "t9", "to": "t10", "type": "FS" }
       ]
     }
+  ],
+  "shopping_list": [
+    {
+      "name": "Spaghetti",
+      "quantity": "12",
+      "unit": "oz",
+      "department": "OTHER"
+    },
+    {
+      "name": "Fresh garlic",
+      "quantity": "6",
+      "unit": "cloves",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Fresh parsley",
+      "quantity": "1/4",
+      "unit": "cup",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Butter",
+      "quantity": "6",
+      "unit": "tbsp",
+      "department": "DAIRY"
+    },
+    {
+      "name": "Parmesan cheese",
+      "quantity": "1/2",
+      "unit": "cup",
+      "department": "DAIRY"
+    },
+    {
+      "name": "Olive oil",
+      "quantity": "2",
+      "unit": "tbsp",
+      "department": "OTHER"
+    },
+    {
+      "name": "Red pepper flakes",
+      "quantity": "1/2",
+      "unit": "tsp",
+      "department": "SPICES"
+    },
+    {
+      "name": "Salt",
+      "quantity": "1",
+      "unit": "tsp",
+      "department": "SPICES"
+    },
+    {
+      "name": "Black pepper",
+      "quantity": "1/2",
+      "unit": "tsp",
+      "department": "SPICES"
+    }
   ]
 }

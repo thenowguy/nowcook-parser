@@ -9,6 +9,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import MealChooser from "./pages/MealChooser";
 import SchedulingModal from "./pages/SchedulingModal";
 import Runtime from "./pages/Runtime";
+import ShoppingList from "./pages/ShoppingList";
 import "./App.css";
 
 export default function App() {
@@ -18,6 +19,7 @@ export default function App() {
         <Route path="/" element={<MealChooser />} />
         <Route path="/schedule/:mealIdx" element={<SchedulingModal />} />
         <Route path="/runtime/:mealIdx" element={<Runtime />} />
+        <Route path="/shop/:mealIdx" element={<ShoppingList />} />
       </Routes>
     </BrowserRouter>
   );

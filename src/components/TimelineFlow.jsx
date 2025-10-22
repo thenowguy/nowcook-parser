@@ -229,11 +229,11 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
       setSwipingId(trackId);
       
       // Wait for complete animation sequence before dismissing
-      // 1s swipe + 1s pause + 1s collapse = 3s total
+      // 1s swipe + 1s collapse = 2s total
       setTimeout(() => {
         onDismissTask(trackId);
         setSwipingId(null);
-      }, 3100); // Slight buffer to ensure animations complete
+      }, 2100); // Slight buffer to ensure animations complete
     }
   };
   
@@ -303,11 +303,7 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
           zIndex: 1,
           transition: 'left 1s linear',
           cursor: track.needsAction ? 'pointer' : 'default',
-          animation: isFlashing 
-            ? 'flash 0.3s ease-out'
-            : isSwiping
-            ? 'swipeOut 1s ease-out forwards'
-            : 'none',
+          animation: isFlashing ? 'flash 0.3s ease-out' : 'none',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -318,8 +314,7 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
           userSelect: 'none',
           pointerEvents: 'auto' // Re-enable pointer events on the lozenge
         }}
-      >
-      </div>
+      ></div>
     );
   };
   
@@ -334,33 +329,30 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
           }
           
           @keyframes swipeOut {
-            0% { 
+            from { 
               transform: translateX(0);
               opacity: 1;
             }
-            70% {
-              transform: translateX(-120px);
+            to { 
+              transform: translateX(-100%);
               opacity: 0;
             }
-            100% { 
-              transform: translateX(-120px);
-              opacity: 0;
-            }
+          }
+          
+          .swiping-track {
+            animation: swipeOut 1s ease-out forwards !important;
           }
           
           @keyframes collapseTrack {
             0% {
               height: 115px;
               opacity: 1;
-            }
-            20% {
-              height: 115px;
-              opacity: 0.3;
+              margin-top: 0;
             }
             100% {
               height: 0;
               opacity: 0;
-              margin: 0;
+              margin-top: -115px;
               padding: 0;
             }
           }
@@ -406,13 +398,15 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
           return (
             <div
               key={track.id}
+              className={isSwiping ? 'swiping-track' : ''}
               style={{
                 position: 'relative',
                 width: '100%',
                 height: `${TRACK_HEIGHT}px`,
                 overflow: 'hidden',
                 pointerEvents: 'none', // Allow touches to pass through to lower tracks
-                animation: isSwiping ? 'collapseTrack 1s ease-out 2s forwards' : 'none'
+                transition: 'all 1s ease-out', // Smooth transition when tracks move up
+                animation: isSwiping ? 'collapseTrack 1s ease-out 1s forwards' : 'none'
               }}
             >
             {/* Z-Layer 0: Track Background */}
@@ -489,8 +483,8 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
               {track.taskName}
             </div>
           </div>
-          );
-        })}
+        );
+      })}
       </div>
     </>
   );

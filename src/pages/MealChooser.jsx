@@ -98,25 +98,48 @@ export default function MealChooser() {
                   <div>Serve at: <strong>{serveTimeStr}</strong></div>
                 </div>
 
-                <button 
-                  onClick={() => handleCookClick(meal)}
-                  style={{
-                    marginTop: 'auto',
-                    padding: '16px 32px',
-                    fontSize: '18px',
-                    fontWeight: 'bold',
-                    width: '100%',
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '12px',
-                    cursor: 'pointer',
-                    boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
-                    minHeight: '56px'
-                  }}
-                >
-                  🍳 COOK
-                </button>
+                <div style={{
+                  display: 'flex',
+                  gap: '12px',
+                  marginTop: 'auto'
+                }}>
+                  <button 
+                    onClick={() => navigate(`/shop/${meal.idx}`)}
+                    style={{
+                      flex: 1,
+                      padding: '16px 24px',
+                      fontSize: '16px',
+                      fontWeight: 'bold',
+                      background: '#88aa55',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '12px',
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 15px rgba(136, 170, 85, 0.4)',
+                      minHeight: '56px'
+                    }}
+                  >
+                    🛒 SHOP
+                  </button>
+                  <button 
+                    onClick={() => handleCookClick(meal)}
+                    style={{
+                      flex: 1,
+                      padding: '16px 24px',
+                      fontSize: '16px',
+                      fontWeight: 'bold',
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '12px',
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
+                      minHeight: '56px'
+                    }}
+                  >
+                    🍳 COOK
+                  </button>
+                </div>
               </div>
             );
           })}

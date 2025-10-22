@@ -145,5 +145,55 @@
         { "from": "t10", "to": "t11", "type": "FS" }
       ]
     }
+  ],
+  "shopping_list": [
+    {
+      "name": "Elbow macaroni",
+      "quantity": "8",
+      "unit": "oz",
+      "department": "OTHER"
+    },
+    {
+      "name": "Sharp cheddar cheese",
+      "quantity": "8",
+      "unit": "oz",
+      "department": "DAIRY"
+    },
+    {
+      "name": "Butter",
+      "quantity": "3",
+      "unit": "tbsp",
+      "department": "DAIRY"
+    },
+    {
+      "name": "All-purpose flour",
+      "quantity": "3",
+      "unit": "tbsp",
+      "department": "BAKED"
+    },
+    {
+      "name": "Milk",
+      "quantity": "2",
+      "unit": "cups",
+      "department": "DAIRY"
+    },
+    {
+      "name": "Salt",
+      "quantity": "1",
+      "unit": "pinch",
+      "department": "SPICES"
+    },
+    {
+      "name": "Black pepper",
+      "quantity": "1/4",
+      "unit": "tsp",
+      "department": "SPICES"
+    },
+    {
+      "name": "Paprika",
+      "quantity": "1/4",
+      "unit": "tsp",
+      "department": "SPICES"
+    }
   ]
 }

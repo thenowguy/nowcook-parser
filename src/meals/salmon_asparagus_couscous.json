@@ -142,5 +142,61 @@
         { "from": "t12", "to": "t13", "type": "FS" }
       ]
     }
+  ],
+  "shopping_list": [
+    {
+      "name": "Salmon fillet",
+      "quantity": "2",
+      "unit": "pieces (6 oz each)",
+      "department": "FISH"
+    },
+    {
+      "name": "Asparagus",
+      "quantity": "1",
+      "unit": "bunch",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Lemon",
+      "quantity": "2",
+      "unit": "whole",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Fresh dill",
+      "quantity": "2",
+      "unit": "tbsp",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Couscous",
+      "quantity": "1",
+      "unit": "cup",
+      "department": "OTHER"
+    },
+    {
+      "name": "Vegetable broth",
+      "quantity": "1.5",
+      "unit": "cups",
+      "department": "OTHER"
+    },
+    {
+      "name": "Olive oil",
+      "quantity": "3",
+      "unit": "tbsp",
+      "department": "OTHER"
+    },
+    {
+      "name": "Salt",
+      "quantity": "1",
+      "unit": "tsp",
+      "department": "SPICES"
+    },
+    {
+      "name": "Black pepper",
+      "quantity": "1/2",
+      "unit": "tsp",
+      "department": "SPICES"
+    }
   ]
 }

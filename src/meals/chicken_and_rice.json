@@ -154,5 +154,61 @@
         { "from": "t13", "to": "t14", "type": "FS" }
       ]
     }
+  ],
+  "shopping_list": [
+    {
+      "name": "Chicken breast",
+      "quantity": "2",
+      "unit": "pieces",
+      "department": "MEAT"
+    },
+    {
+      "name": "Basmati rice",
+      "quantity": "1",
+      "unit": "cup",
+      "department": "OTHER"
+    },
+    {
+      "name": "Chicken broth",
+      "quantity": "2",
+      "unit": "cups",
+      "department": "OTHER"
+    },
+    {
+      "name": "Fresh garlic",
+      "quantity": "3",
+      "unit": "cloves",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Fresh thyme",
+      "quantity": "3",
+      "unit": "sprigs",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Butter",
+      "quantity": "3",
+      "unit": "tbsp",
+      "department": "DAIRY"
+    },
+    {
+      "name": "Olive oil",
+      "quantity": "2",
+      "unit": "tbsp",
+      "department": "OTHER"
+    },
+    {
+      "name": "Salt",
+      "quantity": "1",
+      "unit": "tsp",
+      "department": "SPICES"
+    },
+    {
+      "name": "Black pepper",
+      "quantity": "1/2",
+      "unit": "tsp",
+      "department": "SPICES"
+    }
   ]
 }

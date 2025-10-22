@@ -218,5 +218,55 @@
         { "from": "t19", "to": "t20", "type": "FS" }
       ]
     }
+  ],
+  "shopping_list": [
+    {
+      "name": "Ribeye steak",
+      "quantity": "1",
+      "unit": "lb",
+      "department": "MEAT"
+    },
+    {
+      "name": "Russet potatoes",
+      "quantity": "2",
+      "unit": "lbs",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Green beans",
+      "quantity": "12",
+      "unit": "oz",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Fresh garlic",
+      "quantity": "6",
+      "unit": "cloves",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Butter",
+      "quantity": "6",
+      "unit": "tbsp",
+      "department": "DAIRY"
+    },
+    {
+      "name": "Heavy cream",
+      "quantity": "1/2",
+      "unit": "cup",
+      "department": "DAIRY"
+    },
+    {
+      "name": "Salt",
+      "quantity": "2",
+      "unit": "tsp",
+      "department": "SPICES"
+    },
+    {
+      "name": "Black pepper",
+      "quantity": "1",
+      "unit": "tsp",
+      "department": "SPICES"
+    }
   ]
 }
