@@ -48,6 +48,7 @@ export default function MealChooser() {
           gap: '16px'
         }}>
           {MEALS.map((meal) => {
+            console.log('Rendering meal:', meal.title, meal);
             const min = calculateMinCookTime(meal);
             const serveTime = new Date(Date.now() + min * 60000);
             const serveTimeStr = serveTime.toLocaleTimeString('en-US', { 
@@ -68,11 +69,13 @@ export default function MealChooser() {
                 }}
               >
                 <h2 style={{
-                  fontSize: '20px',
-                  margin: '0 0 4px 0',
-                  fontWeight: 'bold'
+                  fontSize: '24px',
+                  margin: '0 0 8px 0',
+                  fontWeight: '700',
+                  color: '#1a1a1a',
+                  fontFamily: 'system-ui, -apple-system, sans-serif'
                 }}>
-                  {meal.title}
+                  {meal.title || 'Untitled Meal'}
                 </h2>
                 <p style={{
                   fontSize: '14px',
