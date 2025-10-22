@@ -121,7 +121,7 @@ export function useRuntime(tasks) {
   };
 
   // Task classification
-  const couldDoNow = [], canDoNow = [], cantDoYet = [], mustDoNow = [];
+  const couldDoNow = [], canDoNow = [], cantDoYet = [], driverBusyTasks = [], mustDoNow = [];
   const runningIds = new Set(running.map((r) => r.id));
   
   for (const t of tasks) {
@@ -144,7 +144,7 @@ export function useRuntime(tasks) {
     }
     
     if (t.requires_driver && driverBusy) {
-      cantDoYet.push(t);
+      driverBusyTasks.push(t); // Separate from truly blocked
     } else {
       canDoNow.push(t);
     }
@@ -157,7 +157,7 @@ export function useRuntime(tasks) {
     started, setStarted, nowMs,
     running, doneIds, completed,
     driverBusy, 
-    couldDoNow, canDoNow, cantDoYet, mustDoNow,
+    couldDoNow, canDoNow, cantDoYet, driverBusyTasks, mustDoNow,
     ready, blocked,
     startTask, finishTask, reset
   };

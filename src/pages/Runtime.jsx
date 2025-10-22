@@ -1,5 +1,5 @@
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { getMeal } from '../data/meals';
 import { useRuntime, mmss, getPlannedMinutes, orderForLanes, suggestQueue } from '../utils/runtime';
 import TimelineFlow from '../components/TimelineFlow';
@@ -18,6 +18,12 @@ export default function Runtime() {
 
   const tasks = meal.data.tasks || [];
   const rt = useRuntime(tasks);
+  
+  // Toggle state for showing/hiding blocked tasks
+  const [showBlocked, setShowBlocked] = useState(true);
+  
+  // Toggle state for text display mode: 'instructions' | 'ingredients' | 'time'
+  const [textMode, setTextMode] = useState('instructions');
   
   const byId = useMemo(() => 
     new Map(tasks.map((t) => [t.id, t])), 
@@ -92,13 +98,14 @@ export default function Runtime() {
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           {/* Hero Image */}
           <div style={{
+            position: 'relative',
             width: '100%',
             height: '150px', // 300px physical / 2 = 150px logical
             overflow: 'hidden',
             background: '#000'
           }}>
             <img 
-              src="/mac-cheese-hero.png" 
+              src="/MacnCheese_pic.png" 
               alt={meal.title}
               style={{
                 width: '100%',
@@ -106,6 +113,34 @@ export default function Runtime() {
                 objectFit: 'cover'
               }}
             />
+            
+            {/* Home button - top left corner of hero image */}
+            <button
+              onClick={() => navigate('/')}
+              style={{
+                position: 'absolute',
+                left: '20px',
+                top: '20px',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 10
+              }}
+            >
+              <img 
+                src="/nowcook-icon.png"
+                alt="Home"
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  opacity: 0.9
+                }}
+              />
+            </button>
           </div>
 
           {/* Dark Panel with NOW Time Badge */}
@@ -115,6 +150,43 @@ export default function Runtime() {
             height: '50px', // 100px physical / 2 = 50px logical
             background: '#575762'
           }}>
+            {/* Text mode toggle button - between home button and NOW time */}
+            <button
+              onClick={() => {
+                const modes = ['instructions', 'ingredients', 'time'];
+                const currentIndex = modes.indexOf(textMode);
+                const nextIndex = (currentIndex + 1) % modes.length;
+                setTextMode(modes[nextIndex]);
+              }}
+              style={{
+                position: 'absolute',
+                left: '60px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <img 
+                src={
+                  textMode === 'instructions' ? '/info-icon.png' :
+                  textMode === 'ingredients' ? '/ingredients-icon.png' :
+                  '/clock-icon.png'
+                }
+                alt={`Show ${textMode}`}
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  opacity: 0.9
+                }}
+              />
+            </button>
+            
             {/* Time badge positioned over NowLine at 160px */}
             <div style={{
               position: 'absolute',
@@ -125,16 +197,83 @@ export default function Runtime() {
               color: 'white',
               padding: '6px 12px',
               borderRadius: '12px',
-              fontSize: '14px',
+              fontSize: '18px',
               fontWeight: 'bold',
+              fontFamily: 'monospace',
               whiteSpace: 'nowrap'
             }}>
               {new Date().toLocaleTimeString('en-US', { 
-                hour: 'numeric', 
+                hour: '2-digit', 
                 minute: '2-digit',
-                second: '2-digit'
+                second: '2-digit',
+                hour12: false
               })}
             </div>
+            
+            {/* Eye toggle button - 40px from right edge */}
+            <button
+              onClick={() => setShowBlocked(!showBlocked)}
+              style={{
+                position: 'absolute',
+                right: '40px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <img 
+                src={showBlocked ? '/eye-open.png' : '/eye-closed.png'}
+                alt={showBlocked ? 'Hide blocked tasks' : 'Show blocked tasks'}
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  opacity: 0.9
+                }}
+              />
+            </button>
+            
+            {/* Text mode toggle button - 90px from right edge */}
+            <button
+              onClick={() => {
+                const modes = ['instructions', 'ingredients', 'time'];
+                const currentIndex = modes.indexOf(textMode);
+                const nextIndex = (currentIndex + 1) % modes.length;
+                setTextMode(modes[nextIndex]);
+              }}
+              style={{
+                position: 'absolute',
+                right: '90px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <img 
+                src={
+                  textMode === 'instructions' ? '/info-icon.png' :
+                  textMode === 'ingredients' ? '/ingredients-icon.png' :
+                  '/clock-icon.png'
+                }
+                alt={`Show ${textMode}`}
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  opacity: 0.9
+                }}
+              />
+            </button>
           </div>
 
           {/* Timeline - THE main interface */}
@@ -142,20 +281,27 @@ export default function Runtime() {
             flex: 1,
             overflow: 'auto',
             padding: 0,
-            background: 'white'
+            background: '#2a2a2a'
           }}>
             <TimelineFlow
               tasks={tasks}
+              ingredients={meal.data.ingredients || []}
+              textMode={textMode}
               running={rt.running}
               ready={rt.ready}
+              driverBusy={showBlocked ? rt.driverBusyTasks : []}
+              blocked={showBlocked ? rt.blocked : []}
               completed={rt.completed}
               doneIds={rt.doneIds}
               nowMs={rt.nowMs}
+              onStartTask={rt.startTask}
+              onDismissTask={rt.finishTask}
             />
           </div>
 
-          {/* Bottom Controls */}
+          {/* Bottom Controls - HIDDEN for now */}
           <div style={{
+            display: 'none',  // Hidden - functionality moved to timeline
             background: 'white',
             borderTop: '1px solid #e0e0e0',
             padding: '16px 20px',

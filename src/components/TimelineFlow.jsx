@@ -1,7 +1,9 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useRef } from 'react';
+import Lottie from 'lottie-react';
 import { getPlannedMinutes } from '../utils/runtime';
+import chevronAnimation from '../assets/chevron-left-green.json';
 
-export default function TimelineFlow({ tasks, running, ready = [], completed = [], doneIds, nowMs, onStartTask, onDismissTask }) {
+export default function TimelineFlow({ tasks, ingredients = [], textMode = 'instructions', running, ready = [], driverBusy = [], blocked = [], completed = [], doneIds, nowMs, onStartTask, onDismissTask }) {
   // iPhone 11 Configuration - Physical dimensions (2x scale)
   const PIXELS_PER_SECOND = 2;
   const TRACK_HEIGHT = 115; // 230px physical / 2 = 115px logical
@@ -18,6 +20,80 @@ export default function TimelineFlow({ tasks, running, ready = [], completed = [
   
   const byId = useMemo(() => new Map(tasks.map((t) => [t.id, t])), [tasks]);
   
+  // Helper to get display text based on mode
+  const getDisplayText = (task, mode, remainingMs = null) => {
+    if (mode === 'instructions') {
+      return task.name;
+    }
+    
+    if (mode === 'ingredients') {
+      // Get ingredients from task inputs
+      if (!task.inputs || task.inputs.length === 0) {
+        return task.name; // Fallback to instruction if no ingredients
+      }
+      
+      // Map ingredient IDs to full ingredient info
+      const ingredientTexts = task.inputs.map(input => {
+        const ingredientId = input.ingredient;
+        // Try multiple matching strategies
+        const fullIngredient = ingredients.find(ing => {
+          const normalizedItem = ing.item.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+          const normalizedId = ingredientId.toLowerCase();
+          
+          // Direct match or ID contains item name
+          return normalizedItem === normalizedId || 
+                 normalizedItem.includes(normalizedId) ||
+                 normalizedId.includes(normalizedItem);
+        });
+        
+        if (fullIngredient) {
+          return `${fullIngredient.amount} ${fullIngredient.item}`;
+        }
+        // Fallback to just the ID if not found
+        return ingredientId.replace(/_/g, ' ');
+      });
+      
+      return ingredientTexts.join(', ') || task.name;
+    }
+    
+    if (mode === 'time') {
+      // Show countdown for running tasks, planned time for others
+      if (remainingMs !== null && remainingMs > 0) {
+        const totalSeconds = Math.ceil(remainingMs / 1000);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        
+        // Format: MM:SS if less than 1 hour, H:MM:SS if 1+ hours
+        if (hours > 0) {
+          return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        } else {
+          return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+      } else {
+        // Show planned duration
+        const durationMin = getPlannedMinutes(task);
+        const totalSeconds = durationMin * 60;
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        
+        // Format: MM:SS if less than 1 hour, H:MM:SS if 1+ hours
+        if (hours > 0) {
+          return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        } else {
+          return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+      }
+    }
+    
+    return task.name;
+  };
+  
+  // Gesture state
+  const [flashingId, setFlashingId] = useState(null);
+  const [swipingId, setSwipingId] = useState(null);
+  
   const now = new Date();
   const currentTimeStr = now.toLocaleTimeString('en-US', { 
     hour: 'numeric', 
@@ -28,81 +104,234 @@ export default function TimelineFlow({ tasks, running, ready = [], completed = [
   const allTracks = useMemo(() => {
     const tracks = [];
     
-    // Running tasks
-    running.forEach((r) => {
-      const task = byId.get(r.id);
-      if (!task) return;
+    // Iterate through ALL tasks in their original order
+    tasks.forEach((task) => {
+      // Skip if dismissed
+      if (doneIds.has(task.id)) return;
       
-      const durationMin = getPlannedMinutes(task);
-      const durationMs = durationMin * 60000;
-      const elapsedMs = nowMs - r.startedAt;
-      const remainingMs = durationMs - elapsedMs;
+      // Check if running
+      const runningState = running.find(r => r.id === task.id);
       
-      const durationWidth = (durationMs / 1000) * PIXELS_PER_SECOND;
-      // Extend to fill available space or use duration width, whichever is larger
-      const lozengeWidth = Math.max(durationWidth, AVAILABLE_WIDTH);
-      const elapsedPixels = (elapsedMs / 1000) * PIXELS_PER_SECOND;
-      
-      // Calculate position - slides left as time passes
-      let lozengeX = NOWLINE_X - elapsedPixels;
-      const rightEdge = lozengeX + lozengeWidth;
-      
-      // TURNSTILE: Stop when right edge hits NowLine
-      let status = 'running';
-      if (rightEdge <= NOWLINE_X) {
-        lozengeX = NOWLINE_X - lozengeWidth;
-        status = 'stopped-waiting';
+      if (runningState) {
+        // RUNNING or STOPPED-WAITING
+        const durationMin = getPlannedMinutes(task);
+        const durationMs = durationMin * 60000;
+        const elapsedMs = nowMs - runningState.startedAt;
+        const remainingMs = durationMs - elapsedMs;
+        
+        const durationWidth = (durationMs / 1000) * PIXELS_PER_SECOND;
+        const lozengeWidth = Math.max(durationWidth, AVAILABLE_WIDTH);
+        const elapsedPixels = (elapsedMs / 1000) * PIXELS_PER_SECOND;
+        
+        let lozengeX = NOWLINE_X - elapsedPixels;
+        const rightEdge = lozengeX + lozengeWidth;
+        
+        // TURNSTILE: Stop when right edge hits NowLine
+        let status = 'running';
+        if (rightEdge <= NOWLINE_X) {
+          lozengeX = NOWLINE_X - lozengeWidth;
+          status = 'stopped-waiting';
+        }
+        
+        tracks.push({
+          id: task.id,
+          task: task, // Keep full task object for display text
+          taskName: getDisplayText(task, textMode, remainingMs),
+          lozengeX,
+          lozengeWidth,
+          status,
+          remainingMs,
+          color: status === 'stopped-waiting' ? '#9e1212' : '#4caf50',
+          needsAction: status === 'stopped-waiting'
+        });
+      } else if (ready.find(t => t.id === task.id)) {
+        // READY
+        const durationMin = getPlannedMinutes(task);
+        const durationMs = durationMin * 60000;
+        const durationWidth = (durationMs / 1000) * PIXELS_PER_SECOND;
+        const lozengeWidth = Math.max(durationWidth, AVAILABLE_WIDTH);
+        const lozengeX = NOWLINE_X;
+        
+        tracks.push({
+          id: task.id,
+          task: task,
+          taskName: getDisplayText(task, textMode),
+          lozengeX,
+          lozengeWidth,
+          status: 'ready',
+          color: '#4caf50',
+          needsAction: true
+        });
+      } else if (driverBusy.find(t => t.id === task.id)) {
+        // DRIVER-BUSY
+        const durationMin = getPlannedMinutes(task);
+        const durationMs = durationMin * 60000;
+        const durationWidth = (durationMs / 1000) * PIXELS_PER_SECOND;
+        const lozengeWidth = Math.max(durationWidth, AVAILABLE_WIDTH);
+        const lozengeX = NOWLINE_X;
+        
+        tracks.push({
+          id: task.id,
+          task: task,
+          taskName: getDisplayText(task, textMode),
+          lozengeX,
+          lozengeWidth,
+          status: 'driver-busy',
+          color: '#565761',
+          needsAction: false
+        });
+      } else if (blocked.find(t => t.id === task.id)) {
+        // BLOCKED (preview only)
+        tracks.push({
+          id: task.id,
+          task: task,
+          taskName: getDisplayText(task, textMode),
+          lozengeX: 0,
+          lozengeWidth: 0,
+          status: 'blocked',
+          color: '#666',
+          needsAction: false
+        });
       }
-      
-      tracks.push({
-        id: r.id,
-        taskName: task.name,
-        lozengeX,
-        lozengeWidth,
-        status,
-        remainingMs,
-        color: '#4caf50', // Spec green
-        needsAction: status === 'stopped-waiting'
-      });
-    });
-    
-    // Ready tasks
-    ready.forEach((task) => {
-      if (running.find(r => r.id === task.id) || doneIds.has(task.id)) return;
-      
-      const durationMin = getPlannedMinutes(task);
-      const durationMs = durationMin * 60000;
-      const durationWidth = (durationMs / 1000) * PIXELS_PER_SECOND;
-      // Extend to fill available space or use duration width, whichever is larger
-      const lozengeWidth = Math.max(durationWidth, AVAILABLE_WIDTH);
-      const lozengeX = NOWLINE_X; // Left edge AT NowLine
-      
-      tracks.push({
-        id: task.id,
-        taskName: task.name,
-        lozengeX,
-        lozengeWidth,
-        status: 'ready',
-        color: '#4caf50',
-        needsAction: true
-      });
     });
     
     return tracks;
-  }, [tasks, running, ready, doneIds, nowMs, byId]);
+  }, [tasks, running, ready, driverBusy, blocked, doneIds, nowMs, byId, textMode, ingredients]);
+  
+  // Gesture handlers
+  const handleDoubleTap = (trackId, status) => {
+    if (status === 'ready' && onStartTask) {
+      // Get the full task object
+      const task = byId.get(trackId);
+      if (!task) return;
+      
+      // Flash confirmation
+      setFlashingId(trackId);
+      setTimeout(() => setFlashingId(null), 300);
+      
+      // Start task after flash with full task object
+      setTimeout(() => onStartTask(task), 150);
+    }
+  };
+  
+  const handleSwipeLeft = (trackId, status) => {
+    // Allow swipe on: stopped-waiting (completed), ready (early-finish), or running (early-finish)
+    if ((status === 'stopped-waiting' || status === 'ready' || status === 'running') && onDismissTask) {
+      // Swipe out animation
+      setSwipingId(trackId);
+      
+      // Dismiss task after animation
+      setTimeout(() => {
+        onDismissTask(trackId);
+        setSwipingId(null);
+      }, 300);
+    }
+  };
+  
+  // Lozenge component with gesture detection
+  const GestureLozenge = ({ track }) => {
+    const lastTapRef = useRef(0);
+    const touchStartRef = useRef({ x: 0, y: 0 });
+    
+    const handleTouchStart = (e) => {
+      // Disable interaction for driver-busy tasks
+      if (track.status === 'driver-busy') return;
+      
+      const touch = e.touches[0];
+      touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+    };
+    
+    const handleTouchEnd = (e) => {
+      // Disable interaction for driver-busy tasks
+      if (track.status === 'driver-busy') return;
+      
+      const touch = e.changedTouches[0];
+      const deltaX = touch.clientX - touchStartRef.current.x;
+      const deltaY = touch.clientY - touchStartRef.current.y;
+      
+      // Detect swipe left (must move > 50px left, and not too much vertical)
+      if (deltaX < -50 && Math.abs(deltaY) < 30) {
+        handleSwipeLeft(track.id, track.status);
+        return;
+      }
+      
+      // Detect double-tap (two taps within 300ms, minimal movement)
+      if (Math.abs(deltaX) < 10 && Math.abs(deltaY) < 10) {
+        const now = Date.now();
+        const timeSinceLastTap = now - lastTapRef.current;
+        
+        if (timeSinceLastTap < 300 && timeSinceLastTap > 0) {
+          // Double tap detected
+          handleDoubleTap(track.id, track.status);
+          lastTapRef.current = 0; // Reset
+        } else {
+          // First tap
+          lastTapRef.current = now;
+        }
+      }
+    };
+    
+    const isFlashing = flashingId === track.id;
+    const isSwiping = swipingId === track.id;
+    
+    // Don't render lozenge for blocked tasks
+    if (track.status === 'blocked') {
+      return null;
+    }
+    
+    return (
+      <div
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        style={{
+          position: 'absolute',
+          left: `${track.lozengeX}px`,
+          top: `${(TRACK_HEIGHT - LOZENGE_HEIGHT) / 2}px`,
+          width: `${track.lozengeWidth}px`,
+          height: `${LOZENGE_HEIGHT}px`,
+          background: track.color,
+          borderRadius: `${LOZENGE_RADIUS}px`,
+          zIndex: 1,
+          transition: 'left 1s linear',
+          cursor: track.needsAction ? 'pointer' : 'default',
+          animation: isFlashing 
+            ? 'flash 0.3s ease-out'
+            : isSwiping
+            ? 'swipeOut 0.3s ease-out forwards'
+            : 'none',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'rgba(0,0,0,0.7)',
+          fontSize: '14px',
+          fontWeight: '600',
+          touchAction: 'none', // Prevent default touch behaviors
+          userSelect: 'none',
+          pointerEvents: 'auto' // Re-enable pointer events on the lozenge
+        }}
+      >
+      </div>
+    );
+  };
   
   return (
     <>
       <style>
         {`
-          @keyframes pulse {
-            0%, 100% { 
-              opacity: 0.8;
-              transform: scale(1);
-            }
-            50% { 
+          @keyframes flash {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+          }
+          
+          @keyframes swipeOut {
+            0% { 
+              transform: translateX(0);
               opacity: 1;
-              transform: scale(1.01);
+            }
+            100% { 
+              transform: translateX(-100px);
+              opacity: 0;
             }
           }
         `}
@@ -113,8 +342,21 @@ export default function TimelineFlow({ tasks, running, ready = [], completed = [
         position: 'relative',
         width: '100%', // Full width of viewport
         background: '#2a2a2a',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        paddingTop: '20px'
       }}>
+        {/* Z-Layer 5: Right edge shadow panel */}
+        <div style={{
+          position: 'absolute',
+          right: 0,
+          top: 0,
+          bottom: 0,
+          width: '20px',
+          background: 'rgba(42, 42, 42, 0.3)',
+          zIndex: 5,
+          pointerEvents: 'none'
+        }} />
+        
         {/* Z-Layer 4: NowLine (fixed at 160px from left) */}
         <div style={{
           position: 'absolute',
@@ -135,7 +377,8 @@ export default function TimelineFlow({ tasks, running, ready = [], completed = [
               position: 'relative',
               width: '100%',
               height: `${TRACK_HEIGHT}px`,
-              overflow: 'hidden'
+              overflow: 'hidden',
+              pointerEvents: 'none' // Allow touches to pass through to lower tracks
             }}
           >
             {/* Z-Layer 0: Track Background */}
@@ -143,44 +386,35 @@ export default function TimelineFlow({ tasks, running, ready = [], completed = [
               position: 'absolute',
               inset: 0,
               background: '#2a2a2a',
-              zIndex: 0
+              zIndex: 0,
+              pointerEvents: 'none'
             }} />
             
-            {/* Z-Layer 1: Task Lozenge */}
-            <div
-              onClick={() => {
-                if (track.status === 'ready' && onStartTask) {
-                  onStartTask(track.id);
-                } else if (track.status === 'stopped-waiting' && onDismissTask) {
-                  onDismissTask(track.id);
-                }
-              }}
-              style={{
+            {/* Z-Layer 1: Task Lozenge with Gesture Support */}
+            <GestureLozenge track={track} />
+            
+            {/* Z-Layer 1.5: Animated Chevron for Running Tasks */}
+            {track.status === 'running' && (
+              <div style={{
                 position: 'absolute',
-                left: `${track.lozengeX}px`,
-                top: `${(TRACK_HEIGHT - LOZENGE_HEIGHT) / 2}px`,
-                width: `${track.lozengeWidth}px`,
-                height: `${LOZENGE_HEIGHT}px`,
-                background: track.color,
-                borderRadius: `${LOZENGE_RADIUS}px`,
-                zIndex: 1,
-                transition: 'left 1s linear',
-                cursor: track.needsAction ? 'pointer' : 'default',
-                animation: track.needsAction ? 'pulse 2s ease-in-out infinite' : 'none',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'rgba(0,0,0,0.7)',
-                fontSize: '14px',
-                fontWeight: '600'
-              }}
-            >
-              {track.status === 'ready' && '▶ TAP'}
-              {track.status === 'running' && track.remainingMs !== undefined && (
-                <span>{Math.ceil(track.remainingMs / 60000)}m</span>
-              )}
-              {track.status === 'stopped-waiting' && '✓ DONE'}
-            </div>
+                left: `${NOWLINE_X + 50}px`, // Fixed at 50px right of NowLine (210px from left edge)
+                top: `${TRACK_HEIGHT / 2}px`,
+                width: '60px',
+                height: '60px',
+                transform: 'translate(-50%, -50%) rotate(90deg)',
+                zIndex: 3,
+                pointerEvents: 'none'
+              }}>
+                <Lottie 
+                  animationData={chevronAnimation}
+                  loop={true}
+                  style={{
+                    width: '100%',
+                    height: '100%'
+                  }}
+                />
+              </div>
+            )}
             
             {/* Z-Layer 2: "Past" Overlay (left of NowLine) */}
             <div style={{
@@ -199,22 +433,24 @@ export default function TimelineFlow({ tasks, running, ready = [], completed = [
               position: 'absolute',
               left: 0,
               top: 0,
-              width: `${NOWLINE_X - TEXT_PADDING}px`,
+              width: `${NOWLINE_X - TEXT_PADDING - 10}px`, // Extra 10px from right
               height: '100%',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'flex-end',
-              paddingRight: `${TEXT_PADDING}px`,
+              paddingRight: `${TEXT_PADDING + 10}px`,
               paddingLeft: '10px',
-              fontFamily: 'Verdana, sans-serif',
-              fontSize: '16px',
+              fontFamily: textMode === 'time' ? 'monospace' : 'Verdana, sans-serif',
+              fontSize: '18px',
               color: '#ffffff',
+              opacity: (track.status === 'blocked' || track.status === 'driver-busy') ? 0.5 : 1.0,
               textAlign: 'right',
               zIndex: 2,
               pointerEvents: 'none',
               lineHeight: '1.3',
               wordWrap: 'break-word',
-              overflowWrap: 'break-word'
+              overflowWrap: 'break-word',
+              letterSpacing: textMode === 'time' ? '1px' : 'normal'
             }}>
               {track.taskName}
             </div>

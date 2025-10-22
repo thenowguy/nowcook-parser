@@ -14,6 +14,7 @@
     "scaffold:meal": "node scripts/scaffold-meal.js"
   },
   "dependencies": {
+    "lottie-react": "^2.4.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.9.4"
