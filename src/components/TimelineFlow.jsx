@@ -217,6 +217,9 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
       
       // Start task after flash with full task object
       setTimeout(() => onStartTask(task), 150);
+    } else if (status === 'driver-busy') {
+      // Play error sound when trying to start a task that can't be started
+      playSFX('error');
     }
   };
   
@@ -244,6 +247,7 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
     start: '/SFX/startTask.mp3',
     dismiss: '/SFX/dismiss.wav',
     arrive: '/SFX/arrive.wav',
+    error: '/SFX/error.wav',
   };
 
   // Simple mobile detection
