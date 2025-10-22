@@ -269,24 +269,21 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
     const mouseStartRef = useRef({ x: 0, y: 0 });
     
     const handleTouchStart = (e) => {
-      // Disable interaction for driver-busy tasks
-      if (track.status === 'driver-busy') return;
-      
       const touch = e.touches[0];
       touchStartRef.current = { x: touch.clientX, y: touch.clientY };
     };
     
     const handleTouchEnd = (e) => {
-      // Disable interaction for driver-busy tasks
-      if (track.status === 'driver-busy') return;
-      
       const touch = e.changedTouches[0];
       const deltaX = touch.clientX - touchStartRef.current.x;
       const deltaY = touch.clientY - touchStartRef.current.y;
       
       // Detect swipe left (must move > 40px left, and not too much vertical)
+      // Only allow swipe for non-driver-busy tasks
       if (deltaX < -40 && Math.abs(deltaY) < 50) {
-        handleSwipeLeft(track.id, track.status);
+        if (track.status !== 'driver-busy') {
+          handleSwipeLeft(track.id, track.status);
+        }
         return;
       }
       
@@ -309,16 +306,10 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
     
     // Mouse handlers for desktop support
     const handleMouseDown = (e) => {
-      // Disable interaction for driver-busy tasks
-      if (track.status === 'driver-busy') return;
-      
       mouseStartRef.current = { x: e.clientX, y: e.clientY };
     };
     
     const handleMouseUp = (e) => {
-      // Disable interaction for driver-busy tasks
-      if (track.status === 'driver-busy') return;
-      
       const deltaX = e.clientX - mouseStartRef.current.x;
       const deltaY = e.clientY - mouseStartRef.current.y;
       
