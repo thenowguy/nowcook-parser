@@ -135,8 +135,8 @@ export default function Runtime() {
                 src="/nowcook-icon.png"
                 alt="Home"
                 style={{
-                  width: '40px',
-                  height: '40px',
+                  width: '60px',
+                  height: '60px',
                   opacity: 0.9
                 }}
               />
@@ -150,7 +150,7 @@ export default function Runtime() {
             height: '50px', // 100px physical / 2 = 50px logical
             background: '#575762'
           }}>
-            {/* Text mode toggle button - between home button and NOW time */}
+            {/* Text mode toggle button - 30px from left edge */}
             <button
               onClick={() => {
                 const modes = ['instructions', 'ingredients', 'time'];
@@ -160,7 +160,7 @@ export default function Runtime() {
               }}
               style={{
                 position: 'absolute',
-                left: '60px',
+                left: '30px',
                 top: '50%',
                 transform: 'translateY(-50%)',
                 background: 'transparent',
@@ -230,43 +230,6 @@ export default function Runtime() {
               <img 
                 src={showBlocked ? '/eye-open.png' : '/eye-closed.png'}
                 alt={showBlocked ? 'Hide blocked tasks' : 'Show blocked tasks'}
-                style={{
-                  width: '40px',
-                  height: '40px',
-                  opacity: 0.9
-                }}
-              />
-            </button>
-            
-            {/* Text mode toggle button - 90px from right edge */}
-            <button
-              onClick={() => {
-                const modes = ['instructions', 'ingredients', 'time'];
-                const currentIndex = modes.indexOf(textMode);
-                const nextIndex = (currentIndex + 1) % modes.length;
-                setTextMode(modes[nextIndex]);
-              }}
-              style={{
-                position: 'absolute',
-                right: '90px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                background: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 0,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <img 
-                src={
-                  textMode === 'instructions' ? '/info-icon.png' :
-                  textMode === 'ingredients' ? '/ingredients-icon.png' :
-                  '/clock-icon.png'
-                }
-                alt={`Show ${textMode}`}
                 style={{
                   width: '40px',
                   height: '40px',

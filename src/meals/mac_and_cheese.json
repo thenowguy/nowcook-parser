@@ -20,6 +20,7 @@
       "duration_min": 8,
       "requires_driver": false,
       "self_running_after_start": true,
+      "inputs": [{ "ingredient": "salt", "state": "raw" }],
       "edges": []
     },
     {
@@ -29,6 +30,7 @@
       "duration_min": 8,
       "requires_driver": false,
       "self_running_after_start": true,
+      "inputs": [{ "ingredient": "elbow_macaroni", "state": "raw" }],
       "edges": [
         { "from": "t1", "to": "t2", "type": "FS" }
       ]
@@ -40,6 +42,7 @@
       "duration_min": 2,
       "requires_driver": true,
       "self_running_after_start": false,
+      "inputs": [{ "ingredient": "butter", "state": "raw" }],
       "edges": [
         { "from": "t2", "to": "t3", "type": "SS" }
       ]
@@ -51,6 +54,7 @@
       "duration_min": 2,
       "requires_driver": true,
       "self_running_after_start": false,
+      "inputs": [{ "ingredient": "all_purpose_flour", "state": "raw" }],
       "edges": [
         { "from": "t3", "to": "t4", "type": "FS" }
       ]
@@ -62,6 +66,7 @@
       "duration_min": 2,
       "requires_driver": true,
       "self_running_after_start": false,
+      "inputs": [{ "ingredient": "milk", "state": "raw" }],
       "edges": [
         { "from": "t4", "to": "t5", "type": "FS" }
       ]
@@ -131,6 +136,11 @@
       "duration_min": 1,
       "requires_driver": true,
       "self_running_after_start": false,
+      "inputs": [
+        { "ingredient": "salt", "state": "raw" },
+        { "ingredient": "black_pepper", "state": "raw" },
+        { "ingredient": "paprika", "state": "raw" }
+      ],
       "edges": [
         { "from": "t10", "to": "t11", "type": "FS" }
       ]
