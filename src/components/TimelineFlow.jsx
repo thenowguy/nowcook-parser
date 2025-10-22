@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import Lottie from 'lottie-react';
 import { getPlannedMinutes } from '../utils/runtime';
 import chevronAnimation from '../assets/chevron-left-green.json';
@@ -136,6 +136,7 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
         if (rightEdge <= NOWLINE_X) {
           lozengeX = NOWLINE_X - lozengeWidth;
           status = 'stopped-waiting';
+          playSFX('arrive');
         }
         
         tracks.push({
@@ -227,6 +228,7 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
     if ((status === 'stopped-waiting' || status === 'ready' || status === 'running') && onDismissTask) {
       // Start swipe animation
       setSwipingId(trackId);
+      playSFX('dismiss');
       
       // Wait for complete animation sequence before dismissing
       // 1s swipe + 1s collapse = 2s total
@@ -236,6 +238,25 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
       }, 2100); // Slight buffer to ensure animations complete
     }
   };
+  
+  // SFX paths
+  const SFX = {
+    start: '/SFX/startTask.mp3',
+    dismiss: '/SFX/dismiss.wav',
+    arrive: '/SFX/arrive.wav',
+  };
+
+  // Simple mobile detection
+  const isMobile = typeof window !== 'undefined' && (
+    'ontouchstart' in window || navigator.maxTouchPoints > 0
+  );
+
+  function playSFX(type) {
+    if (!isMobile) return;
+    const audio = new window.Audio(SFX[type]);
+    audio.volume = 0.7;
+    audio.play();
+  }
   
   // Lozenge component with gesture detection
   const GestureLozenge = ({ track }) => {
@@ -273,6 +294,7 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
         if (timeSinceLastTap < 500 && timeSinceLastTap > 50) {
           // Double tap detected
           handleDoubleTap(track.id, track.status);
+          playSFX('start');
           lastTapRef.current = 0; // Reset
         } else {
           // First tap
@@ -304,6 +326,7 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
         if (timeSinceLastClick < 500 && timeSinceLastClick > 50) {
           // Double click detected
           handleDoubleTap(track.id, track.status);
+          playSFX('start');
           lastTapRef.current = 0; // Reset
         } else {
           // First click
