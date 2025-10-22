@@ -210,11 +210,14 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
       // Get the full task object
       const task = byId.get(trackId);
       if (!task) return;
-      
+
+      // Play start sound immediately for feedback
+      playSFX('start');
+
       // Flash confirmation
       setFlashingId(trackId);
       setTimeout(() => setFlashingId(null), 300);
-      
+
       // Start task after flash with full task object
       setTimeout(() => onStartTask(task), 150);
     } else if (status === 'driver-busy') {
@@ -295,7 +298,6 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
         if (timeSinceLastTap < 500 && timeSinceLastTap > 50) {
           // Double tap detected
           handleDoubleTap(track.id, track.status);
-          playSFX('start');
           lastTapRef.current = 0; // Reset
         } else {
           // First tap
@@ -321,7 +323,6 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
         if (timeSinceLastClick < 500 && timeSinceLastClick > 50) {
           // Double click detected
           handleDoubleTap(track.id, track.status);
-          playSFX('start');
           lastTapRef.current = 0; // Reset
         } else {
           // First click
