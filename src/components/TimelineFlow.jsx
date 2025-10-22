@@ -241,6 +241,7 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
   const GestureLozenge = ({ track }) => {
     const lastTapRef = useRef(0);
     const touchStartRef = useRef({ x: 0, y: 0 });
+    const mouseStartRef = useRef({ x: 0, y: 0 });
     
     const handleTouchStart = (e) => {
       // Disable interaction for driver-busy tasks
@@ -280,6 +281,50 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
       }
     };
     
+    // Mouse handlers for desktop support
+    const handleMouseDown = (e) => {
+      // Disable interaction for driver-busy tasks
+      if (track.status === 'driver-busy') return;
+      
+      mouseStartRef.current = { x: e.clientX, y: e.clientY };
+    };
+    
+    const handleMouseUp = (e) => {
+      // Disable interaction for driver-busy tasks
+      if (track.status === 'driver-busy') return;
+      
+      const deltaX = e.clientX - mouseStartRef.current.x;
+      const deltaY = e.clientY - mouseStartRef.current.y;
+      
+      // Only process clicks (minimal movement)
+      if (Math.abs(deltaX) < 5 && Math.abs(deltaY) < 5) {
+        const now = Date.now();
+        const timeSinceLastClick = now - lastTapRef.current;
+        
+        if (timeSinceLastClick < 500 && timeSinceLastClick > 50) {
+          // Double click detected
+          handleDoubleTap(track.id, track.status);
+          lastTapRef.current = 0; // Reset
+        } else {
+          // First click
+          lastTapRef.current = now;
+        }
+      }
+    };
+    
+    // Context menu for desktop dismiss
+    const handleContextMenu = (e) => {
+      e.preventDefault(); // Prevent default context menu
+      
+      // Disable interaction for driver-busy tasks
+      if (track.status === 'driver-busy') return;
+      
+      // Right-click to dismiss
+      if (track.status === 'stopped-waiting' || track.status === 'ready' || track.status === 'running') {
+        handleSwipeLeft(track.id, track.status);
+      }
+    };
+    
     const isFlashing = flashingId === track.id;
     const isSwiping = swipingId === track.id;
     
@@ -292,6 +337,9 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
       <div
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+        onContextMenu={handleContextMenu}
         style={{
           position: 'absolute',
           left: `${track.lozengeX}px`,
