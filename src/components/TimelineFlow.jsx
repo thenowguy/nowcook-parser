@@ -260,9 +260,13 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
 
   function playSFX(type) {
     if (!isMobile) return;
-    const audio = new window.Audio(SFX[type]);
-    audio.volume = 0.7;
-    audio.play();
+    try {
+      const audio = new window.Audio(SFX[type]);
+      audio.volume = 0.7;
+      audio.play().catch(err => console.log('Audio play error:', err));
+    } catch (err) {
+      console.log('Audio setup error:', err);
+    }
   }
   
   // Lozenge component with gesture detection
