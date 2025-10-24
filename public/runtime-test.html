@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Runtime Hold Window Test</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      padding: 20px;
+      background: #0a0a0a;
+      color: #e0e0e0;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 8px;
+      background: linear-gradient(90deg, #00d4ff, #7b2ff7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: bold;
+    }
+
+    .subtitle {
+      color: #888;
+      margin-bottom: 24px;
+      font-size: 14px;
+    }
+
+    .controls {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 24px;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    button {
+      background: linear-gradient(135deg, #00d4ff, #7b2ff7);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .clock {
+      background: #0a0a0a;
+      border: 1px solid #444;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 16px;
+      color: #00d4ff;
+    }
+
+    .section {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+      font-weight: 600;
+      opacity: 0.7;
+    }
+
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .task {
+      background: #0a0a0a;
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.2s;
+    }
+
+    .task.available {
+      border-color: #00d4ff;
+      background: rgba(0, 212, 255, 0.05);
+    }
+
+    .task.must-do {
+      border-color: #e74c3c;
+      background: rgba(231, 76, 60, 0.1);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    .task.blocked {
+      opacity: 0.4;
+    }
+
+    .task.done {
+      opacity: 0.3;
+      text-decoration: line-through;
+    }
+
+    .task-info {
+      flex: 1;
+    }
+
+    .task-name {
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .task-meta {
+      font-size: 11px;
+      color: #888;
+      display: flex;
+      gap: 12px;
+    }
+
+    .task-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .btn-small {
+      padding: 4px 12px;
+      font-size: 12px;
+      background: #333;
+    }
+
+    .btn-small.finish {
+      background: linear-gradient(135deg, #2ecc71, #27ae60);
+    }
+
+    .badge {
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .badge.flexible {
+      background: rgba(46, 204, 113, 0.2);
+      color: #2ecc71;
+    }
+
+    .badge.rigid {
+      background: rgba(231, 76, 60, 0.2);
+      color: #e74c3c;
+    }
+
+    .badge.hold-days {
+      background: rgba(155, 89, 182, 0.2);
+      color: #9b59b6;
+    }
+
+    .badge.hold-hours {
+      background: rgba(52, 152, 219, 0.2);
+      color: #3498db;
+    }
+
+    .log {
+      background: #0a0a0a;
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 12px;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 11px;
+      max-height: 200px;
+      overflow-y: auto;
+      color: #888;
+      line-height: 1.6;
+    }
+
+    .log-entry {
+      margin-bottom: 4px;
+    }
+
+    .log-entry.info { color: #00d4ff; }
+    .log-entry.success { color: #2ecc71; }
+    .log-entry.warning { color: #f39c12; }
+    .log-entry.error { color: #e74c3c; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Runtime Hold Window Test</h1>
+    <p class="subtitle">Test FLEXIBLE vs RIGID dependency evaluation with simulated time</p>
+
+    <div class="controls">
+      <button onclick="loadMeal()">Load Mac & Cheese</button>
+      <button onclick="startClock()" id="startBtn">Start Clock</button>
+      <button onclick="skipTime(60)" class="btn-small">+1 min</button>
+      <button onclick="skipTime(300)" class="btn-small">+5 min</button>
+      <button onclick="skipTime(3600)" class="btn-small">+1 hour</button>
+      <div style="flex: 1"></div>
+      <div class="clock" id="clock">00:00:00</div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+      <div>
+        <div class="section">
+          <div class="section-title">Available Now</div>
+          <div class="task-list" id="available"></div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Blocked (dependencies not met)</div>
+          <div class="task-list" id="blocked"></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section">
+          <div class="section-title">Completed</div>
+          <div class="task-list" id="completed"></div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Event Log</div>
+          <div class="log" id="log"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { parseRecipe } from '../src/parser/index.js';
+
+    let tasks = [];
+    let completed = [];
+    let nowSec = 0;
+    let clockRunning = false;
+    let clockInterval = null;
+
+    const MAC_CHEESE = `Ingredients
+Kosher salt
+1 pound elbow macaroni
+4 cloves garlic, smashed and divided
+5 1/2 cups shredded sharp white Cheddar
+
+Directions
+Bring a pot of salted water to a boil over high heat. Add the macaroni and cook for 8 to 9 minutes, until al dente. Drain.
+
+In a small saucepan heat the milk. Melt the butter in a large, deep skillet over medium-high heat. Whisk in the flour and cook for about 1 minute. Add the hot milk, bring up to a bubble, then add the cheese. Keep whisking until the sauce is smooth.
+
+Fold the macaroni into the cheese sauce and keep stirring until well combined. Scrape into a buttered casserole dish.
+
+Bake for 25 minutes, or until bubbly and the top is browned.`;
+
+    window.loadMeal = async function() {
+      log('Loading Mac & Cheese...', 'info');
+
+      const result = await parseRecipe(MAC_CHEESE, 'Mac & Cheese', {
+        autoDependencies: false,
+        detectTaskChains: true,
+        useSemanticChains: true
+      });
+
+      tasks = result.tasks || [];
+      completed = [];
+      nowSec = 0;
+      clockRunning = false;
+
+      log(`Loaded ${tasks.length} tasks with hold window data`, 'success');
+
+      // Count constraints
+      const flexible = tasks.reduce((sum, t) =>
+        sum + (t.edges || []).filter(e => e.constraint === 'FLEXIBLE').length, 0);
+      const rigid = tasks.reduce((sum, t) =>
+        sum + (t.edges || []).filter(e => e.constraint === 'RIGID').length, 0);
+
+      log(`Found ${flexible} FLEXIBLE edges, ${rigid} RIGID edges`, 'info');
+
+      render();
+    };
+
+    window.startClock = function() {
+      if (clockRunning) {
+        clockRunning = false;
+        clearInterval(clockInterval);
+        document.getElementById('startBtn').textContent = 'Start Clock';
+        log('Clock paused', 'info');
+      } else {
+        clockRunning = true;
+        clockInterval = setInterval(() => {
+          nowSec++;
+          updateClock();
+          render();
+        }, 1000);
+        document.getElementById('startBtn').textContent = 'Pause Clock';
+        log('Clock started', 'success');
+      }
+    };
+
+    window.skipTime = function(seconds) {
+      nowSec += seconds;
+      updateClock();
+      render();
+      log(`⏩ Skipped forward ${formatDuration(seconds)}`, 'warning');
+    };
+
+    window.finishTask = function(taskId) {
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      completed.push({
+        id: taskId,
+        finishedAt: nowSec * 1000 // Convert to ms
+      });
+
+      log(`✅ Finished: ${task.name}`, 'success');
+      render();
+    };
+
+    function updateClock() {
+      const hours = Math.floor(nowSec / 3600);
+      const minutes = Math.floor((nowSec % 3600) / 60);
+      const seconds = nowSec % 60;
+      document.getElementById('clock').textContent =
+        `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+    }
+
+    function pad(n) {
+      return n.toString().padStart(2, '0');
+    }
+
+    function render() {
+      const availableEl = document.getElementById('available');
+      const blockedEl = document.getElementById('blocked');
+      const completedEl = document.getElementById('completed');
+
+      availableEl.innerHTML = '';
+      blockedEl.innerHTML = '';
+      completedEl.innerHTML = '';
+
+      const completedIds = new Set(completed.map(c => c.id));
+      const nowMs = nowSec * 1000;
+
+      tasks.forEach(task => {
+        const isDone = completedIds.has(task.id);
+
+        if (isDone) {
+          completedEl.appendChild(renderTask(task, 'done', nowMs));
+          return;
+        }
+
+        const depsOK = checkDependencies(task, completedIds, nowMs);
+
+        if (depsOK.satisfied) {
+          const urgency = depsOK.hasExpiringSoon ? 'must-do' : 'available';
+          availableEl.appendChild(renderTask(task, urgency, nowMs));
+        } else {
+          blockedEl.appendChild(renderTask(task, 'blocked', nowMs, depsOK.reason));
+        }
+      });
+    }
+
+    function checkDependencies(task, completedIds, nowMs) {
+      if (!task.edges || task.edges.length === 0) {
+        return { satisfied: true, hasExpiringSoon: false };
+      }
+
+      let hasExpiringSoon = false;
+
+      for (const edge of task.edges) {
+        if (!completedIds.has(edge.from)) {
+          return { satisfied: false, reason: 'Predecessor not finished' };
+        }
+
+        // Check hold window
+        if (edge.constraint) {
+          const pred = completed.find(c => c.id === edge.from);
+          if (pred) {
+            const timeSinceFinish = nowMs - pred.finishedAt;
+
+            if (edge.constraint === 'RIGID') {
+              const maxWaitMs = 5 * 60 * 1000; // 5 minutes
+              if (timeSinceFinish > maxWaitMs) {
+                return { satisfied: false, reason: 'RIGID window expired' };
+              }
+              if (timeSinceFinish > maxWaitMs * 0.5) {
+                hasExpiringSoon = true; // Within last 2.5 minutes
+              }
+            } else if (edge.constraint === 'FLEXIBLE') {
+              const holdWindowMs = (edge.hold_window_minutes || 60) * 60 * 1000;
+              if (timeSinceFinish > holdWindowMs) {
+                return { satisfied: false, reason: 'FLEXIBLE window expired' };
+              }
+              // Check if expiring within 10% of window
+              if (timeSinceFinish > holdWindowMs * 0.9) {
+                hasExpiringSoon = true;
+              }
+            }
+          }
+        }
+      }
+
+      return { satisfied: true, hasExpiringSoon };
+    }
+
+    function renderTask(task, state, nowMs, blockReason = '') {
+      const div = document.createElement('div');
+      div.className = `task ${state}`;
+
+      const info = document.createElement('div');
+      info.className = 'task-info';
+
+      const name = document.createElement('div');
+      name.className = 'task-name';
+      name.textContent = task.name;
+      info.appendChild(name);
+
+      const meta = document.createElement('div');
+      meta.className = 'task-meta';
+
+      // Show verb and hold window
+      if (task.canonical_verb) {
+        meta.innerHTML += `<span>${task.canonical_verb}</span>`;
+      }
+      if (task.hold_window_minutes) {
+        meta.innerHTML += `<span class="badge ${task.temporal_flexibility?.replace('_', '-')}">${formatHold(task.hold_window_minutes)}</span>`;
+      }
+
+      // Show edges
+      if (task.edges && task.edges.length > 0) {
+        task.edges.forEach(edge => {
+          const badge = edge.constraint === 'FLEXIBLE' ? 'flexible' : 'rigid';
+          meta.innerHTML += `<span class="badge ${badge}">${edge.constraint || 'FS'}</span>`;
+        });
+      }
+
+      if (blockReason) {
+        meta.innerHTML += `<span style="color: #e74c3c;">${blockReason}</span>`;
+      }
+
+      info.appendChild(meta);
+      div.appendChild(info);
+
+      // Actions
+      const actions = document.createElement('div');
+      actions.className = 'task-actions';
+
+      if (state === 'available' || state === 'must-do') {
+        const btn = document.createElement('button');
+        btn.className = 'btn-small finish';
+        btn.textContent = 'Finish';
+        btn.onclick = () => finishTask(task.id);
+        actions.appendChild(btn);
+      }
+
+      div.appendChild(actions);
+
+      return div;
+    }
+
+    function formatHold(minutes) {
+      if (minutes >= 1440) return `${(minutes/1440).toFixed(0)}d hold`;
+      if (minutes >= 60) return `${(minutes/60).toFixed(0)}h hold`;
+      return `${minutes}m hold`;
+    }
+
+    function formatDuration(seconds) {
+      if (seconds >= 3600) return `${(seconds/3600).toFixed(1)}h`;
+      if (seconds >= 60) return `${(seconds/60).toFixed(0)}m`;
+      return `${seconds}s`;
+    }
+
+    function log(message, type = 'info') {
+      const logEl = document.getElementById('log');
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`;
+      const time = new Date().toLocaleTimeString();
+      entry.textContent = `[${time}] ${message}`;
+      logEl.insertBefore(entry, logEl.firstChild);
+    }
+
+    // Initialize
+    updateClock();
+  </script>
+</body>
+</html>
