@@ -497,6 +497,81 @@
       "defaults": { "planned_min": 15 },
       "hold_window_minutes": 60,
       "temporal_flexibility": "hold_hours"
+    },
+    {
+      "canon": "grate",
+      "attention": "attended",
+      "patterns": [
+        "\\bgrate\\b",
+        "\\bshred\\b",
+        "\\bgrated\\b",
+        "\\bshredded\\b"
+      ],
+      "defaults": { "planned_min": 3 },
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days"
+    },
+    {
+      "canon": "smash",
+      "attention": "attended",
+      "patterns": [
+        "\\bsmash\\b",
+        "\\bsmashed\\b",
+        "\\bcrush\\b",
+        "\\bcrushed\\b"
+      ],
+      "defaults": { "planned_min": 1 },
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days"
+    },
+    {
+      "canon": "divide",
+      "attention": "attended",
+      "patterns": [
+        "\\bdivide\\b",
+        "\\bdivided\\b",
+        "\\bseparate\\b",
+        "\\bseparated\\b"
+      ],
+      "defaults": { "planned_min": 1 },
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days"
+    },
+    {
+      "canon": "measure",
+      "attention": "attended",
+      "patterns": [
+        "\\bmeasure\\b",
+        "\\bmeasured\\b",
+        "\\bportion\\b"
+      ],
+      "defaults": { "planned_min": 1 },
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days"
+    },
+    {
+      "canon": "crush",
+      "attention": "attended",
+      "patterns": [
+        "\\bcrush\\b",
+        "\\bcrushed\\b",
+        "\\bpound\\b"
+      ],
+      "defaults": { "planned_min": 2 },
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days"
+    },
+    {
+      "canon": "separate",
+      "attention": "attended",
+      "patterns": [
+        "\\bseparate\\b",
+        "\\bseparated\\b",
+        "\\bsplit\\b"
+      ],
+      "defaults": { "planned_min": 1 },
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days"
     }
   ]
 }

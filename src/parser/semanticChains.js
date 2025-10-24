@@ -10,6 +10,8 @@
  * @module parser/semanticChains
  */
 
+import { extractIngredientPrep, createPrepChain } from './ingredientPrep.js';
+
 /**
  * Analyzes narrative recipe text and identifies logical chains using semantic understanding.
  *
@@ -28,10 +30,31 @@
  * @returns {Promise<Object>} Chain structure with metadata
  */
 export async function detectChainsSemanticly(narrativeText, recipeTitle = '') {
-  // This is where we apply semantic AI understanding
-  // For now, I'll create a structured prompt that analyzes the recipe
+  // STEP 1: Extract prep tasks embedded in ingredient lists
+  console.log('🔍 Extracting embedded prep tasks from ingredient list...');
+  const { ingredients, prepTasks } = extractIngredientPrep(narrativeText);
 
+  if (prepTasks.length > 0) {
+    console.log(`✅ Found ${prepTasks.length} embedded prep tasks:`);
+    prepTasks.forEach(t => {
+      console.log(`   - ${t.description} (${t.estimated_min} min)`);
+    });
+  }
+
+  // STEP 2: Analyze narrative cooking instructions
   const analysis = analyzeRecipeNarrative(narrativeText, recipeTitle);
+
+  // STEP 3: If prep tasks were found, add them as "Chain 0: Prep Work"
+  if (prepTasks.length > 0) {
+    const prepChain = createPrepChain(prepTasks);
+    if (prepChain) {
+      // Insert prep chain at the beginning
+      analysis.chains.unshift(prepChain);
+      analysis.metadata.total_chains = analysis.chains.length;
+      analysis.metadata.has_prep_chain = true;
+      analysis.metadata.prep_tasks_count = prepTasks.length;
+    }
+  }
 
   return analysis;
 }
