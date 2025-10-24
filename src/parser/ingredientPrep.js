@@ -96,16 +96,70 @@ function parseIngredientLine(line) {
   if (!line) return null;
 
   // Pattern: [quantity] [unit] [ingredient], [prep_verb(s)] [modifiers]
+  // OR: [quantity] [unit] [prep_verb] [ingredient]
   // Examples:
   //   "4 cloves garlic, smashed and divided"
-  //   "5 1/2 cups sharp white Cheddar, shredded"
+  //   "5 1/2 cups shredded sharp white Cheddar"
   //   "1 medium onion, diced"
   //   "2 tablespoons butter, divided"
 
   const prepTasks = [];
   let cleanIngredient = line;
 
-  // Check if line contains prep verbs after comma
+  // CASE 1: Check if line contains prep verbs BEFORE ingredient name
+  // Pattern: "[quantity] [unit] [prep_verb] [ingredient]"
+  const foundPrepsInline = [];
+  Object.keys(PREP_VERBS).forEach(verbForm => {
+    const regex = new RegExp(`\\b${verbForm}\\b`, 'i');
+    if (regex.test(line) && !line.includes(',')) {
+      // Found prep verb without comma - likely inline
+      foundPrepsInline.push(verbForm);
+    }
+  });
+
+  if (foundPrepsInline.length > 0) {
+    // Extract quantity and ingredient, removing prep verbs
+    let cleanLine = line;
+    foundPrepsInline.forEach(verbForm => {
+      cleanLine = cleanLine.replace(new RegExp(`\\b${verbForm}\\b`, 'gi'), '').trim();
+    });
+
+    const quantityMatch = cleanLine.match(/^([\d\s\/½⅓⅔¼¾⅛⅜⅝⅞]+)\s*(?:cups?|tablespoons?|teaspoons?|tbsp|tsp|oz|ounces?|pounds?|lbs?|grams?|g|kg|cloves?|whole|medium|large|small|slices?)?\s+(.+)$/i);
+
+    let quantity = null;
+    let ingredientName = cleanLine;
+
+    if (quantityMatch) {
+      quantity = parseQuantity(quantityMatch[1]);
+      ingredientName = quantityMatch[2] || cleanLine;
+    }
+
+    // Create prep tasks
+    foundPrepsInline.forEach(verbForm => {
+      const prepInfo = PREP_VERBS[verbForm];
+      const duration = estimatePrepDuration(prepInfo, quantity, ingredientName);
+
+      let taskDesc = `${capitalizeFirst(prepInfo.canon)} the ${ingredientName}`;
+      if (quantity && quantityMatch) {
+        taskDesc += ` (${quantityMatch[1].trim()} ${line.match(/cups?|tablespoons?|teaspoons?|cloves?|whole|medium|large|slices?/i)?.[0] || ''})`.trim();
+      }
+
+      prepTasks.push({
+        description: taskDesc,
+        canonical_verb: prepInfo.canon,
+        estimated_min: duration,
+        ingredient: ingredientName,
+        quantity: quantity,
+        source_line: line
+      });
+    });
+
+    cleanIngredient = cleanLine;
+
+    return { ingredient: cleanIngredient, prepTasks };
+  }
+
+  // CASE 2: Check if line contains prep verbs after comma
   const commaParts = line.split(',').map(s => s.trim());
 
   if (commaParts.length > 1) {
