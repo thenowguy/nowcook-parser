@@ -57,19 +57,51 @@ export function isPrepTask(task) {
   return false;
 }
 
-export function depsSatisfied(task, getPred) {
+export function depsSatisfied(task, getPred, nowMs = 0, getFinishedAt = null) {
   const edges = Array.isArray(task.edges) ? task.edges : [];
   if (edges.length === 0) return true;
+
   return edges.every((e) => {
     const pred = getPred(e.from);
     if (!pred) return true;
-    switch (e.type) {
-      case "SS": return pred.started || pred.done;
-      case "FS":
-      case "FF":
-      case "SF":
-      default:   return pred.done;
+
+    // Handle SS (Start-to-Start) edges
+    if (e.type === "SS") {
+      return pred.started || pred.done;
     }
+
+    // Handle FS (Finish-to-Start) edges with hold window logic
+    if (e.type === "FS" || e.type === "FF" || e.type === "SF" || !e.type) {
+      // Predecessor must be finished
+      if (!pred.done) return false;
+
+      // If no hold window data or no timestamp tracking, use old behavior
+      if (!e.constraint || !getFinishedAt) return true;
+
+      // Get when predecessor finished
+      const finishedAt = getFinishedAt(e.from);
+      if (!finishedAt) return true; // Fallback: if we can't get timestamp, assume OK
+
+      const timeSinceFinish = nowMs - finishedAt;
+
+      // RIGID edges: Must use output quickly (within 5 minutes buffer)
+      if (e.constraint === 'RIGID') {
+        const maxWaitMs = 5 * 60 * 1000; // 5 minutes
+        return timeSinceFinish <= maxWaitMs;
+      }
+
+      // FLEXIBLE edges: Can use output anytime within hold window
+      if (e.constraint === 'FLEXIBLE') {
+        const holdWindowMs = (e.hold_window_minutes || 60) * 60 * 1000;
+        return timeSinceFinish <= holdWindowMs;
+      }
+
+      // Unknown constraint: default to old behavior (just check if done)
+      return true;
+    }
+
+    // Default: predecessor must be done
+    return pred.done;
   });
 }
 
@@ -123,18 +155,29 @@ export function useRuntime(tasks) {
   // Task classification
   const couldDoNow = [], canDoNow = [], cantDoYet = [], driverBusyTasks = [], mustDoNow = [];
   const runningIds = new Set(running.map((r) => r.id));
-  
+
+  // Helper to get when a task finished
+  const getFinishedAt = (taskId) => {
+    const c = completed.find(x => x.id === taskId);
+    return c ? c.finishedAt : null;
+  };
+
   for (const t of tasks) {
     if (doneIds.has(t.id) || runningIds.has(t.id)) continue;
-    
-    const depsOK = depsSatisfied(t, (id) => ({
-      started: runningIds.has(id) || doneIds.has(id),
-      done: doneIds.has(id),
-    }));
-    
-    if (!depsOK) { 
+
+    const depsOK = depsSatisfied(
+      t,
+      (id) => ({
+        started: runningIds.has(id) || doneIds.has(id),
+        done: doneIds.has(id),
+      }),
+      nowMs,
+      getFinishedAt
+    );
+
+    if (!depsOK) {
       cantDoYet.push(t);
-      continue; 
+      continue;
     }
     
     const isPurePrep = isPrepTask(t);
