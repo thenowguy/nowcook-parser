@@ -629,9 +629,117 @@ Runtime / Gantt Visualization
 
 **Next immediate task**: Implement semantic chain detection for Mac & Cheese recipe (user's choice for testing)
 
+## Recent Developments (Oct 2024)
+
+### Hold Windows & Temporal Flexibility
+
+**Problem**: Recipe authors embed prep work in ingredient lists ("4 cloves garlic, smashed and divided") and traditional parsers treat all dependencies as RIGID (must execute immediately in sequence). This creates artificial time pressure.
+
+**Solution**: Three-part system implementing the 2012 "leave time" / "channel extension" concept:
+
+#### 1. Hold Window Ontology (verbs.json)
+Every verb now includes temporal metadata:
+```json
+{
+  "canon": "sauté",
+  "hold_window_minutes": 1440,           // 24 hours
+  "temporal_flexibility": "hold_hours"   // prep_any_time | hold_days | hold_hours | hold_minutes | serve_immediate
+}
+```
+
+**46 verbs total** with flexibility classifications:
+- **prep_any_time** (1): marinate - 30 days
+- **hold_days** (15): dice, chop, grate, smash - 7 days
+- **hold_hours** (16): sauté, bake, roast, simmer - 1-24 hours
+- **hold_minutes** (9): whisk, stir, add - 15-30 minutes
+- **serve_immediate** (9): boil, drain, plate - 0-5 minutes
+
+#### 2. Ingredient Prep Extraction (ingredientPrep.js)
+Detects hidden prep tasks in ingredient lists:
+- Pattern 1 (after comma): "4 cloves garlic, smashed and divided"
+- Pattern 2 (inline): "5 1/2 cups shredded sharp white Cheddar"
+
+Creates **Chain 0: Prep Work** with extracted tasks:
+- Parses complex quantities (fractions, ranges, unicode)
+- Estimates duration based on quantity and ingredient type
+- All prep tasks get `hold_days` flexibility (7 days)
+
+**Mac & Cheese Example**: Found 7 hidden prep tasks totaling 13.5 minutes:
+1. Grate cheese (5.5 cups) - 4.5 min
+2. Dice bacon (8 slices) - 4 min
+3. Smash/divide garlic - 2 min
+4. Chop/peel/dice onions - 3 min
+
+#### 3. FLEXIBLE vs RIGID Constraints (index.js)
+Dependencies now have constraint metadata:
+```javascript
+{
+  from: "chain_1/step_1",
+  to: "chain_1/step_2",
+  type: "FS",
+  constraint: "FLEXIBLE",              // or "RIGID"
+  hold_window_minutes: 1440,
+  temporal_flexibility: "hold_hours"
+}
+```
+
+**Within-chain dependencies**: Based on predecessor's temporal flexibility
+- `serve_immediate` → RIGID edge (must execute immediately)
+- All others → FLEXIBLE edge (can wait for hold window)
+
+**Cross-chain dependencies**: Based on source task's flexibility
+- Cheese sauce → Assemble: FLEXIBLE (sauce holds for hours)
+- Pasta → Drain: RIGID (pasta must be used immediately)
+
+#### 4. Hold Window Visualization (hold-window-prototype.html)
+Resurrects the 2012 "channel extension" concept:
+- **Solid gradient bar**: Active work time (task duration)
+- **Striped extension**: Hold window (output viability)
+- **Same width scale**: Both rendered at same pixels/minute (default 12px/min)
+
+Visual example:
+```
+"Melt butter"   [3min ████]═════════[10min ▒▒▒▒▒ can hold 10m]
+"Whisk flour"   [1min ██]════════════[30min ▒▒▒▒▒ can hold 30m]
+"Simmer sauce"  [20min ████████████]═══════[60min ▒▒▒▒▒ can hold 1h]
+```
+
+Makes temporal flexibility **immediately visible** - users can see at a glance which tasks have breathing room.
+
+**Access**: http://localhost:5174/hold-window-prototype.html
+
+### Task Object Updates
+
+Tasks now include:
+```json
+{
+  "id": "chain_2/step_3",
+  "canonical_verb": "simmer",
+  "hold_window_minutes": 60,
+  "temporal_flexibility": "hold_hours",
+  "edges": [
+    {
+      "from": "chain_2/step_2",
+      "type": "FS",
+      "constraint": "FLEXIBLE",
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes"
+    }
+  ]
+}
+```
+
+### Next Steps
+
+1. **Expand visualization** to show all chains with dependencies
+2. **Backward scheduling** from serve time using FLEXIBLE/RIGID constraints
+3. **"Could do now" indicators** based on hold window availability
+4. **Critical path calculation** respecting temporal flexibility
+
 ## Additional Resources
 
 - **Philosophy**: `Life at the NowLine/Life at the NowLine.md` - Origin story
 - **Temporal Flexibility**: `TEMPORAL_FLEXIBILITY.md` - Four task states
 - **Emergent Ingredients**: `EMERGENT_INGREDIENTS.md` - Flexible prep patterns
 - **Mobile Refactor**: `MOBILE_REFACTOR.md` - v2.0 architecture decisions
+- **IP Assessment**: `reference/Document 4 — IP and Legal Report (Updated Oct 2024).md`
