@@ -281,7 +281,7 @@
       <div class="control-group">
         <label>
           Pixels per minute:
-          <input type="number" id="pixelsPerMin" value="4" min="1" max="20">
+          <input type="number" id="pixelsPerMin" value="12" min="1" max="30">
         </label>
         <button onclick="render()">Re-render</button>
         <button onclick="loadMacAndCheese()">Load Mac & Cheese Data</button>
@@ -390,7 +390,7 @@ To serve, crumble the bacon mixture over the top of the mac and cheese. If desir
         return;
       }
 
-      const pixelsPerMin = parseInt(document.getElementById('pixelsPerMin').value) || 4;
+      const pixelsPerMin = parseInt(document.getElementById('pixelsPerMin').value) || 12;
 
       // Calculate timeline dimensions
       let totalDuration = 0;
