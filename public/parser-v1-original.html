@@ -249,6 +249,10 @@ Heat olive oil in a pan — 2 min"></textarea>
         <div style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
           <button onclick="parseRecipe()">Parse Recipe</button>
           <button onclick="exportJSON()">Export JSON</button>
+          <label style="font-size: 13px; color: #999; display: flex; align-items: center; gap: 5px;">
+            <input type="checkbox" id="useSemanticChains" style="margin: 0;">
+            <span style="background: linear-gradient(90deg, #00d4ff, #7b2ff7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold;">AI Chains</span>
+          </label>
           <div style="flex: 1;"></div>
           <label style="font-size: 13px; color: #999;">
             Serve in:
@@ -369,8 +373,15 @@ Heat olive oil in a pan — 2 min"></textarea>
       const serveInHours = parseFloat(document.getElementById('serveInHours').value) || 2;
       serveTimeMs = Date.now() + (serveInHours * 60 * 60 * 1000);
 
+      // Check if semantic chains enabled
+      const useSemanticChains = document.getElementById('useSemanticChains').checked;
+
       try {
-        log('Parsing recipe with ontology...', 'info');
+        if (useSemanticChains) {
+          log('🧠 Parsing recipe with AI semantic chain detection...', 'info');
+        } else {
+          log('Parsing recipe with algorithmic chain detection...', 'info');
+        }
 
         // Use the actual NowCook parser
         const parsed = await parseRecipeModule(text, "Test Recipe", {
@@ -378,7 +389,8 @@ Heat olive oil in a pan — 2 min"></textarea>
           smartDependencies: true,
           roundAboutUp: true,
           defaultAttention: "attended",
-          detectTaskChains: true // Enable chain detection
+          detectTaskChains: true, // Enable chain detection
+          useSemanticChains: useSemanticChains // NEW: Two-phase hybrid approach
         });
 
         currentMeal = {

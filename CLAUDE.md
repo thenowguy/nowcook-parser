@@ -398,12 +398,236 @@ scripts/                         # validate.js, validate-ontology.js, test-parse
 - Hover shows full task name and duration
 - Instantly shows feasibility and "freedom windows"
 
+### Parser UI Improvements ✅
+- Recipe dropdown selector (replaces Sample 1/2 buttons) with all 5 meals from Alpha app
+- Chain headers more visible: uppercase, white, 📋 icon
+- Persistent layout: Top row (Input | List), Middle row (Gantt full-width), Bottom row (Timeline full-width)
+- No more toggling between views - all displays visible simultaneously
+
 ### Key Files Modified
-- [public/parser-v1-original.html](public/parser-v1-original.html) - Added Gantt view, critical path integration
+- [public/parser-v1-original.html](public/parser-v1-original.html) - Added Gantt view, critical path integration, recipe dropdown, layout improvements
 - [src/parser/index.js](src/parser/index.js) - Added `renumberTasksWithChainContext()`
 - [src/parser/splitter.js](src/parser/splitter.js) - Updated SECTION_HEADERS regex
 - [src/parser/criticalPath.js](src/parser/criticalPath.js) - **NEW** Critical path calculator
+- [src/parser/chains.js](src/parser/chains.js) - Attempted algorithmic chain detection (see below)
 - [CLAUDE.md](CLAUDE.md) - Updated with all concepts and implementations
+
+## Critical Architecture Decision: Two-Phase Hybrid Parsing Approach
+
+### The Problem Discovered ⚠️
+
+**Algorithmic chain detection failed for the Salmon recipe:**
+- Expected: 3 logical chains ("Prepare Asparagus", "Prepare Couscous", "Prepare Salmon")
+- Got: 13 chains (one per task) with meaningless names like "Preparation", "Phase 1", "Phase 2"
+
+**Why the algorithmic approach failed:**
+1. **Multiple independent root tasks**: t1 (preheat oven), t2 (trim asparagus), t5 (boil stock), t8 (season salmon)
+2. **Each root started its own cluster**: BFS traversal from each root created separate dependency chains
+3. **Ingredient-based merging didn't work**: Clustering algorithm required `count > 1` for primary ingredient detection, which failed for small clusters
+4. **Structured JSON loses narrative context**: Flat task list without section headers or natural language connectives ("meanwhile", "at the same time", "in a separate pan")
+
+**User insight:**
+> "I'm constantly astounded by AI's ability to read a document and deduce its meaning, nuances, purpose etc. Why is it harder for Claude to read a recipe and deduce 'well, boiling the water, salting the water, boil the pasta, drain the pasta are obviously a group — a chain'?"
+
+### Pattern Matching vs Semantic Understanding
+
+**Pattern Matching** (current algorithmic approach):
+- Word frequencies and keyword detection
+- Dependency graph traversal (BFS/DFS)
+- Equipment reuse tracking
+- Ingredient transformation matching
+- Temporal marker regex (TEMPORAL_CUES)
+- **Limitation**: Cannot understand NARRATIVE PURPOSE - only sees disconnected patterns
+
+**Semantic Understanding** (AI reading):
+- Natural language comprehension of recipe narrative
+- Understands PURPOSE: "this group of steps makes the sauce"
+- Recognizes implied relationships: "add the sauce" → depends on making sauce
+- Interprets temporal structure: "meanwhile" = parallel chain
+- Infers emergent ingredients from context: "the cheese sauce" is output of chain 1
+- **Advantage**: Works like a human reading a recipe
+
+**Example: Jamie Oliver's Fish Pie (User-provided narrative)**
+```
+For the filling:
+- Poach the fish in milk with bay leaf (15 min)
+- Strain and reserve the poaching liquid
+- Flake the fish, removing bones
+
+For the sauce:
+- Make a roux with butter and flour
+- Add the reserved poaching liquid gradually
+- Simmer until thickened (5 min)
+- Stir in cream
+
+To assemble:
+- Combine flaked fish with sauce
+- Transfer to baking dish
+- Top with mashed potatoes
+- Bake until golden (30 min)
+```
+
+**Semantic AI easily identifies**:
+- **Chain 1**: "Prepare the Fish" (tasks 1-3) → produces `e_flaked_fish_001`
+- **Chain 2**: "Make the Sauce" (tasks 4-7) → produces `e_cream_sauce_001`, requires `e_poaching_liquid_001`
+- **Chain 3**: "Assemble and Bake" (tasks 8-11) → requires `e_flaked_fish_001` + `e_cream_sauce_001`
+
+**Pattern matching struggles** because:
+- No explicit section headers in structured JSON
+- Temporal markers scattered or missing
+- Dependency graph shows only task-to-task edges, not logical groupings
+- Ingredient matching is too granular (sees "fish", "milk", "butter" not "the filling")
+
+### The Solution: Two-Phase Hybrid Approach 🎯
+
+**Phase 1: Semantic Chain Detection** (NEW - TO BE IMPLEMENTED)
+- **Input**: Raw narrative recipe text (prose, not JSON)
+- **Process**: AI semantic understanding reads recipe and identifies:
+  1. Logical chains with meaningful names (e.g., "Make the Cheese Sauce")
+  2. Chain purposes (what each chain produces/accomplishes)
+  3. Emergent ingredient IDs for chain outputs (e.g., `e_cheese_sauce_001`)
+  4. Chain-level dependencies (Chain 3 requires output from Chain 1 and Chain 2)
+- **Output**: Chain structure with emergent IDs assigned
+
+**Phase 2: Algorithmic Task Parsing** (EXISTING - KEEP)
+- **Input**: Individual instruction lines from each chain
+- **Process**: Existing parser modules handle:
+  1. Verb extraction and canonicalization (`verbMatcher.js`)
+  2. Duration and temperature extraction (`extractors.js`)
+  3. Equipment and ingredient detection
+  4. Task-level dependency inference (`dependencies.js`)
+  5. Task numbering within chain context (`chain_1/step_1`, etc.)
+- **Output**: Fully parsed task objects with all metadata
+
+**Data Flow Diagram**:
+```
+Raw Narrative Recipe Text
+  ↓
+[PHASE 1: SEMANTIC AI]
+  ├─ Read recipe narrative
+  ├─ Identify logical chains: "Cook Pasta", "Make Sauce", "Assemble"
+  ├─ Assign emergent IDs: e_boiled_pasta_001, e_cheese_sauce_002
+  ├─ Infer chain dependencies: "Assemble" requires pasta + sauce
+  ↓
+Chain Structure with Emergent IDs
+  {
+    chain_1: { name: "Cook Pasta", outputs: [e_boiled_pasta_001], tasks: [...] },
+    chain_2: { name: "Make Sauce", outputs: [e_cheese_sauce_002], tasks: [...] },
+    chain_3: { name: "Assemble", inputs: [e_boiled_pasta_001, e_cheese_sauce_002], tasks: [...] }
+  }
+  ↓
+[PHASE 2: ALGORITHMIC PARSING]
+  For each task in each chain:
+    ├─ Extract verb: "boil" → canonical_verb: "boil"
+    ├─ Extract duration: "8 minutes" → duration_min: 8
+    ├─ Extract equipment: "pot" → equipment: ["pot"]
+    ├─ Infer task-level dependencies: FS edges within chain
+  ↓
+Fully Parsed Meal Object
+  {
+    chains: [...],
+    tasks: [{ id: "chain_1/step_1", canonical_verb: "bring_to_boil", edges: [...], timing: {...} }]
+  }
+  ↓
+Runtime / Gantt Visualization
+```
+
+**Example: Mac & Cheese (User's reference recipe)**
+
+**Phase 1 Output (Semantic)**:
+```json
+{
+  "chains": [
+    {
+      "id": "chain_1",
+      "name": "Cook the Pasta",
+      "purpose": "Prepare pasta for dish",
+      "outputs": [{ "emergent_id": "e_cooked_pasta_001", "ingredient": "pasta", "state": "al_dente" }],
+      "inputs": [],
+      "tasks": ["Bring water to boil", "Salt water", "Boil pasta", "Drain pasta"]
+    },
+    {
+      "id": "chain_2",
+      "name": "Make the Cheese Sauce",
+      "purpose": "Create creamy cheese sauce",
+      "outputs": [{ "emergent_id": "e_cheese_sauce_002", "ingredient": "cheese_sauce", "state": "creamy" }],
+      "inputs": [],
+      "tasks": ["Melt butter", "Add flour", "Pour in milk", "Stir until thick", "Add cheese", "Season"]
+    },
+    {
+      "id": "chain_3",
+      "name": "Assemble and Bake",
+      "purpose": "Combine and finish dish",
+      "outputs": [{ "emergent_id": "e_mac_cheese_finished_003", "ingredient": "mac_and_cheese", "state": "baked" }],
+      "inputs": [
+        { "emergent_id": "e_cooked_pasta_001", "required": true },
+        { "emergent_id": "e_cheese_sauce_002", "required": true }
+      ],
+      "tasks": ["Mix pasta with sauce", "Transfer to baking dish", "Top with breadcrumbs", "Bake"]
+    }
+  ]
+}
+```
+
+**Phase 2 Output (Algorithmic - for each task)**:
+```json
+{
+  "id": "chain_1/step_1",
+  "name": "Bring water to a boil",
+  "canonical_verb": "bring_to_boil",
+  "duration_min": 8,
+  "requires_driver": false,
+  "self_running_after_start": true,
+  "equipment": ["pot"],
+  "edges": [],  // First task in chain
+  "timing": { /* from criticalPath.js */ }
+}
+```
+
+### Implementation Strategy (Next Steps)
+
+1. **Test with narrative recipes first** - Use human-written prose (Jamie Oliver, Serious Eats) NOT structured JSON
+2. **Start with Mac & Cheese** - User's request: familiar, well-understood example
+3. **Semantic AI prompt for Phase 1**:
+   - "Read this recipe and identify logical chains (groups of related tasks)"
+   - "For each chain, determine what it produces (emergent ingredients)"
+   - "Identify which chains depend on outputs from other chains"
+4. **Keep existing Phase 2 parser modules** - Already working well for task-level parsing
+5. **Validate against existing meals** - Compare semantic detection vs manual chain assignments
+
+### Why This Approach Will Work
+
+**Narrative recipes provide rich context**:
+- Section headers: "For the pasta:", "Meanwhile, for the sauce:"
+- Temporal connectives: "at the same time", "while that's cooking", "once the water boils"
+- Implicit references: "add the sauce" (sauce must exist), "toss with pasta" (pasta must be ready)
+- Purpose statements: "to finish the dish", "to make the topping"
+
+**Semantic AI excels at**:
+- Understanding implied relationships
+- Recognizing hierarchical structure
+- Inferring emergent ingredients from context ("the cheese sauce" = output of sauce-making chain)
+- Handling ambiguity and natural language variation
+
+**Algorithmic parsing excels at**:
+- Precise verb extraction and canonicalization
+- Duration and temperature parsing
+- Equipment and ingredient keyword matching
+- Dependency graph construction (once chains are known)
+- Critical path calculation
+
+**Best of both worlds**: Semantic understanding for high-level structure, algorithmic precision for low-level details.
+
+### Checkpoint Note
+
+**Git commit f0ba63f** saved before implementing this approach. Can return to this state if needed.
+
+**Files to create/modify for Phase 1**:
+- New module: `src/parser/semanticChains.js` (semantic chain detection)
+- Update: `src/parser/index.js` (orchestrate two-phase approach)
+- Keep: All existing Phase 2 modules (splitter, verbMatcher, extractors, dependencies)
+
+**Next immediate task**: Implement semantic chain detection for Mac & Cheese recipe (user's choice for testing)
 
 ## Additional Resources
 

@@ -9,6 +9,7 @@ import { extractDuration, extractTemperature } from "./extractors.js";
 import { findCanonicalVerb, getDefaultDuration, getAttentionMode } from "./verbMatcher.js";
 import { inferDependencies, inferSequentialDependencies } from "./dependencies.js";
 import { detectChains } from "./chains.js";
+import { detectChainsSemanticly } from "./semanticChains.js";
 import { generateEmergentIds, matchEmergentInputs } from "./emergentIngredients.js";
 
 /**
@@ -24,7 +25,8 @@ export async function parseRecipe(rawText, title = "Untitled Recipe", options = 
     smartDependencies = false, // Use intelligent inference vs sequential
     roundAboutUp = true,
     defaultAttention = "attended",
-    detectTaskChains = true // NEW: Enable chain detection
+    detectTaskChains = true, // Enable chain detection
+    useSemanticChains = false // NEW: Two-phase hybrid (semantic + algorithmic)
   } = options;
 
   if (!rawText || !rawText.trim()) {
@@ -36,9 +38,31 @@ export async function parseRecipe(rawText, title = "Untitled Recipe", options = 
     };
   }
 
+  // Semantic chain detection (two-phase approach)
+  let semanticResult = null;
+
+  if (useSemanticChains && detectTaskChains) {
+    // PHASE 1: Semantic chain detection FIRST (to get proper task list)
+    console.log('🔍 Phase 1: Semantic chain detection...');
+    semanticResult = await detectChainsSemanticly(rawText, title);
+    console.log(`✅ Found ${semanticResult.chains.length} chains semantically`);
+  }
+
   // Step 1: Normalize and split into steps
   const normalized = normalizeText(rawText);
-  const stepTexts = splitIntoSteps(normalized);
+  let stepTexts;
+
+  if (semanticResult) {
+    // Use semantic task descriptions as the source
+    stepTexts = [];
+    semanticResult.chains.forEach(chain => {
+      stepTexts.push(...chain.tasks);
+    });
+    console.log(`📝 Using ${stepTexts.length} tasks from semantic chains`);
+  } else {
+    // Use traditional splitting
+    stepTexts = splitIntoSteps(normalized);
+  }
 
   // Step 2: Parse each step into a task
   const tasks = stepTexts.map((stepText, index) => {
@@ -124,8 +148,22 @@ export async function parseRecipe(rawText, title = "Untitled Recipe", options = 
 
   // Step 6: Detect chains
   let chains = [];
+
   if (detectTaskChains) {
-    chains = detectChains(finalTasks, rawText);
+    if (semanticResult) {
+      // We already have semantic chains from Phase 1
+      // Now we just need to map them to the task IDs we created
+      console.log('🔗 Phase 2: Mapping chains to parsed task IDs...');
+      chains = mapSemanticChainsToTasks(semanticResult.chains, finalTasks);
+
+      console.log('✅ Mapped chains:', chains.length);
+      chains.forEach((chain, idx) => {
+        console.log(`  ${chain.name} → ${chain.tasks.length} tasks`);
+      });
+    } else {
+      // Legacy algorithmic chain detection
+      chains = detectChains(finalTasks, rawText);
+    }
 
     // Step 6b: Renumber tasks to show chain context
     if (chains.length > 0) {
@@ -153,6 +191,108 @@ export async function parseRecipe(rawText, title = "Untitled Recipe", options = 
   };
 
   return meal;
+}
+
+/**
+ * Map semantic chains to actual parsed tasks
+ * When using semantic chains, tasks are parsed in order from semantic task descriptions,
+ * so we can map by sequential order rather than fuzzy matching.
+ * @param {Object[]} semanticChains - Chains from semantic detection
+ * @param {Object[]} parsedTasks - Algorithmically parsed tasks (in same order as semantic)
+ * @returns {Object[]} - Chains with task IDs
+ */
+function mapSemanticChainsToTasks(semanticChains, parsedTasks) {
+  const mappedChains = [];
+  let taskIndex = 0; // Track position in parsedTasks array
+
+  semanticChains.forEach((semanticChain, chainIdx) => {
+    const chain = {
+      id: semanticChain.id,
+      name: semanticChain.name,
+      purpose: semanticChain.purpose,
+      tasks: [], // Will fill with task IDs
+      outputs: semanticChain.outputs,
+      inputs: semanticChain.inputs,
+      temporal_marker: semanticChain.temporal_marker,
+      parallel_with: semanticChain.parallel_with,
+      metadata: semanticChain.metadata
+    };
+
+    // Tasks are in order - just take the next N tasks
+    const numTasks = semanticChain.tasks.length;
+    for (let i = 0; i < numTasks && taskIndex < parsedTasks.length; i++) {
+      chain.tasks.push(parsedTasks[taskIndex].id);
+      taskIndex++;
+    }
+
+    mappedChains.push(chain);
+  });
+
+  return mappedChains;
+}
+
+/**
+ * Find best matching task for a semantic task description
+ * @param {string} description - Semantic task description
+ * @param {Object[]} parsedTasks - All parsed tasks
+ * @param {string[]} alreadyAssigned - Task IDs already assigned to chains
+ * @returns {Object|null} - Matched task or null
+ */
+function findBestTaskMatch(description, parsedTasks, alreadyAssigned) {
+  const descLower = description.toLowerCase().trim();
+
+  // Filter out already assigned tasks
+  const availableTasks = parsedTasks.filter(t => !alreadyAssigned.includes(t.id));
+
+  if (availableTasks.length === 0) return null;
+
+  // Clean description for better matching (remove periods, extra spaces)
+  const cleanDesc = descLower.replace(/\.$/, '').replace(/\s+/g, ' ').trim();
+
+  // Try exact match first
+  let bestMatch = availableTasks.find(t => {
+    const taskName = t.name.toLowerCase().replace(/\.$/, '').replace(/\s+/g, ' ').trim();
+    return taskName === cleanDesc;
+  });
+  if (bestMatch) return bestMatch;
+
+  // Try substring match (both directions) with minimum length threshold
+  if (cleanDesc.length > 10) {
+    bestMatch = availableTasks.find(t => {
+      const taskName = t.name.toLowerCase();
+      return taskName.includes(cleanDesc) || cleanDesc.includes(taskName);
+    });
+    if (bestMatch) return bestMatch;
+  }
+
+  // Try matching first few significant words
+  const descWords = cleanDesc.split(' ').filter(w => w.length > 3).slice(0, 3);
+  bestMatch = availableTasks.find(t => {
+    const taskName = t.name.toLowerCase();
+    return descWords.every(word => taskName.includes(word));
+  });
+  if (bestMatch) return bestMatch;
+
+  // Try verb match with surrounding context
+  bestMatch = availableTasks.find(t => {
+    const verb = t.canonical_verb.replace(/_/g, ' ');
+    const verbIndex = cleanDesc.indexOf(verb);
+    if (verbIndex === -1) return false;
+
+    // Check if surrounding words also match
+    const taskName = t.name.toLowerCase();
+    const surroundingWords = cleanDesc.substring(
+      Math.max(0, verbIndex - 10),
+      Math.min(cleanDesc.length, verbIndex + verb.length + 10)
+    );
+    return taskName.includes(surroundingWords.slice(0, 15));
+  });
+  if (bestMatch) return bestMatch;
+
+  // If still no match, return null instead of first task
+  // This prevents incorrect assignments
+  console.warn(`No match found for semantic task: "${description}"`);
+  return null;
 }
 
 /**
