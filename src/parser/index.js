@@ -160,6 +160,10 @@ export async function parseRecipe(rawText, title = "Untitled Recipe", options = 
       chains.forEach((chain, idx) => {
         console.log(`  ${chain.name} → ${chain.tasks.length} tasks`);
       });
+
+      // Add sequential dependencies within each chain
+      console.log('🔗 Adding sequential dependencies within chains...');
+      finalTasks = addSequentialDependenciesWithinChains(finalTasks, chains);
     } else {
       // Legacy algorithmic chain detection
       chains = detectChains(finalTasks, rawText);
@@ -191,6 +195,49 @@ export async function parseRecipe(rawText, title = "Untitled Recipe", options = 
   };
 
   return meal;
+}
+
+/**
+ * Adds sequential Finish-to-Start dependencies within each chain.
+ * Each task (except the first) depends on the previous task finishing.
+ *
+ * @param {Object[]} tasks - Array of tasks
+ * @param {Object[]} chains - Array of chains with task IDs
+ * @returns {Object[]} - Tasks with updated edges
+ */
+function addSequentialDependenciesWithinChains(tasks, chains) {
+  // Create a map for quick task lookup
+  const taskMap = new Map(tasks.map(t => [t.id, t]));
+
+  chains.forEach(chain => {
+    // For each chain, add FS edges between consecutive tasks
+    for (let i = 1; i < chain.tasks.length; i++) {
+      const currentTaskId = chain.tasks[i];
+      const previousTaskId = chain.tasks[i - 1];
+
+      const currentTask = taskMap.get(currentTaskId);
+      if (currentTask) {
+        // Check if this edge already exists
+        const edgeExists = currentTask.edges && currentTask.edges.some(
+          edge => edge.from === previousTaskId && edge.to === currentTaskId && edge.type === 'FS'
+        );
+
+        if (!edgeExists) {
+          // Add FS (Finish-to-Start) dependency
+          if (!currentTask.edges) {
+            currentTask.edges = [];
+          }
+          currentTask.edges.push({
+            from: previousTaskId,
+            to: currentTaskId,
+            type: 'FS'
+          });
+        }
+      }
+    }
+  });
+
+  return tasks;
 }
 
 /**
