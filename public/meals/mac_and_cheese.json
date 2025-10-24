@@ -1,0 +1,199 @@
+{
+  "title": "Classic Mac & Cheese",
+  "description": "Comfort food with emergent ingredient demonstration",
+  "recipe_text": "Bring large pot of salted water to a boil\nBoil elbow macaroni until al dente\nGrate cheddar cheese\nMelt butter in saucepan\nWhisk in flour to make roux\nGradually whisk in milk\nSimmer until sauce thickens\nStir in grated cheese\nDrain pasta\nCombine pasta with cheese sauce\nSeason with salt, pepper, and paprika",
+  "ingredients": [
+    { "item": "elbow macaroni", "amount": "8 oz", "state": "raw" },
+    { "item": "sharp cheddar cheese", "amount": "2 cups (8 oz)", "state": "raw" },
+    { "item": "butter", "amount": "3 tbsp", "state": "raw" },
+    { "item": "all-purpose flour", "amount": "3 tbsp", "state": "raw" },
+    { "item": "milk", "amount": "2 cups", "state": "raw" },
+    { "item": "salt", "amount": "a large pinch", "state": "raw" },
+    { "item": "black pepper", "amount": "to taste", "state": "raw" },
+    { "item": "paprika", "amount": "1/4 tsp", "state": "raw" }
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "name": "Bring large pot of salted water to a boil",
+      "canonical_verb": "bring_to_boil",
+      "duration_min": 8,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "inputs": [{ "ingredient": "salt", "state": "raw" }],
+      "edges": []
+    },
+    {
+      "id": "t2",
+      "name": "Boil elbow macaroni until al dente",
+      "canonical_verb": "boil",
+      "duration_min": 8,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "inputs": [{ "ingredient": "elbow_macaroni", "state": "raw" }],
+      "edges": [
+        { "from": "t1", "to": "t2", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t3",
+      "name": "Melt butter in saucepan",
+      "canonical_verb": "melt",
+      "duration_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": [{ "ingredient": "butter", "state": "raw" }],
+      "edges": [
+        { "from": "t2", "to": "t3", "type": "SS" }
+      ]
+    },
+    {
+      "id": "t4",
+      "name": "Whisk in flour to make roux",
+      "canonical_verb": "whisk",
+      "duration_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": [{ "ingredient": "all_purpose_flour", "state": "raw" }],
+      "edges": [
+        { "from": "t3", "to": "t4", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t5",
+      "name": "Gradually whisk in milk",
+      "canonical_verb": "whisk",
+      "duration_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": [{ "ingredient": "milk", "state": "raw" }],
+      "edges": [
+        { "from": "t4", "to": "t5", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t6",
+      "name": "Grate cheddar cheese",
+      "canonical_verb": "grate",
+      "duration_min": 3,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": [{ "ingredient": "cheddar_cheese", "state": "raw" }],
+      "outputs": [{ "ingredient": "cheddar_cheese", "state": "grated", "emergent": true }],
+      "edges": []
+    },
+    {
+      "id": "t7",
+      "name": "Simmer until sauce thickens",
+      "canonical_verb": "simmer",
+      "duration_min": 5,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "edges": [
+        { "from": "t5", "to": "t7", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t8",
+      "name": "Stir in grated cheese",
+      "canonical_verb": "stir",
+      "duration_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": [{ "ingredient": "cheddar_cheese", "state": "grated", "emergent": true }],
+      "edges": [
+        { "from": "t6", "to": "t8", "type": "FS", "note": "Must have grated cheese" },
+        { "from": "t7", "to": "t8", "type": "FS", "note": "Sauce must be ready" }
+      ]
+    },
+    {
+      "id": "t9",
+      "name": "Drain pasta",
+      "canonical_verb": "drain",
+      "duration_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t2", "to": "t9", "type": "FF" }
+      ]
+    },
+    {
+      "id": "t10",
+      "name": "Combine pasta with cheese sauce",
+      "canonical_verb": "combine",
+      "duration_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t8", "to": "t10", "type": "FS", "note": "Cheese sauce complete" },
+        { "from": "t9", "to": "t10", "type": "FS", "note": "Pasta drained" }
+      ]
+    },
+    {
+      "id": "t11",
+      "name": "Season with salt, pepper, and paprika",
+      "canonical_verb": "season",
+      "duration_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": [
+        { "ingredient": "salt", "state": "raw" },
+        { "ingredient": "black_pepper", "state": "raw" },
+        { "ingredient": "paprika", "state": "raw" }
+      ],
+      "edges": [
+        { "from": "t10", "to": "t11", "type": "FS" }
+      ]
+    }
+  ],
+  "shopping_list": [
+    {
+      "name": "Elbow macaroni",
+      "quantity": "8",
+      "unit": "oz",
+      "department": "OTHER"
+    },
+    {
+      "name": "Sharp cheddar cheese",
+      "quantity": "8",
+      "unit": "oz",
+      "department": "DAIRY"
+    },
+    {
+      "name": "Butter",
+      "quantity": "3",
+      "unit": "tbsp",
+      "department": "DAIRY"
+    },
+    {
+      "name": "All-purpose flour",
+      "quantity": "3",
+      "unit": "tbsp",
+      "department": "BAKED"
+    },
+    {
+      "name": "Milk",
+      "quantity": "2",
+      "unit": "cups",
+      "department": "DAIRY"
+    },
+    {
+      "name": "Salt",
+      "quantity": "1",
+      "unit": "pinch",
+      "department": "SPICES"
+    },
+    {
+      "name": "Black pepper",
+      "quantity": "1/4",
+      "unit": "tsp",
+      "department": "SPICES"
+    },
+    {
+      "name": "Paprika",
+      "quantity": "1/4",
+      "unit": "tsp",
+      "department": "SPICES"
+    }
+  ]
+}

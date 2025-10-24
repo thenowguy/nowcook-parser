@@ -1,0 +1,202 @@
+{
+  "title": "Pan-Seared Salmon, Roasted Asparagus & Couscous",
+  "description": "Multi-component elegant dinner with 3-way orchestration",
+  "recipe_text": "Preheat oven to 425°F\nTrim asparagus ends\nToss asparagus with olive oil, salt, and pepper\nRoast asparagus until tender\nBring vegetable stock to a boil\nPour stock over couscous and cover\nLet couscous steam\nSeason salmon fillets with salt, pepper, and lemon zest\nHeat oil in large skillet\nSear salmon skin-side down until crispy\nFlip salmon and finish cooking\nFluff couscous with fork\nPlate salmon, asparagus, and couscous with lemon wedges",
+  "tasks": [
+    {
+      "id": "t1",
+      "name": "Preheat oven to 425°F",
+      "canonical_verb": "preheat",
+      "duration_min": 10,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "edges": []
+    },
+    {
+      "id": "t2",
+      "name": "Trim asparagus ends",
+      "canonical_verb": "trim",
+      "duration_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": []
+    },
+    {
+      "id": "t3",
+      "name": "Toss asparagus with olive oil, salt, and pepper",
+      "canonical_verb": "toss",
+      "duration_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t2", "to": "t3", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t4",
+      "name": "Roast asparagus until tender",
+      "canonical_verb": "roast",
+      "duration_min": 12,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "edges": [
+        { "from": "t1", "to": "t4", "type": "FS" },
+        { "from": "t3", "to": "t4", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t5",
+      "name": "Bring vegetable stock to a boil",
+      "canonical_verb": "bring_to_boil",
+      "duration_min": 5,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "edges": []
+    },
+    {
+      "id": "t6",
+      "name": "Pour stock over couscous and cover",
+      "canonical_verb": "pour",
+      "duration_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t5", "to": "t6", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t7",
+      "name": "Let couscous steam",
+      "canonical_verb": "steam",
+      "duration_min": 5,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "edges": [
+        { "from": "t6", "to": "t7", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t8",
+      "name": "Season salmon fillets with salt, pepper, and lemon zest",
+      "canonical_verb": "season",
+      "duration_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": []
+    },
+    {
+      "id": "t9",
+      "name": "Heat oil in large skillet",
+      "canonical_verb": "heat",
+      "duration_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t4", "to": "t9", "type": "SS" }
+      ]
+    },
+    {
+      "id": "t10",
+      "name": "Sear salmon skin-side down until crispy",
+      "canonical_verb": "sear",
+      "duration_min": 5,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t8", "to": "t10", "type": "FS" },
+        { "from": "t9", "to": "t10", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t11",
+      "name": "Flip salmon and finish cooking",
+      "canonical_verb": "cook",
+      "duration_min": 4,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "edges": [
+        { "from": "t10", "to": "t11", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t12",
+      "name": "Fluff couscous with fork",
+      "canonical_verb": "fluff",
+      "duration_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t7", "to": "t12", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t13",
+      "name": "Plate salmon, asparagus, and couscous with lemon wedges",
+      "canonical_verb": "plate",
+      "duration_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t4", "to": "t13", "type": "FS" },
+        { "from": "t11", "to": "t13", "type": "FS" },
+        { "from": "t12", "to": "t13", "type": "FS" }
+      ]
+    }
+  ],
+  "shopping_list": [
+    {
+      "name": "Salmon fillet",
+      "quantity": "2",
+      "unit": "pieces (6 oz each)",
+      "department": "FISH"
+    },
+    {
+      "name": "Asparagus",
+      "quantity": "1",
+      "unit": "bunch",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Lemon",
+      "quantity": "2",
+      "unit": "whole",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Fresh dill",
+      "quantity": "2",
+      "unit": "tbsp",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Couscous",
+      "quantity": "1",
+      "unit": "cup",
+      "department": "OTHER"
+    },
+    {
+      "name": "Vegetable broth",
+      "quantity": "1.5",
+      "unit": "cups",
+      "department": "OTHER"
+    },
+    {
+      "name": "Olive oil",
+      "quantity": "3",
+      "unit": "tbsp",
+      "department": "OTHER"
+    },
+    {
+      "name": "Salt",
+      "quantity": "1",
+      "unit": "tsp",
+      "department": "SPICES"
+    },
+    {
+      "name": "Black pepper",
+      "quantity": "1/2",
+      "unit": "tsp",
+      "department": "SPICES"
+    }
+  ]
+}

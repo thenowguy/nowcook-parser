@@ -142,6 +142,8 @@ export function inferSequentialDependencies(tasks) {
  * @returns {string}
  */
 function normalizeKey(text) {
+  if (!text || typeof text !== 'string') return '';
+
   return text
     .toLowerCase()
     .replace(/\b(?:the|a|an)\b/g, "")

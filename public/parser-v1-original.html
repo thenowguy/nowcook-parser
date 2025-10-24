@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Parser - NowCook Development Sandbox</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: #1a1a1a;
+      color: #e0e0e0;
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1800px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      color: #4caf50;
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+
+    .subtitle {
+      color: #999;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .grid-two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .panel {
+      background: #2a2a2a;
+      border-radius: 8px;
+      padding: 20px;
+      border: 1px solid #3a3a3a;
+    }
+
+    .panel-header {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      color: #4caf50;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 300px;
+      background: #1a1a1a;
+      color: #e0e0e0;
+      border: 1px solid #3a3a3a;
+      border-radius: 4px;
+      padding: 12px;
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 13px;
+      resize: vertical;
+    }
+
+    button {
+      background: #4caf50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      margin-right: 10px;
+      transition: background 0.2s;
+    }
+
+    button:hover { background: #45a049; }
+    button:disabled { background: #555; cursor: not-allowed; opacity: 0.5; }
+
+    .task-list {
+      list-style: none;
+      margin-top: 10px;
+    }
+
+    .task-item {
+      background: #1a1a1a;
+      border: 1px solid #3a3a3a;
+      border-radius: 4px;
+      padding: 12px;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+
+    .task-item .task-id {
+      color: #4caf50;
+      font-weight: 600;
+      font-family: monospace;
+    }
+
+    .task-item .task-name {
+      color: #e0e0e0;
+      margin: 5px 0;
+    }
+
+    .task-item .task-meta {
+      color: #999;
+      font-size: 12px;
+      margin-top: 8px;
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .badge-attended { background: #ff9800; color: white; }
+    .badge-unattended { background: #2196f3; color: white; }
+    .badge-sras { background: #9c27b0; color: white; }
+    .badge-edge { background: #607d8b; color: white; margin-right: 4px; }
+
+    .timeline-container {
+      background: #1a1a1a;
+      border: 1px solid #3a3a3a;
+      border-radius: 4px;
+      min-height: 500px;
+      position: relative;
+      overflow-x: auto;
+      overflow-y: auto;
+      margin-top: 15px;
+    }
+
+    .runtime-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 15px;
+      padding: 15px;
+      background: #1a1a1a;
+      border-radius: 4px;
+      border: 1px solid #3a3a3a;
+    }
+
+    .clock-display {
+      font-family: 'Monaco', monospace;
+      font-size: 24px;
+      color: #4caf50;
+      font-weight: bold;
+      margin-right: 20px;
+    }
+
+    .driver-status {
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .driver-free { background: #4caf50; color: white; }
+    .driver-busy { background: #ff5722; color: white; }
+
+    .log {
+      background: #0a0a0a;
+      border: 1px solid #3a3a3a;
+      border-radius: 4px;
+      padding: 12px;
+      font-family: 'Monaco', monospace;
+      font-size: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+      color: #4caf50;
+    }
+
+    .log-entry {
+      margin-bottom: 4px;
+      opacity: 0.8;
+    }
+
+    .log-entry.error { color: #f44336; }
+    .log-entry.warn { color: #ff9800; }
+    .log-entry.info { color: #2196f3; }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    pre {
+      background: #0a0a0a;
+      border: 1px solid #3a3a3a;
+      border-radius: 4px;
+      padding: 12px;
+      overflow-x: auto;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>The Parser</h1>
+    <div class="subtitle">NowCook Development Sandbox - Ontology & Dependency Testing</div>
+
+    <!-- Top Row: Input | List -->
+    <div class="grid-two-col">
+      <!-- Recipe Input Panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <span>Recipe Text Input</span>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <select id="recipeSelector" onchange="loadRecipe(this.value)" style="padding: 6px 10px; background: #1a1a1a; color: #e0e0e0; border: 1px solid #3a3a3a; border-radius: 4px; cursor: pointer;">
+              <option value="">Select a recipe...</option>
+              <option value="0">Garlic Butter Pasta</option>
+              <option value="1">Mac & Cheese</option>
+              <option value="2">Chicken & Rice</option>
+              <option value="3">Salmon, Asparagus & Couscous</option>
+              <option value="4">Steak, Potatoes & Green Beans</option>
+            </select>
+            <button onclick="clearInput()">Clear</button>
+          </div>
+        </div>
+        <textarea id="recipeInput" placeholder="Paste recipe text here...
+
+Example:
+Bring a large pot of water to a boil — 10 min
+Slice garlic and parsley — 3 min
+Add pasta to boiling water — 8 min
+Heat olive oil in a pan — 2 min"></textarea>
+        <div style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+          <button onclick="parseRecipe()">Parse Recipe</button>
+          <button onclick="exportJSON()">Export JSON</button>
+          <div style="flex: 1;"></div>
+          <label style="font-size: 13px; color: #999;">
+            Serve in:
+            <input type="number" id="serveInHours" value="2" min="0" max="24" step="0.5"
+                   style="width: 60px; margin-left: 5px; padding: 4px; background: #1a1a1a; color: #e0e0e0; border: 1px solid #3a3a3a; border-radius: 4px;">
+            hours
+          </label>
+        </div>
+      </div>
+
+      <!-- Parsed Tasks List Panel -->
+      <div class="panel">
+        <div class="panel-header">Tasks & Dependencies</div>
+        <div id="tasksDisplay" style="max-height: 400px; overflow-y: auto;">
+          <p style="color: #999; text-align: center; padding: 40px;">
+            Paste recipe text and click "Parse Recipe"
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Middle Row: Gantt (full width) -->
+    <div class="panel full-width">
+      <div class="panel-header">Gantt Timeline</div>
+      <div id="ganttDisplay" style="max-height: 300px; overflow-x: auto; overflow-y: auto;">
+        <p style="color: #999; text-align: center; padding: 40px;">
+          Paste recipe text and click "Parse Recipe"
+        </p>
+      </div>
+    </div>
+
+    <!-- Bottom Row: Runtime Timeline (full width) -->
+    <div class="panel full-width">
+      <div class="panel-header">Runtime - NowLine Timeline</div>
+
+      <div class="runtime-controls">
+        <span class="clock-display" id="clockDisplay">0:00</span>
+        <span class="driver-status driver-free" id="driverStatus">Driver: FREE</span>
+        <div style="flex: 1;"></div>
+        <button onclick="startRuntime()" id="startBtn">Start Runtime</button>
+        <button onclick="pauseRuntime()" id="pauseBtn" disabled>Pause</button>
+        <button onclick="resetRuntime()">Reset</button>
+      </div>
+
+      <div class="timeline-container" id="timelineContainer">
+        <p style="color: #999; text-align: center; padding: 40px;">
+          Parse a recipe and start the runtime to see the NowLine timeline
+        </p>
+      </div>
+
+      <div style="margin-top: 15px;">
+        <div class="panel-header">Event Log</div>
+        <div class="log" id="eventLog">
+          <div class="log-entry">Ready. Waiting for recipe input...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // Import the actual NowCook parser
+    import { parseRecipe as parseRecipeModule } from '../src/parser/index.js';
+    import {
+      useRuntime,
+      depsSatisfied,
+      consumesDriver,
+      getPlannedMinutes,
+      mmss,
+      minToMs
+    } from '../src/utils/runtime.js';
+    import { calculateCriticalPath, formatTimeRemaining } from '../src/parser/criticalPath.js';
+    import { MEALS } from '../src/data/meals.js';
+
+    // State
+    let currentMeal = null;
+    let criticalPathData = null;
+    let runtimeActive = false;
+    let clockInterval = null;
+    let nowMs = 0;
+    let running = [];
+    let doneIds = new Set();
+    let serveTimeMs = Date.now() + (2 * 60 * 60 * 1000); // Default: 2 hours from now
+    let currentView = 'list'; // 'list' or 'gantt'
+
+    // Recipe texts from the 5 existing meals
+    const RECIPE_TEXTS = MEALS.map(meal => ({
+      title: meal.title,
+      text: meal.data.recipe_text || ''
+    }));
+
+    // Expose functions globally
+    window.loadRecipe = (index) => {
+      if (index === '') {
+        document.getElementById('recipeInput').value = '';
+        return;
+      }
+      const recipe = RECIPE_TEXTS[parseInt(index)];
+      if (recipe) {
+        document.getElementById('recipeInput').value = recipe.text;
+        log(`Loaded: ${recipe.title}`, 'info');
+      }
+    };
+
+    window.clearInput = () => {
+      document.getElementById('recipeInput').value = '';
+      document.getElementById('recipeSelector').value = '';
+      log('Cleared input');
+    };
+
+    window.parseRecipe = async () => {
+      const text = document.getElementById('recipeInput').value.trim();
+      if (!text) {
+        log('Please enter recipe text', 'warn');
+        return;
+      }
+
+      // Get serve time from input
+      const serveInHours = parseFloat(document.getElementById('serveInHours').value) || 2;
+      serveTimeMs = Date.now() + (serveInHours * 60 * 60 * 1000);
+
+      try {
+        log('Parsing recipe with ontology...', 'info');
+
+        // Use the actual NowCook parser
+        const parsed = await parseRecipeModule(text, "Test Recipe", {
+          autoDependencies: true,
+          smartDependencies: true,
+          roundAboutUp: true,
+          defaultAttention: "attended",
+          detectTaskChains: true // Enable chain detection
+        });
+
+        currentMeal = {
+          title: parsed.title || "Test Recipe",
+          author: "Parser Test",
+          tasks: parsed.tasks || [],
+          chains: parsed.chains || [],
+          ingredients: parsed.ingredients || []
+        };
+
+        // Calculate critical path
+        criticalPathData = calculateCriticalPath(
+          currentMeal.tasks,
+          serveTimeMs,
+          Date.now()
+        );
+
+        // Update tasks with timing info
+        currentMeal.tasks = criticalPathData.tasks;
+
+        const chainMsg = currentMeal.chains.length > 0 ? `, ${currentMeal.chains.length} chains` : '';
+        const feasibleMsg = criticalPathData.feasible ? '✅ FEASIBLE' : '❌ IMPOSSIBLE';
+        const timeNeeded = formatTimeRemaining(criticalPathData.criticalPathDuration);
+        const timeAvailable = formatTimeRemaining(criticalPathData.timeAvailable);
+
+        log(`Parsed ${currentMeal.tasks.length} tasks${chainMsg} with smart dependency inference`, 'info');
+        log(`Critical path: ${timeNeeded} needed, ${timeAvailable} available - ${feasibleMsg}`, criticalPathData.feasible ? 'info' : 'error');
+        displayTasks();
+        renderGantt(); // Always render gantt alongside tasks
+        resetRuntime();
+
+      } catch (err) {
+        log(`Parse error: ${err.message}`, 'error');
+        console.error('Parse error:', err);
+        console.error('Stack trace:', err.stack);
+      }
+    };
+
+    function displayTasks() {
+      if (!currentMeal || !currentMeal.tasks) return;
+
+      const container = document.getElementById('tasksDisplay');
+      let html = '';
+
+      // Display chains if detected
+      if (currentMeal.chains && currentMeal.chains.length > 0) {
+        html += '<div style="margin-bottom: 20px; padding: 12px; background: #1a1a1a; border: 1px solid #4caf50; border-radius: 4px;">';
+        html += '<h4 style="color: #4caf50; margin: 0 0 10px 0;">🔗 Detected Chains</h4>';
+
+        currentMeal.chains.forEach((chain, idx) => {
+          const chainEdges = chain.edges || [];
+          const chainOutputs = chain.outputs || [];
+
+          html += `
+            <div style="margin: 10px 0; padding: 10px; background: #2a2a2a; border-radius: 4px;">
+              <div style="font-weight: 600; color: #4caf50;">${chain.id}: ${chain.name}</div>
+              ${chain.purpose ? `<div style="font-size: 12px; color: #999; margin-top: 4px;">${chain.purpose}</div>` : ''}
+              <div style="font-size: 12px; color: #ccc; margin-top: 6px;">
+                Tasks: ${chain.tasks.join(', ')}
+                ${chain.estimated_duration_min ? `(~${chain.estimated_duration_min} min)` : ''}
+              </div>
+              ${chainOutputs.length > 0 ? `
+                <div style="font-size: 11px; color: #999; margin-top: 6px;">
+                  Produces: ${chainOutputs.map(o => `<span class="badge" style="background: #607d8b;">${o.emergent_id}</span>`).join(' ')}
+                </div>
+              ` : ''}
+              ${chainEdges.length > 0 ? `
+                <div style="font-size: 11px; margin-top: 6px;">
+                  ${chainEdges.map(e => `<span class="badge badge-edge">${e.type}: ${e.from} → ${e.to}</span>`).join(' ')}
+                </div>
+              ` : ''}
+            </div>
+          `;
+        });
+
+        html += '</div>';
+      }
+
+      // Display tasks (grouped by chain if available)
+      if (currentMeal.chains && currentMeal.chains.length > 0) {
+        // Group tasks by chain
+        currentMeal.chains.forEach((chain, chainIdx) => {
+          html += `<div style="margin-bottom: 15px;">`;
+          html += `<h4 style="color: #fff; font-size: 14px; font-weight: 700; text-transform: uppercase; margin: 10px 0 8px 0; letter-spacing: 0.5px;">📋 ${chain.name}</h4>`;
+
+          const chainTasks = currentMeal.tasks.filter(t => chain.tasks.includes(t.id));
+          html += chainTasks.map(task => renderTaskItem(task)).join('');
+
+          html += '</div>';
+        });
+
+        // Show any tasks not in chains
+        const tasksInChains = new Set(currentMeal.chains.flatMap(c => c.tasks));
+        const orphanTasks = currentMeal.tasks.filter(t => !tasksInChains.has(t.id));
+        if (orphanTasks.length > 0) {
+          html += `<div style="margin-bottom: 15px;">`;
+          html += `<h4 style="color: #fff; font-size: 14px; font-weight: 700; text-transform: uppercase; margin: 10px 0 8px 0; letter-spacing: 0.5px; opacity: 0.6;">📋 Other Tasks</h4>`;
+          html += orphanTasks.map(task => renderTaskItem(task)).join('');
+          html += '</div>';
+        }
+      } else {
+        // No chains - display all tasks flat
+        html += currentMeal.tasks.map(task => renderTaskItem(task)).join('');
+      }
+
+      container.innerHTML = html;
+    }
+
+    function renderTaskItem(task) {
+      const duration = getPlannedMinutes(task);
+      const isAttended = consumesDriver(task);
+      const isSRAS = task.self_running_after_start;
+      const edges = task.edges || [];
+      const timing = task.timing;
+
+      let attentionBadge = '';
+      if (isSRAS) {
+        attentionBadge = '<span class="badge badge-sras">SRAS</span>';
+      } else if (isAttended) {
+        attentionBadge = '<span class="badge badge-attended">Attended</span>';
+      } else {
+        attentionBadge = '<span class="badge badge-unattended">Unattended</span>';
+      }
+
+      // Urgency badge
+      let urgencyBadge = '';
+      if (timing) {
+        const urgencyColors = {
+          must_do_now: '#f44336',
+          should_start_soon: '#ff9800',
+          flexible: '#2196f3',
+          could_do_now: '#4caf50'
+        };
+        const urgencyLabels = {
+          must_do_now: '🔥 URGENT',
+          should_start_soon: '⚠️ Soon',
+          flexible: '⏰ Flexible',
+          could_do_now: '✅ Anytime'
+        };
+        urgencyBadge = `<span class="badge" style="background: ${urgencyColors[timing.urgency]};">${urgencyLabels[timing.urgency]}</span>`;
+      }
+
+      let edgesHTML = '';
+      if (edges.length > 0) {
+        edgesHTML = '<div style="margin-top: 8px;">' +
+          edges.map(e => `<span class="badge badge-edge">${e.type}: ${e.from} → ${task.id}</span>`).join('') +
+          '</div>';
+      }
+
+      // Timing info
+      let timingHTML = '';
+      if (timing) {
+        const slackMins = Math.floor(timing.slack_ms / (60 * 1000));
+        timingHTML = `
+          <div style="margin-top: 8px; font-size: 11px; color: #999;">
+            Slack: ${slackMins}min |
+            ${timing.is_critical ? '<strong style="color: #f44336;">CRITICAL PATH</strong>' : 'Not critical'}
+          </div>
+        `;
+      }
+
+      return `
+        <div class="task-item">
+          <span class="task-id">${task.id}</span>
+          <div class="task-name">${task.name}</div>
+          <div class="task-meta">
+            <span>Duration: ${duration} min</span>
+            ${attentionBadge}
+            ${urgencyBadge}
+            ${task.canonical_verb ? `<span>Verb: ${task.canonical_verb}</span>` : ''}
+          </div>
+          ${edgesHTML}
+          ${timingHTML}
+        </div>
+      `;
+    }
+
+    // Gantt chart rendering
+    function renderGantt() {
+      if (!currentMeal || !criticalPathData) {
+        document.getElementById('ganttDisplay').innerHTML = '<p style="color: #999; text-align: center; padding: 40px;">Parse a recipe to see Gantt timeline</p>';
+        return;
+      }
+
+      const container = document.getElementById('ganttDisplay');
+      const chains = currentMeal.chains || [];
+      const tasks = currentMeal.tasks || [];
+
+      if (chains.length === 0) {
+        container.innerHTML = '<p style="color: #999; text-align: center; padding: 40px;">No chains detected</p>';
+        return;
+      }
+
+      // Timeline dimensions
+      const now = Date.now();
+      const timelineStart = now;
+      const timelineEnd = serveTimeMs;
+      const totalDuration = timelineEnd - timelineStart;
+      const TIMELINE_WIDTH = 1200; // pixels
+      const SWIM_LANE_HEIGHT = 80;
+      const TASK_BAR_HEIGHT = 60;
+      const MARGIN_LEFT = 150; // Space for chain names
+
+      // Chain colors
+      const chainColors = [
+        '#bbdefb', // light blue
+        '#ffe0b2', // light orange
+        '#f8bbd0', // light pink
+        '#c5e1a5', // light green
+        '#d1c4e9', // light purple
+        '#fff9c4'  // light yellow
+      ];
+
+      // Helper: Convert time to x position
+      function timeToX(timeMs) {
+        const offset = timeMs - timelineStart;
+        const ratio = offset / totalDuration;
+        return MARGIN_LEFT + (ratio * TIMELINE_WIDTH);
+      }
+
+      // Build HTML
+      let html = `
+        <div style="position: relative; width: ${MARGIN_LEFT + TIMELINE_WIDTH + 100}px; min-height: ${chains.length * SWIM_LANE_HEIGHT + 60}px; background: #1a1a1a; padding: 20px;">
+
+          <!-- Timeline header -->
+          <div style="position: absolute; top: 0; left: ${MARGIN_LEFT}px; width: ${TIMELINE_WIDTH}px; height: 40px; border-bottom: 2px solid #4caf50;">
+            <div style="position: absolute; left: 0; top: 10px; font-size: 12px; color: #4caf50; font-weight: bold;">NOW</div>
+            <div style="position: absolute; right: 0; top: 10px; font-size: 12px; color: #f44336; font-weight: bold;">SERVE TIME</div>
+            <div style="position: absolute; left: 0; bottom: -2px; width: 2px; height: ${chains.length * SWIM_LANE_HEIGHT + 20}px; background: #4caf50;"></div>
+            <div style="position: absolute; right: 0; bottom: -2px; width: 2px; height: ${chains.length * SWIM_LANE_HEIGHT + 20}px; background: #f44336;"></div>
+          </div>
+
+          <!-- Swim lanes -->
+      `;
+
+      chains.forEach((chain, chainIdx) => {
+        const yPos = 50 + (chainIdx * SWIM_LANE_HEIGHT);
+        const bgColor = chainColors[chainIdx % chainColors.length];
+        const chainTasks = tasks.filter(t => chain.tasks.includes(t.id));
+
+        html += `
+          <!-- Chain ${chainIdx + 1} swim lane -->
+          <div style="position: absolute; top: ${yPos}px; left: 0; width: ${MARGIN_LEFT + TIMELINE_WIDTH}px; height: ${SWIM_LANE_HEIGHT}px; background: ${bgColor}; border-bottom: 1px solid #333;">
+
+            <!-- Chain name -->
+            <div style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: #000; max-width: ${MARGIN_LEFT - 20}px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              ${chain.name}
+            </div>
+
+            <!-- Task bars -->
+        `;
+
+        chainTasks.forEach(task => {
+          if (!task.timing) return;
+
+          const startX = timeToX(task.timing.earliest_start_ms);
+          const endX = timeToX(task.timing.earliest_finish_ms);
+          const barWidth = Math.max(endX - startX, 20); // Minimum 20px width
+          const barY = (SWIM_LANE_HEIGHT - TASK_BAR_HEIGHT) / 2;
+
+          // Determine actual status based on current time and dependencies
+          const canStartNow = task.timing.earliest_start_ms <= now && depsSatisfied(task, (id) => ({
+            started: doneIds.has(id),
+            done: doneIds.has(id)
+          }));
+
+          const isPastDeadline = now > task.timing.latest_start_ms;
+          const isCritical = task.timing.is_critical || task.timing.slack_ms < 5 * 60 * 1000; // Less than 5min slack
+
+          // Color based on actual status
+          let barColor;
+          if (canStartNow && !isPastDeadline) {
+            barColor = '#4caf50'; // Green - Can do now
+          } else if (isPastDeadline || isCritical) {
+            barColor = '#f44336'; // Red - Urgent/overdue
+          } else if (task.timing.earliest_start_ms > now) {
+            barColor = '#999'; // Gray - Too early, blocked by time
+          } else {
+            barColor = '#ff9800'; // Orange - Soon
+          }
+
+          html += `
+            <div style="position: absolute; left: ${startX}px; top: ${barY}px; width: ${barWidth}px; height: ${TASK_BAR_HEIGHT}px; background: ${barColor}; border-radius: 8px; border: 2px solid #000; cursor: pointer; overflow: hidden;"
+                 title="${task.name} (${getPlannedMinutes(task)}min)">
+              <div style="padding: 4px 8px; font-size: 11px; color: #fff; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                ${task.id.split('/')[1] || task.id}
+              </div>
+              <div style="padding: 0 8px; font-size: 9px; color: #fff; opacity: 0.9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                ${task.name.substring(0, 30)}${task.name.length > 30 ? '...' : ''}
+              </div>
+            </div>
+          `;
+        });
+
+        html += `
+          </div>
+        `;
+      });
+
+      html += `
+        </div>
+      `;
+
+      container.innerHTML = html;
+    }
+
+    window.startRuntime = () => {
+      if (!currentMeal) {
+        log('Parse a recipe first', 'warn');
+        return;
+      }
+
+      runtimeActive = true;
+      document.getElementById('startBtn').disabled = true;
+      document.getElementById('pauseBtn').disabled = false;
+
+      log('Runtime started - NowLine active', 'info');
+
+      clockInterval = setInterval(() => {
+        nowMs += 1000;
+        updateDisplay();
+      }, 1000);
+
+      updateDisplay();
+    };
+
+    window.pauseRuntime = () => {
+      if (clockInterval) {
+        clearInterval(clockInterval);
+        clockInterval = null;
+      }
+      runtimeActive = false;
+      document.getElementById('startBtn').disabled = false;
+      document.getElementById('pauseBtn').disabled = true;
+      log('Runtime paused');
+    };
+
+    window.resetRuntime = () => {
+      if (clockInterval) {
+        clearInterval(clockInterval);
+        clockInterval = null;
+      }
+      runtimeActive = false;
+      nowMs = 0;
+      running = [];
+      doneIds = new Set();
+      document.getElementById('startBtn').disabled = false;
+      document.getElementById('pauseBtn').disabled = true;
+      updateDisplay();
+      log('Runtime reset');
+    };
+
+    function updateDisplay() {
+      if (!currentMeal) return;
+
+      // Update clock
+      document.getElementById('clockDisplay').textContent = mmss(nowMs);
+
+      // Check driver status
+      const driverBusy = running.some(r => r.consumesDriver);
+      const driverEl = document.getElementById('driverStatus');
+      driverEl.textContent = driverBusy ? 'Driver: BUSY' : 'Driver: FREE';
+      driverEl.className = driverBusy ? 'driver-status driver-busy' : 'driver-status driver-free';
+
+      // Calculate task states
+      const runningIds = new Set(running.map(r => r.id));
+      const ready = [];
+      const blocked = [];
+      const couldDoNow = [];
+
+      for (const task of currentMeal.tasks) {
+        if (doneIds.has(task.id) || runningIds.has(task.id)) continue;
+
+        const depsOK = depsSatisfied(task, (id) => ({
+          started: runningIds.has(id) || doneIds.has(id),
+          done: doneIds.has(id)
+        }));
+
+        if (!depsOK) {
+          blocked.push(task);
+        } else if (consumesDriver(task) && driverBusy) {
+          blocked.push(task);
+        } else {
+          ready.push(task);
+        }
+      }
+
+      // Render timeline (simplified for now)
+      renderTimeline(ready, blocked, running);
+    }
+
+    function renderTimeline(ready, blocked, running) {
+      const container = document.getElementById('timelineContainer');
+
+      let html = '<div style="padding: 20px;">';
+
+      // Helper function to render a task with chain context
+      function renderTimelineTask(task, style = '', actions = '') {
+        return `
+          <div class="task-item" style="${style}">
+            <span class="task-id">${task.id}</span>: ${task.name}
+            ${actions}
+          </div>
+        `;
+      }
+
+      // Helper function to group tasks by chain
+      function groupByChain(tasks) {
+        if (!currentMeal.chains || currentMeal.chains.length === 0) {
+          return [{ name: null, tasks }];
+        }
+
+        const groups = [];
+        currentMeal.chains.forEach(chain => {
+          const chainTasks = tasks.filter(t => chain.tasks.includes(t.id));
+          if (chainTasks.length > 0) {
+            groups.push({ name: chain.name, tasks: chainTasks });
+          }
+        });
+
+        // Add orphan tasks
+        const tasksInChains = new Set(currentMeal.chains.flatMap(c => c.tasks));
+        const orphanTasks = tasks.filter(t => !tasksInChains.has(t.id));
+        if (orphanTasks.length > 0) {
+          groups.push({ name: 'Other Tasks', tasks: orphanTasks });
+        }
+
+        return groups;
+      }
+
+      // Running tasks
+      if (running.length > 0) {
+        html += '<div style="margin-bottom: 20px;"><h3 style="color: #4caf50; margin-bottom: 10px;">🏃 Running</h3>';
+        const runningTasks = running.map(r => currentMeal.tasks.find(t => t.id === r.id));
+        const runningGroups = groupByChain(runningTasks);
+
+        runningGroups.forEach(group => {
+          if (group.name) {
+            html += `<h4 style="color: #fff; font-size: 13px; font-weight: 700; text-transform: uppercase; margin: 12px 0 6px 0; letter-spacing: 0.5px;">📋 ${group.name}</h4>`;
+          }
+          group.tasks.forEach(task => {
+            const r = running.find(run => run.id === task.id);
+            const elapsed = nowMs - r.startedAt;
+            const remaining = Math.max(0, r.endsAt - nowMs);
+            html += `
+              <div class="task-item" style="border-left: 4px solid #4caf50;">
+                <span class="task-id">${task.id}</span>: ${task.name}
+                <div style="margin-top: 8px; color: #999;">
+                  Elapsed: ${mmss(elapsed)} | Remaining: ${mmss(remaining)}
+                  ${remaining === 0 ? ' <strong style="color: #ff9800;">⏰ TIME UP - Ready to dismiss</strong>' : ''}
+                </div>
+                <button onclick="window.finishTask('${r.id}')" style="margin-top: 8px;">Finish Task</button>
+              </div>
+            `;
+          });
+        });
+        html += '</div>';
+      }
+
+      // Ready tasks
+      if (ready.length > 0) {
+        html += '<div style="margin-bottom: 20px;"><h3 style="color: #2196f3; margin-bottom: 10px;">✅ Can Do Now</h3>';
+        const readyGroups = groupByChain(ready);
+
+        readyGroups.forEach(group => {
+          if (group.name) {
+            html += `<h4 style="color: #fff; font-size: 13px; font-weight: 700; text-transform: uppercase; margin: 12px 0 6px 0; letter-spacing: 0.5px;">📋 ${group.name}</h4>`;
+          }
+          group.tasks.forEach(task => {
+            const duration = getPlannedMinutes(task);
+            html += `
+              <div class="task-item" style="border-left: 4px solid #2196f3;">
+                <span class="task-id">${task.id}</span>: ${task.name}
+                <div style="margin-top: 8px; color: #999;">Duration: ${duration} min</div>
+                <button onclick="window.startTask('${task.id}')" style="margin-top: 8px;">Start Task</button>
+              </div>
+            `;
+          });
+        });
+        html += '</div>';
+      }
+
+      // Blocked tasks
+      if (blocked.length > 0) {
+        html += '<div><h3 style="color: #999; margin-bottom: 10px;">⏸️ Blocked</h3>';
+        const blockedGroups = groupByChain(blocked);
+
+        blockedGroups.forEach(group => {
+          if (group.name) {
+            html += `<h4 style="color: #fff; font-size: 13px; font-weight: 700; text-transform: uppercase; margin: 12px 0 6px 0; letter-spacing: 0.5px; opacity: 0.6;">📋 ${group.name}</h4>`;
+          }
+          group.tasks.forEach(task => {
+            const edges = task.edges || [];
+            const blockedBy = edges
+              .filter(e => !doneIds.has(e.from))
+              .map(e => `${e.from} (${e.type})`)
+              .join(', ');
+            html += `
+              <div class="task-item" style="opacity: 0.6; border-left: 4px solid #666;">
+                <span class="task-id">${task.id}</span>: ${task.name}
+                ${blockedBy ? `<div style="margin-top: 8px; color: #ff9800; font-size: 12px;">Waiting on: ${blockedBy}</div>` : ''}
+              </div>
+            `;
+          });
+        });
+        html += '</div>';
+      }
+
+      // Done tasks
+      const doneTasks = currentMeal.tasks.filter(t => doneIds.has(t.id));
+      if (doneTasks.length > 0) {
+        html += '<div style="margin-top: 20px;"><h3 style="color: #666; margin-bottom: 10px;">✓ Completed</h3>';
+        const doneGroups = groupByChain(doneTasks);
+
+        doneGroups.forEach(group => {
+          if (group.name) {
+            html += `<h4 style="color: #fff; font-size: 13px; font-weight: 700; text-transform: uppercase; margin: 12px 0 6px 0; letter-spacing: 0.5px; opacity: 0.4;">📋 ${group.name}</h4>`;
+          }
+          group.tasks.forEach(task => {
+            html += `
+              <div class="task-item" style="opacity: 0.5; border-left: 4px solid #4caf50;">
+                <span class="task-id">${task.id}</span>: ${task.name}
+              </div>
+            `;
+          });
+        });
+        html += '</div>';
+      }
+
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    window.startTask = (taskId) => {
+      const task = currentMeal.tasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      const duration = getPlannedMinutes(task);
+      const endsAt = nowMs + minToMs(duration);
+
+      running.push({
+        id: task.id,
+        startedAt: nowMs,
+        endsAt,
+        consumesDriver: consumesDriver(task)
+      });
+
+      log(`Started: ${task.id} - ${task.name} (${duration} min)`, 'info');
+      updateDisplay();
+    };
+
+    window.finishTask = (taskId) => {
+      running = running.filter(r => r.id !== taskId);
+      doneIds.add(taskId);
+
+      const task = currentMeal.tasks.find(t => t.id === taskId);
+      log(`Completed: ${task.id} - ${task.name}`, 'info');
+      updateDisplay();
+    };
+
+    window.exportJSON = () => {
+      if (!currentMeal) {
+        log('No meal to export', 'warn');
+        return;
+      }
+
+      const json = JSON.stringify(currentMeal, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'parsed-meal.json';
+      a.click();
+      URL.revokeObjectURL(url);
+
+      log('Exported meal JSON', 'info');
+    };
+
+    function log(message, type = 'info') {
+      const logEl = document.getElementById('eventLog');
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`;
+      const timestamp = new Date().toLocaleTimeString();
+      entry.textContent = `[${timestamp}] ${message}`;
+      logEl.insertBefore(entry, logEl.firstChild);
+
+      // Keep only last 50 entries
+      while (logEl.children.length > 50) {
+        logEl.removeChild(logEl.lastChild);
+      }
+    }
+
+    // Initialize
+    log('Parser ready. Load a sample or paste recipe text.');
+  </script>
+</body>
+</html>

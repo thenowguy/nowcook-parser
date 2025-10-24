@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NowCook Parser v1 - Standalone</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #4f5b66;
+      color: #333;
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .panel {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .panel-authoring { background: #ffe7b3; }
+    .panel-meals { background: #c0efff; }
+    .panel-budget { background: #b3ffb3; }
+    .panel-runtime { background: white; }
+
+    .panel-header {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    .grid-two-cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 200px;
+      font-family: monospace;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      resize: vertical;
+    }
+
+    button {
+      background: #1a1a1a;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      margin: 5px;
+    }
+
+    button:hover { background: #333; }
+    button:disabled { background: #ccc; cursor: not-allowed; }
+
+    .meal-card {
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 6px;
+      background: white;
+    }
+
+    .meal-card-title {
+      font-weight: bold;
+      font-size: 16px;
+      margin-bottom: 5px;
+    }
+
+    .meal-card-author {
+      color: #666;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+
+    .task-item {
+      padding: 10px;
+      margin: 5px 0;
+      background: #f5f5f5;
+      border-radius: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .task-item.running {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+    }
+
+    .task-item.ready {
+      background: #d1ecf1;
+      border-left: 4px solid #17a2b8;
+    }
+
+    .task-item.done {
+      background: #d4edda;
+      opacity: 0.7;
+    }
+
+    .task-item.blocked {
+      background: #f8d7da;
+    }
+
+    .runtime-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .runtime-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .nowline {
+      font-size: 18px;
+      font-weight: bold;
+      padding: 10px;
+      background: #e9ecef;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    .task-section {
+      margin: 20px 0;
+      padding: 15px;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+    }
+
+    .task-section-title {
+      margin: 0 0 15px 0;
+      color: #495057;
+      font-size: 18px;
+    }
+
+    .chip {
+      display: inline-block;
+      padding: 4px 12px;
+      margin: 4px;
+      background: #e9ecef;
+      border-radius: 16px;
+      font-size: 13px;
+    }
+
+    .chip-success { background: #d4edda; color: #155724; }
+    .chip-error { background: #f8d7da; color: #721c24; }
+    .chip-warning { background: #fff3cd; color: #856404; }
+
+    .timeline-svg {
+      width: 100%;
+      height: 500px;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      margin: 20px 0;
+      background: #f8f9fa;
+    }
+
+    .opacity-80 { opacity: 0.8; }
+    .opacity-70 { opacity: 0.7; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 style="color: white; text-align: center;">NowCook Parser v1 - Standalone</h1>
+
+    <!-- Authoring Panel -->
+    <div class="panel panel-authoring">
+      <div class="panel-header">Recipe Ingestion</div>
+      <textarea id="recipeText" placeholder="Paste recipe text here...
+
+Example:
+Bring a large pot of water to a boil — 10 min
+Slice garlic and parsley — 3 min
+Add pasta to boiling water — 8 min
+Heat olive oil in a pan — 2 min"></textarea>
+      <div>
+        <button onclick="parseRecipe()">Parse Recipe</button>
+        <button onclick="clearRecipe()">Clear</button>
+      </div>
+    </div>
+
+    <div class="grid-two-cols">
+      <!-- Meals Panel -->
+      <div class="panel panel-meals">
+        <div class="panel-header">Sample Meals</div>
+        <div id="mealsContainer"></div>
+      </div>
+
+      <!-- Time Budget Panel -->
+      <div class="panel panel-budget">
+        <div class="panel-header">Time Budget</div>
+        <div style="margin-bottom: 15px;">
+          <label>Need to serve at: </label>
+          <input type="time" id="serveAt" value="19:00" />
+        </div>
+        <div class="chip" id="minBudgetChip">Minimum prep & cook time: -- min</div>
+        <div class="chip" id="fitsChip">Fits your window: --</div>
+        <div style="margin-top: 15px; font-size: 16px;">
+          Earliest serve if you start now: <b id="earliestServe">--</b>
+        </div>
+      </div>
+    </div>
+
+    <!-- Runtime Panel -->
+    <div class="panel panel-runtime">
+      <div class="runtime-header">
+        <h2 style="margin: 0;">MealMap Runtime</h2>
+        <div class="runtime-controls">
+          <span id="nowLine">NowLine: 0:00 — driver free</span>
+          <button onclick="startRuntime()" id="startBtn">Start run</button>
+          <button onclick="resetRuntime()">Reset</button>
+        </div>
+      </div>
+
+      <div class="nowline" id="nowLineDisplay">Clock: 0:00 | Driver: free</div>
+
+      <!-- Timeline SVG -->
+      <svg class="timeline-svg" id="timelineSvg"></svg>
+
+      <!-- Running Tasks -->
+      <div class="task-section">
+        <h3 class="task-section-title">🏃 Running Tasks</h3>
+        <div id="runningTasks">Nothing running.</div>
+      </div>
+
+      <!-- Ready Tasks -->
+      <div class="task-section">
+        <h3 class="task-section-title">✅ Can Do Now</h3>
+        <div id="readyTasks">No tasks are ready yet.</div>
+      </div>
+
+      <!-- Blocked Tasks -->
+      <div class="task-section">
+        <h3 class="task-section-title">⏸️ Blocked</h3>
+        <div id="blockedTasks">Nothing blocked.</div>
+      </div>
+
+      <!-- Done Tasks -->
+      <div class="task-section">
+        <h3 class="task-section-title">✓ Done</h3>
+        <div id="doneTasks">Nothing completed yet.</div>
+      </div>
+
+      <div>
+        <button onclick="exportJSON()">Export JSON</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==================== STATE ====================
+    let currentMeal = null;
+    let runtimeStarted = false;
+    let nowMs = 0;
+    let running = [];
+    let doneIds = new Set();
+    let clockInterval = null;
+
+    // ==================== SAMPLE MEALS ====================
+    const SAMPLE_MEALS = [
+      {
+        title: "Quick Pasta with Garlic Oil",
+        author: "NowCook",
+        min: 31,
+        tasks: [
+          {
+            id: "t1",
+            name: "Bring a large pot of water to a boil",
+            duration_min: 10,
+            requires_driver: false,
+            self_running_after_start: true,
+            edges: []
+          },
+          {
+            id: "t2",
+            name: "Slice garlic and parsley; set out chili flakes",
+            duration_min: 3,
+            requires_driver: true,
+            self_running_after_start: false,
+            edges: []
+          },
+          {
+            id: "t3",
+            name: "Salt the boiling water generously",
+            duration_min: 1,
+            requires_driver: true,
+            self_running_after_start: false,
+            edges: [{ from: "t1", to: "t3", type: "SS" }]
+          },
+          {
+            id: "t4",
+            name: "Boil the pasta until al dente",
+            duration_min: 8,
+            requires_driver: false,
+            self_running_after_start: true,
+            edges: [{ from: "t1", to: "t4", type: "FS" }]
+          },
+          {
+            id: "t5",
+            name: "Heat olive oil in a pan",
+            duration_min: 2,
+            requires_driver: true,
+            self_running_after_start: false,
+            edges: [{ from: "t4", to: "t5", type: "SS" }]
+          },
+          {
+            id: "t6",
+            name: "Sauté sliced garlic in the oil until fragrant",
+            duration_min: 2,
+            requires_driver: true,
+            self_running_after_start: false,
+            edges: [{ from: "t5", to: "t6", type: "FS" }]
+          },
+          {
+            id: "t7",
+            name: "Reserve a cup of pasta water",
+            duration_min: 1,
+            requires_driver: true,
+            self_running_after_start: false,
+            edges: [{ from: "t4", to: "t7", type: "SS" }]
+          },
+          {
+            id: "t8",
+            name: "Drain the pasta",
+            duration_min: 1,
+            requires_driver: true,
+            self_running_after_start: false,
+            edges: [{ from: "t4", to: "t8", type: "FF" }]
+          },
+          {
+            id: "t9",
+            name: "Toss pasta with garlic oil",
+            duration_min: 2,
+            requires_driver: true,
+            self_running_after_start: false,
+            edges: [
+              { from: "t6", to: "t9", type: "FS" },
+              { from: "t8", to: "t9", type: "FS" }
+            ]
+          },
+          {
+            id: "t10",
+            name: "Plate and finish",
+            duration_min: 1,
+            requires_driver: true,
+            self_running_after_start: false,
+            edges: [{ from: "t9", to: "t10", type: "FS" }]
+          }
+        ]
+      }
+    ];
+
+    // ==================== HELPER FUNCTIONS ====================
+    const mmss = (ms) => {
+      const sec = Math.max(0, Math.floor(ms / 1000));
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return `${m}:${s.toString().padStart(2, "0")}`;
+    };
+
+    const minToMs = (m) => (m || 0) * 60000;
+    const getDuration = (task) => task.duration_min || task.planned_min || 1;
+
+    // ==================== DEPENDENCY CHECKING ====================
+    function depsSatisfied(task) {
+      if (!task.edges || task.edges.length === 0) return true;
+
+      const runningIds = new Set(running.map(r => r.id));
+      const runningTasks = new Map(running.map(r => [r.id, r]));
+
+      return task.edges.every(edge => {
+        const predId = edge.from;
+
+        switch (edge.type) {
+          case 'SS': // Start-to-Start: can start when predecessor starts
+            return runningIds.has(predId) || doneIds.has(predId);
+
+          case 'SF': // Start-to-Finish
+            return runningIds.has(predId) || doneIds.has(predId);
+
+          case 'FF': // Finish-to-Finish: can finish when predecessor finishes
+            if (runningTasks.has(predId)) {
+              const predTask = runningTasks.get(predId);
+              return nowMs >= predTask.endsAt;
+            }
+            return doneIds.has(predId);
+
+          case 'FS': // Finish-to-Start (default)
+          default:
+            return doneIds.has(predId);
+        }
+      });
+    }
+
+    // ==================== MEAL LOADING ====================
+    function loadMeals() {
+      const container = document.getElementById('mealsContainer');
+      container.innerHTML = SAMPLE_MEALS.map((meal, idx) => `
+        <div class="meal-card">
+          <div class="meal-card-title">${meal.title}</div>
+          <div class="meal-card-author">by ${meal.author}</div>
+          <div>
+            <span class="chip">Min time: ${meal.min}min</span>
+            <span class="chip">Tasks: ${meal.tasks.length}</span>
+          </div>
+          <button onclick="loadMeal(${idx})">Load this meal</button>
+        </div>
+      `).join('');
+    }
+
+    function loadMeal(idx) {
+      currentMeal = SAMPLE_MEALS[idx];
+      document.getElementById('recipeText').value = currentMeal.tasks.map(t =>
+        `${t.name} — ${getDuration(t)} min`
+      ).join('\n');
+      updateBudget();
+      resetRuntime();
+      alert(`Loaded: ${currentMeal.title}`);
+    }
+
+    // ==================== RECIPE PARSING ====================
+    function parseRecipe() {
+      const text = document.getElementById('recipeText').value.trim();
+      if (!text) {
+        alert('Please enter recipe text first');
+        return;
+      }
+
+      const lines = text.split('\n').filter(l => l.trim());
+      const tasks = lines.map((line, i) => {
+        const durMatch = line.match(/—\s*(\d+)\s*min/i);
+        const duration = durMatch ? parseInt(durMatch[1]) : 5;
+        const name = line.replace(/—\s*\d+\s*min/i, '').trim();
+
+        return {
+          id: `t${i + 1}`,
+          name,
+          duration_min: duration,
+          requires_driver: true,
+          self_running_after_start: false,
+          edges: i > 0 ? [{ from: `t${i}`, to: `t${i + 1}`, type: 'FS' }] : []
+        };
+      });
+
+      currentMeal = {
+        title: "Parsed Recipe",
+        author: "User",
+        min: tasks.reduce((sum, t) => sum + getDuration(t), 0),
+        tasks
+      };
+
+      updateBudget();
+      resetRuntime();
+      alert(`Parsed ${tasks.length} tasks with sequential dependencies`);
+    }
+
+    function clearRecipe() {
+      document.getElementById('recipeText').value = '';
+      currentMeal = null;
+      resetRuntime();
+    }
+
+    // ==================== BUDGET CALCULATION ====================
+    function updateBudget() {
+      if (!currentMeal) {
+        document.getElementById('minBudgetChip').textContent = 'Minimum prep & cook time: -- min';
+        document.getElementById('fitsChip').textContent = 'Fits your window: --';
+        document.getElementById('fitsChip').className = 'chip';
+        document.getElementById('earliestServe').textContent = '--';
+        return;
+      }
+
+      const minTime = currentMeal.min || currentMeal.tasks.reduce((sum, t) => sum + getDuration(t), 0);
+      document.getElementById('minBudgetChip').textContent = `Minimum prep & cook time: ${minTime}min`;
+
+      const now = new Date();
+      const earliest = new Date(now.getTime() + minTime * 60000);
+      document.getElementById('earliestServe').textContent = earliest.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+      const serveAt = document.getElementById('serveAt').value;
+      if (serveAt) {
+        const [h, m] = serveAt.split(':').map(Number);
+        const serveDate = new Date();
+        serveDate.setHours(h, m, 0, 0);
+        if (serveDate < now) serveDate.setDate(serveDate.getDate() + 1);
+
+        const availableMin = (serveDate - now) / 60000;
+        const fits = availableMin >= minTime;
+        document.getElementById('fitsChip').textContent = `Fits your window: ${fits ? 'Yes' : 'No'}`;
+        document.getElementById('fitsChip').className = fits ? 'chip chip-success' : 'chip chip-error';
+      }
+    }
+
+    // ==================== RUNTIME MANAGEMENT ====================
+    function startRuntime() {
+      if (!currentMeal) {
+        alert('Please load or parse a recipe first');
+        return;
+      }
+
+      runtimeStarted = true;
+      document.getElementById('startBtn').disabled = true;
+
+      clockInterval = setInterval(() => {
+        nowMs += 1000;
+        updateRuntimeDisplay();
+      }, 1000);
+
+      updateRuntimeDisplay();
+    }
+
+    function resetRuntime() {
+      runtimeStarted = false;
+      nowMs = 0;
+      running = [];
+      doneIds = new Set();
+      document.getElementById('startBtn').disabled = false;
+
+      if (clockInterval) {
+        clearInterval(clockInterval);
+        clockInterval = null;
+      }
+
+      updateRuntimeDisplay();
+    }
+
+    // ==================== DISPLAY UPDATE ====================
+    function updateRuntimeDisplay() {
+      if (!currentMeal) return;
+
+      const driverBusy = running.some(r => r.consumesDriver);
+      document.getElementById('nowLineDisplay').textContent = `Clock: ${mmss(nowMs)} | Driver: ${driverBusy ? 'BUSY' : 'free'}`;
+
+      // Calculate ready, blocked
+      const runningIds = new Set(running.map(r => r.id));
+      const ready = [];
+      const blocked = [];
+
+      for (const task of currentMeal.tasks) {
+        if (doneIds.has(task.id) || runningIds.has(task.id)) continue;
+
+        const depsOK = depsSatisfied(task);
+        if (!depsOK) {
+          blocked.push(task);
+        } else if (task.requires_driver && driverBusy) {
+          blocked.push(task);
+        } else {
+          ready.push(task);
+        }
+      }
+
+      // Render running
+      document.getElementById('runningTasks').innerHTML = running.length === 0
+        ? 'Nothing running.'
+        : running.map(r => {
+            const task = currentMeal.tasks.find(t => t.id === r.id);
+            const elapsed = nowMs - r.startedAt;
+            const left = Math.max(0, r.endsAt - nowMs);
+            const timeUp = left <= 0;
+            const driverStatus = r.consumesDriver ? '👤 attended' : '⏱️ unattended';
+            return `
+              <div class="task-item running">
+                <div>
+                  <b>${task.id}: ${task.name}</b><br>
+                  <span class="opacity-80">${driverStatus} | elapsed: ${mmss(elapsed)} | ${mmss(left)} left${timeUp ? ' • TIME UP ⏰' : ''}</span>
+                </div>
+                <button onclick="finishTask('${r.id}')">Finish</button>
+              </div>
+            `;
+          }).join('');
+
+      // Render ready
+      document.getElementById('readyTasks').innerHTML = ready.length === 0
+        ? 'No tasks are ready yet.'
+        : ready.map(t => {
+            const driverStatus = t.requires_driver ? '👤 attended' : '⏱️ unattended';
+            const selfRunning = t.self_running_after_start ? ' (self-running)' : '';
+            return `
+            <div class="task-item ready">
+              <div>
+                <b>${t.id}: ${t.name}</b><br>
+                <span class="opacity-80">${getDuration(t)}min | ${driverStatus}${selfRunning}</span>
+              </div>
+              <button onclick="startTask('${t.id}')" ${t.requires_driver && driverBusy ? 'disabled' : ''}>Start</button>
+            </div>
+          `;
+          }).join('');
+
+      // Render blocked
+      document.getElementById('blockedTasks').innerHTML = blocked.length === 0
+        ? 'Nothing blocked.'
+        : blocked.map(t => {
+            let reason = 'waiting';
+            if (t.edges && t.edges.length > 0) {
+              const blockedBy = t.edges
+                .filter(e => !doneIds.has(e.from) && !runningIds.has(e.from))
+                .map(e => `${e.from} (${e.type})`);
+              if (blockedBy.length > 0) {
+                reason = `waiting on: ${blockedBy.join(', ')}`;
+              } else if (t.requires_driver && driverBusy) {
+                reason = 'driver busy';
+              }
+            } else if (t.requires_driver && driverBusy) {
+              reason = 'driver busy';
+            }
+            return `
+            <div class="task-item blocked">
+              <b>${t.id}: ${t.name}</b><br>
+              <span class="opacity-70">${reason}</span>
+            </div>
+          `;
+          }).join('');
+
+      // Render done
+      const doneTasks = currentMeal.tasks.filter(t => doneIds.has(t.id));
+      document.getElementById('doneTasks').innerHTML = doneTasks.length === 0
+        ? 'Nothing completed yet.'
+        : doneTasks.map(t => `<div class="task-item done">${t.id}: ${t.name}</div>`).join('');
+
+      // Render timeline
+      renderTimeline();
+    }
+
+    // ==================== TIMELINE VISUALIZATION ====================
+    function renderTimeline() {
+      if (!currentMeal) return;
+
+      const svg = document.getElementById('timelineSvg');
+      const width = svg.clientWidth || 1400;
+      const height = 500;
+      const margin = { top: 40, right: 20, bottom: 40, left: 80 };
+      const plotWidth = width - margin.left - margin.right;
+      const plotHeight = height - margin.top - margin.bottom;
+
+      const allTasks = currentMeal.tasks;
+      const runningEndTimes = running.length > 0 ? running.map(r => r.endsAt) : [0];
+      const taskDurations = allTasks.length > 0 ? allTasks.map(t => getDuration(t) * 60000) : [0];
+      const maxEndTime = Math.max(...runningEndTimes, nowMs, ...taskDurations);
+      const timelineEnd = Math.max(maxEndTime, 600000); // At least 10 minutes
+      const pixelsPerMs = plotWidth / timelineEnd;
+
+      // Clear SVG
+      svg.innerHTML = '';
+
+      // Background
+      const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      bg.setAttribute('width', width);
+      bg.setAttribute('height', height);
+      bg.setAttribute('fill', '#f8f9fa');
+      svg.appendChild(bg);
+
+      // Time axis
+      const axisY = margin.top + plotHeight + 10;
+      const numTicks = 10;
+      for (let i = 0; i <= numTicks; i++) {
+        const ms = (timelineEnd / numTicks) * i;
+        const x = margin.left + ms * pixelsPerMs;
+
+        const tick = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        tick.setAttribute('x1', x);
+        tick.setAttribute('y1', axisY - 5);
+        tick.setAttribute('x2', x);
+        tick.setAttribute('y2', axisY + 5);
+        tick.setAttribute('stroke', '#666');
+        tick.setAttribute('stroke-width', '1');
+        svg.appendChild(tick);
+
+        const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        label.setAttribute('x', x);
+        label.setAttribute('y', axisY + 20);
+        label.setAttribute('text-anchor', 'middle');
+        label.setAttribute('fill', '#666');
+        label.setAttribute('font-size', '11');
+        label.textContent = mmss(ms);
+        svg.appendChild(label);
+      }
+
+      // NowLine
+      const nowX = margin.left + nowMs * pixelsPerMs;
+      const nowLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      nowLine.setAttribute('x1', nowX);
+      nowLine.setAttribute('y1', margin.top);
+      nowLine.setAttribute('x2', nowX);
+      nowLine.setAttribute('y2', margin.top + plotHeight);
+      nowLine.setAttribute('stroke', '#e74c3c');
+      nowLine.setAttribute('stroke-width', '3');
+      nowLine.setAttribute('stroke-dasharray', '5,5');
+      svg.appendChild(nowLine);
+
+      const nowLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      nowLabel.setAttribute('x', nowX);
+      nowLabel.setAttribute('y', margin.top - 10);
+      nowLabel.setAttribute('text-anchor', 'middle');
+      nowLabel.setAttribute('fill', '#e74c3c');
+      nowLabel.setAttribute('font-weight', 'bold');
+      nowLabel.setAttribute('font-size', '14');
+      nowLabel.textContent = `NOW (${mmss(nowMs)})`;
+      svg.appendChild(nowLabel);
+
+      // Tasks
+      const trackHeight = Math.min(35, (plotHeight - 10) / allTasks.length);
+      const trackGap = 5;
+
+      allTasks.forEach((task, idx) => {
+        const y = margin.top + idx * (trackHeight + trackGap);
+
+        // Task label
+        const taskLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        taskLabel.setAttribute('x', margin.left - 10);
+        taskLabel.setAttribute('y', y + trackHeight / 2 + 4);
+        taskLabel.setAttribute('text-anchor', 'end');
+        taskLabel.setAttribute('fill', '#333');
+        taskLabel.setAttribute('font-size', '11');
+        taskLabel.setAttribute('font-weight', 'bold');
+        taskLabel.textContent = task.id;
+        svg.appendChild(taskLabel);
+
+        const runningTask = running.find(r => r.id === task.id);
+
+        if (runningTask) {
+          // Running task bar
+          const startX = margin.left + runningTask.startedAt * pixelsPerMs;
+          const endX = margin.left + runningTask.endsAt * pixelsPerMs;
+          const barWidth = endX - startX;
+
+          const bar = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          bar.setAttribute('x', startX);
+          bar.setAttribute('y', y);
+          bar.setAttribute('width', barWidth);
+          bar.setAttribute('height', trackHeight);
+          bar.setAttribute('fill', runningTask.consumesDriver ? '#ffc107' : '#17a2b8');
+          bar.setAttribute('opacity', '0.5');
+          bar.setAttribute('stroke', '#333');
+          bar.setAttribute('stroke-width', '2');
+          svg.appendChild(bar);
+
+          // Progress
+          const currentX = Math.min(nowX, endX);
+          const progress = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          progress.setAttribute('x', startX);
+          progress.setAttribute('y', y);
+          progress.setAttribute('width', currentX - startX);
+          progress.setAttribute('height', trackHeight);
+          progress.setAttribute('fill', runningTask.consumesDriver ? '#ff9800' : '#0d6efd');
+          progress.setAttribute('opacity', '0.9');
+          svg.appendChild(progress);
+
+        } else if (doneIds.has(task.id)) {
+          // Done
+          const doneBox = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          doneBox.setAttribute('x', margin.left);
+          doneBox.setAttribute('y', y);
+          doneBox.setAttribute('width', 25);
+          doneBox.setAttribute('height', trackHeight);
+          doneBox.setAttribute('fill', '#28a745');
+          doneBox.setAttribute('opacity', '0.8');
+          doneBox.setAttribute('rx', '4');
+          svg.appendChild(doneBox);
+
+          const checkmark = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          checkmark.setAttribute('x', margin.left + 12);
+          checkmark.setAttribute('y', y + trackHeight / 2 + 5);
+          checkmark.setAttribute('text-anchor', 'middle');
+          checkmark.setAttribute('fill', 'white');
+          checkmark.setAttribute('font-weight', 'bold');
+          checkmark.setAttribute('font-size', '16');
+          checkmark.textContent = '✓';
+          svg.appendChild(checkmark);
+
+        } else {
+          // Pending (ghost bar)
+          const ghostBar = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          ghostBar.setAttribute('x', margin.left);
+          ghostBar.setAttribute('y', y);
+          ghostBar.setAttribute('width', getDuration(task) * 60000 * pixelsPerMs);
+          ghostBar.setAttribute('height', trackHeight);
+          ghostBar.setAttribute('fill', '#ccc');
+          ghostBar.setAttribute('opacity', '0.3');
+          ghostBar.setAttribute('stroke', '#999');
+          ghostBar.setAttribute('stroke-width', '1');
+          ghostBar.setAttribute('stroke-dasharray', '4,4');
+          svg.appendChild(ghostBar);
+        }
+      });
+    }
+
+    // ==================== TASK ACTIONS ====================
+    function startTask(taskId) {
+      const task = currentMeal.tasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      const duration = getDuration(task);
+      const endsAt = nowMs + minToMs(duration);
+
+      running.push({
+        id: task.id,
+        startedAt: nowMs,
+        endsAt,
+        consumesDriver: task.requires_driver
+      });
+
+      updateRuntimeDisplay();
+    }
+
+    function finishTask(taskId) {
+      running = running.filter(r => r.id !== taskId);
+      doneIds.add(taskId);
+      updateRuntimeDisplay();
+    }
+
+    // ==================== EXPORT ====================
+    function exportJSON() {
+      if (!currentMeal) {
+        alert('No meal to export');
+        return;
+      }
+
+      const json = JSON.stringify(currentMeal, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'meal.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // ==================== INITIALIZATION ====================
+    loadMeals();
+    updateBudget();
+    updateRuntimeDisplay();
+  </script>
+</body>
+</html>

@@ -1,0 +1,351 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2865
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 HelveticaNeue-Bold;\f1\fnil\fcharset0 .SFNS-Regular;\f2\fswiss\fcharset0 Helvetica;
+}
+{\colortbl;\red255\green255\blue255;\red14\green14\blue14;}
+{\*\expandedcolortbl;;\cssrgb\c6700\c6700\c6700;}
+\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f0\b\fs32 \cf2 Document 1 \'97 Developer Handoff (Technical Edition)
+\f1\b0 \
+\
+Purpose\
+This document is a developer-facing handoff. It encodes the system\'92s intent, domain model, key invariants, and the chronological rationale behind architectural choices. It assumes a seasoned engineer and focuses on structure, behavior, and constraints \'97 not prose storytelling. No code is required here; when implementation is mentioned it is to anchor concepts (e.g., schema, validator, state machine).\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f2\fs24 \cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tqr\tx240\tx400\li400\fi-400\sl324\slmult1\sb240\partightenfactor0
+\cf2 	1.	Problem Definition and Product Scope\
+\
+1.1 Operational Problem\
+Recipes are unstructured prose; they push cognitive and timing burdens onto the user. The practical task is to transform prose into a computable plan that respects time, dependencies, attention constraints, and household resources (one cook, limited equipment).\
+\
+1.2 Product Scope\
+NowCook is not a cooking course or a professional-kitchen tool. It is a home-cooking orchestration system that:\
+\'95 translates instructions into canonical actions;\
+\'95 schedules them against a target serve time under single-actor constraints;\
+\'95 presents the next viable actions at an active temporal gate (\'93NowLine\'94);\
+\'95 provides ancillary utilities (browsing, shopping list, pantry handling) consistent with the same ontology.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f2\fs24 \cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tqr\tx280\tx440\li440\fi-440\sl324\slmult1\sb240\partightenfactor0
+\cf2 	2.	Domain Model (Ontology and Units)\
+\
+2.1 Canonical Reduction\
+All instructions reduce to: Verb \uc0\u8594  Parameters \u8594  Ingredient.\
+\'95 Verb: finite, canonical (e.g., saut\'e9, whisk, fold, simmer, preheat, rest, drain).\
+\'95 Parameters: verb-scoped (e.g., heat_level, stir_frequency, target_texture, vessel).\
+\'95 Ingredient: raw or emergent (see 2.2).\
+\
+2.2 Ingredients: Raw vs Emergent\
+\'95 Raw: fundamentals listed for shopping (butter, onion, eggs, pasta).\
+\'95 Emergent: outputs of prior actions that become first-class inputs (roux, browned butter, rested steak, tomato sauce).\
+Implications: (a) emergent entities carry lineage (which steps created them, when), (b) later steps may require freshness windows or temperature states, (c) validator must block references to emergent entities that do not exist yet.\
+\
+2.3 Dishes vs Meals\
+\'95 Dish: a self-contained DAG of tasks that culminates in a plated entity.\
+\'95 Meal: an orchestration of multiple dish DAGs synchronized to a common serve time under shared constraints (one cook; shared oven/burners; limited utensils).\
+User-facing atomic unit is the Meal; Dishes are reusable components.\
+\
+2.4 Hard Edges (Non-Negotiable Rules)\
+\'95 Durations: each task has an explicit duration \uc0\u8805  1 minute (UI/UX stability, avoids flicker).\
+\'95 Dependencies: explicit DAG; no cycles; no order-only inference.\
+\'95 Attention Modes: Attended vs Self-Running-After-Start (SRAS).\
+\'95 Serve Time: scheduling is anchored to target serve time with explicit elasticity (slip if user delays).\
+\'95 Applicability: verb+params must be valid for the ingredient class (e.g., mash valid for root_veg; invalid for steak).\
+\
+2.5 Resources and Constraints\
+\'95 Single driver (one cook).\
+\'95 Equipment model (burners, oven slots, pan count) optional in M0 but the scheduler should be resource-aware where specified.\
+\'95 Space/time realism is enforced by the mutex model (see 5.3).\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f2\fs24 \cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tqr\tx280\tx440\li440\fi-440\sl324\slmult1\sb240\partightenfactor0
+\cf2 	3.	Knowledge Packs and Schemas\
+\
+3.1 Packs (Authoritative Vocabularies)\
+\'95 Verbs: canonical list + matching patterns; each verb defines default attention mode and parameter schema.\
+\'95 Parameters: verb-scoped enumerations/ranges.\
+\'95 Synonyms: mapping colloquial terms/phrases to verbs and parameters.\
+\'95 Readiness Cues: normalized signals (\'93until golden,\'94 \'93to soft peaks\'94).\
+\'95 Duration Defaults: typical baselines per verb or verb+ingredient-class.\
+\
+3.2 Meal Data Contract (Schema)\
+Top-level fields:\
+\'95 serve_time_target (timestamp)\
+\'95 dishes[]\
+\'95 resources (optional: burners/ovens/pans)\
+\'95 metadata (author, tags, cuisine, dietary)\
+Dish:\
+\'95 tasks[] (id, verb, parameters, ingredient_ref, duration_min, attention_mode, dependencies[], optional resource bindings)\
+\'95 emergent_ingredients[] (id, created_by_task_id, attributes)\
+Constraints enforced by schema+validator: durations \uc0\u8805  1, DAG acyclic, ingredient lineage resolvable, attention_mode consistent with verb defaults unless explicitly overridden, applicability satisfied.\
+\
+3.3 Validator (Build-Time Gate)\
+Responsibilities:\
+\'95 schema validation;\
+\'95 applicability checks (verb \uc0\u8596  ingredient_class);\
+\'95 parameter whitelist/range checks;\
+\'95 duration minimum;\
+\'95 DAG cycle detection;\
+\'95 emergent reference resolution;\
+\'95 optional resource conflicts (if resources provided).\
+Output should be deterministic, grep-friendly, and actionable.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f2\fs24 \cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tqr\tx280\tx440\li440\fi-440\sl324\slmult1\sb240\partightenfactor0
+\cf2 	4.	Ingestion and Normalization\
+\
+4.1 Ingestion Pipeline (Prose \uc0\u8594  Canonical Tasks)\
+\'95 Tokenize step text;\
+\'95 match to canonical verb via patterns/synonyms;\
+\'95 extract verb-scoped parameters;\
+\'95 resolve ingredient references (raw vs emergent);\
+\'95 assign default duration and attention from packs (allow explicit overrides);\
+\'95 emit a task candidate;\
+\'95 run validator;\
+\'95 attach warnings (e.g., reliance on heuristic duration).\
+\
+4.2 Emergent Entity Promotion\
+On tasks that create intermediate results (e.g., \'93Make the sauce\'94), create an emergent ingredient entry with lineage fields (created_by, created_at_relative, expected_state). Downstream steps reference this id, not free text.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f2\fs24 \cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tqr\tx280\tx440\li440\fi-440\sl324\slmult1\sb240\partightenfactor0
+\cf2 	5.	Runtime Model (Scheduling and Execution)\
+\
+5.1 Serve-Time Back-Planning\
+\'95 Compute ideal start/finish windows by back-propagating from target serve_time across the DAGs.\
+\'95 Respect hold windows (safe-to-wait ranges) where defined; otherwise, assume zero-latency tolerance for volatile outputs.\
+\'95 Persist projection as \'93planned\'94; do not auto-start tasks.\
+\
+5.2 NowLine (Active Temporal Gate)\
+\'95 Tasks reaching planned start do not auto-start.\
+\'95 Task enters at_gate when all dependencies satisfied and time has arrived (or user elects to pull-ahead if allowed).\
+\'95 Crossing the gate requires explicit user action (Start).\
+\'95 Completing a task releases dependents to become eligible.\
+\
+5.3 Driver Mutex and Simultaneity\
+\'95 Exactly one attended task can be active (driver lock).\
+\'95 Multiple SRAS tasks may run concurrently after explicit start.\
+\'95 Attempting to start a second attended task while one is active is blocked with a clear reason.\
+\'95 Optional: resource mutexes (e.g., oven in use) block conflicting starts with explanation.\
+\
+5.4 Elasticity and Slip Propagation\
+\'95 If a task waits at_gate beyond ideal start, projected serve_time shifts 1:1, capped or modulated by hold windows per dish/output.\
+\'95 UI communicates slip in human terms (\'93a few minutes later than planned\'94) while maintaining exact math internally.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f2\fs24 \cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tqr\tx280\tx440\li440\fi-440\sl324\slmult1\sb240\partightenfactor0
+\cf2 	6.	UX Contracts (Developer-Relevant Behavior)\
+\
+6.1 Smartphone-First Constraints\
+\'95 Portrait, one-thumb operation, large tap targets, minimal simultaneous text.\
+\'95 Stable vertical NowLine; tasks slide toward the gate.\
+\'95 Peek (facts) vs Start (action) is consistent in all states.\
+\'95 Offline resilience: running set and timers persist locally.\
+\
+6.2 Options at the Gate\
+\'95 Only eligible next actions are presented (attended options limited by mutex; SRAS options allowed if dependencies met).\
+\'95 Blocked tasks are visible but visually de-emphasized with explicit \'93waiting for X\'94 reasons.\
+\
+6.3 Tone and Feedback\
+\'95 Copy is calm (\'93Ready when you are\'94).\
+\'95 Haptic confirmation on start/complete.\
+\'95 Timers are informative; avoid alarm semantics unless safety-critical.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f2\fs24 \cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tqr\tx240\tx400\li400\fi-400\sl324\slmult1\sb240\partightenfactor0
+\cf2 	7.	Browsing and Shopping List (Powered by Ontology)\
+\
+7.1 Browsing (Library)\
+\'95 Users choose Meals (not loose Dishes) via a familiar library view (cards, filters for chef/cuisine/time/diet).\
+\'95 Browsing is intentionally conventional; novelty exists at runtime.\
+\
+7.2 Shopping List Engine\
+\'95 Aggregate all raw ingredients across dishes; preserve form distinctions that matter to preparation (e.g., melted vs cold butter when relevant).\
+\'95 Normalize units to kitchen-friendly measures; round to practical quantities (e.g., tablespoons/half-cups/whole units).\
+\'95 Output grouped by grocery department; allow pantry check-offs and scaling by portion multiplier.\
+\'95 Consistency requirement: aggregation relies on the same ingredient taxonomy used by ingestion (no divergent naming).\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f2\fs24 \cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tqr\tx280\tx440\li440\fi-440\sl324\slmult1\sb240\partightenfactor0
+\cf2 	8.	Data and Persistence Considerations\
+\
+8.1 Canonical Master Protocol (Collaboration)\
+\'95 Single source of truth: one \'93Canonical Master\'94 document (or store) that contains the latest full packs + schemas + decisions.\
+\'95 No partial diffs; only full drop-ins.\
+\'95 Decisions logged adjacent to artifacts (what changed and why).\
+\
+8.2 Versioning and Compatibility\
+\'95 Semantic versioning for packs and meal schema.\
+\'95 Validator must report the version context used for a given meal.\
+\'95 Migration strategy: where feasible, auto-upgrade meals across minor versions; block on majors.\
+\
+8.3 Telemetry (Future)\
+\'95 Optional: step durations actuals vs defaults; attention bottlenecks; common slips; recovery patterns \'97 used to improve defaults and UX.\
+\'95 Privacy and offline-first rules apply.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f2\fs24 \cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tqr\tx280\tx440\li440\fi-440\sl324\slmult1\sb240\partightenfactor0
+\cf2 	9.	Open Questions / Policy Decisions (Explicit)\
+\
+9.1 Serve-Time Warnings\
+Whether to surface proactive warnings or rely on implicit slip visualization remains a controlled option; default is gentle projection change with optional hints.\
+\
+9.2 Resource Modeling Depth\
+M0 may treat resources minimally (driver only); later phases can deepen burner/oven/pan models and conflicts.\
+\
+9.3 Authoring Flow\
+Balance between automated ingestion and human normalization (e.g., duration tuning) will evolve; authoring panel should make overrides explicit and auditable.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f2\fs24 \cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tqr\tx420\tx580\li580\fi-580\sl324\slmult1\sb240\partightenfactor0
+\cf2 	10.	Example Task Lifecycle (Concrete Walkthrough)\
+\
+10.1 Parse\
+\'93Meanwhile, boil salted water and chop basil.\'94\
+\'95 Emit SRAS task: boil_water (parameters: salt=true, vessel=pot), duration default (e.g., 10m), ingredient: water (raw).\
+\'95 Emit attended task: chop (parameters: fineness=chiffonade), ingredient: basil (raw).\
+\'95 Dependencies: none between them.\
+\
+10.2 Validate\
+\'95 durations \uc0\u8805  1; attention defaults ok (boil=SRAS, chop=attended); applicability ok; DAG valid.\
+\
+10.3 Schedule\
+\'95 Back-plan from serve_time; water ideal start T\'9620; basil T\'9612.\
+\
+10.4 Run\
+\'95 At T\'9620: \'93Start boiling water\'94 appears at gate; user taps Start \uc0\u8594  SRAS lane.\
+\'95 While boiling, at T\'9612: \'93Chop basil\'94 appears; user starts \uc0\u8594  driver lock acquired.\
+\'95 Finish chop \uc0\u8594  lock released; SRAS continues; downstream pasta step becomes eligible only when boil complete.\
+\
+10.5 Slip\
+\'95 If chop is started 3 minutes late, projected serve_time shifts +3 unless a defined hold absorbs it.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f2\fs24 \cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tqr\tx380\tx540\li540\fi-540\sl324\slmult1\sb240\partightenfactor0
+\cf2 	11.	Developer Checklist (What to Build and Keep)\
+\
+11.1 Lock the Contracts\
+\'95 Finalize pack schemas and meal schema; publish versions.\
+\'95 Ensure packs define: verbs (with defaults), parameter constraints, synonyms, readiness cues, duration defaults.\
+\
+11.2 Complete the Validator\
+\'95 Implement all checks in 3.3; deterministic output.\
+\'95 CI gate: any pack/meal change must pass validator.\
+\
+11.3 Ingestion v1\
+\'95 Deterministic mapping from prose to tasks using packs; explicit fallbacks flagged.\
+\
+11.4 Scheduler + State Machine\
+\'95 Implement back-planning, NowLine gate, driver mutex, SRAS concurrency, slip propagation, and (optional) resource blocks.\
+\
+11.5 Authoring Panel (Minimum)\
+\'95 Review parsed tasks; edit durations/params; create emergent entities; write back to meal format.\
+\
+11.6 Shopping List Generator\
+\'95 Aggregate by base ingredient + form; normalize/round; group by department; pantry toggles.\
+\
+11.7 UX Spine\
+\'95 Smartphone-first NowLine view; options rail; SRAS lane; calm copy; haptics; offline run set.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f2\fs24 \cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tqr\tx420\tx580\li580\fi-580\sl324\slmult1\sb240\partightenfactor0
+\cf2 	12.	Non-Negotiable Invariants (Audit at Every Change)\
+\
+\'95 NowLine is an active gate \'97 no auto-starts.\
+\'95 Single attended driver \'97 mutex enforced.\
+\'95 SRAS requires explicit start; may run concurrently.\
+\'95 Durations normalized to \uc0\u8805  1 minute.\
+\'95 DAG acyclic; dependencies explicit; emergent lineage resolvable.\
+\'95 Serve-time computed backward; slips propagate honestly.\
+\'95 Ontology consistency across ingestion, validator, scheduler, shopping list.\
+\'95 Smartphone constraints and calm tone are architectural, not decorative.\
+\'95 Canonical Master is the only truth for packs/schemas/decisions.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f2\fs24 \cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tqr\tx420\tx580\li580\fi-580\sl324\slmult1\sb240\partightenfactor0
+\cf2 	13.	Quick Glossary (Operational)\
+\
+\'95 NowLine: active temporal gate controlling task start.\
+\'95 Attended: requires the cook\'92s active attention (holds driver).\
+\'95 SRAS: self-running-after-start; runs unattended after explicit start.\
+\'95 Emergent ingredient: first-class output of previous steps, used later as input.\
+\'95 Driver mutex: single-actor lock preventing concurrent attended tasks.\
+\'95 Hold window: tolerated delay range for a cooked item without quality loss.\
+\'95 Applicability guard: rules preventing invalid verb\'96ingredient pairings.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f2\fs24 \cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tqr\tx420\tx580\li580\fi-580\sl324\slmult1\sb240\partightenfactor0
+\cf2 	14.	Handoff Summary\
+\
+Build from the ontology up. Treat the NowLine and driver mutex as the behavioral spine. Keep the validator ruthless and the UX calm. The system\'92s credibility comes from enforcing what one person can actually do in a normal kitchen while providing timely, human-readable guidance. All extensions should be judged against those constraints.}

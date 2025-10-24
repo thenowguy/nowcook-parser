@@ -1,0 +1,272 @@
+{
+  "title": "Seared Steak, Garlic Mashed Potatoes & Sautéed Green Beans",
+  "description": "Restaurant-quality showstopper demonstrating complex parallelism",
+  "recipe_text": "Peel and cube potatoes\nBoil potatoes in salted water until tender\nTrim green beans\nBring pot of salted water to a boil for beans\nBlanch green beans until bright green\nShock beans in ice water\nTake steak out to reach room temperature\nSeason steak generously with salt and pepper\nMince garlic for potatoes\nMince garlic for beans\nDrain potatoes\nMash potatoes with butter, cream, and garlic\nHeat cast iron skillet until smoking\nSear steak until crusty crust forms\nFlip and cook to desired doneness\nRest steak\nHeat butter in sauté pan\nSauté green beans with garlic\nSlice steak against the grain\nPlate steak, mashed potatoes, and green beans",
+  "tasks": [
+    {
+      "id": "t1",
+      "name": "Peel and cube potatoes",
+      "canonical_verb": "cube",
+      "duration_min": 5,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": []
+    },
+    {
+      "id": "t2",
+      "name": "Boil potatoes in salted water until tender",
+      "canonical_verb": "boil",
+      "duration_min": 15,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "edges": [
+        { "from": "t1", "to": "t2", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t3",
+      "name": "Trim green beans",
+      "canonical_verb": "trim",
+      "duration_min": 4,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": []
+    },
+    {
+      "id": "t4",
+      "name": "Bring pot of salted water to a boil for beans",
+      "canonical_verb": "bring_to_boil",
+      "duration_min": 8,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "edges": []
+    },
+    {
+      "id": "t5",
+      "name": "Blanch green beans until bright green",
+      "canonical_verb": "blanch",
+      "duration_min": 3,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t3", "to": "t5", "type": "FS" },
+        { "from": "t4", "to": "t5", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t6",
+      "name": "Shock beans in ice water",
+      "canonical_verb": "shock",
+      "duration_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t5", "to": "t6", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t7",
+      "name": "Take steak out to reach room temperature",
+      "canonical_verb": "rest",
+      "duration_min": 10,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "edges": []
+    },
+    {
+      "id": "t8",
+      "name": "Season steak generously with salt and pepper",
+      "canonical_verb": "season",
+      "duration_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t7", "to": "t8", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t9",
+      "name": "Mince garlic for potatoes",
+      "canonical_verb": "mince",
+      "duration_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": []
+    },
+    {
+      "id": "t10",
+      "name": "Mince garlic for beans",
+      "canonical_verb": "mince",
+      "duration_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": []
+    },
+    {
+      "id": "t11",
+      "name": "Drain potatoes",
+      "canonical_verb": "drain",
+      "duration_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t2", "to": "t11", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t12",
+      "name": "Mash potatoes with butter, cream, and garlic",
+      "canonical_verb": "mash",
+      "duration_min": 4,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t9", "to": "t12", "type": "FS" },
+        { "from": "t11", "to": "t12", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t13",
+      "name": "Heat cast iron skillet until smoking",
+      "canonical_verb": "heat",
+      "duration_min": 5,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t2", "to": "t13", "type": "SS" }
+      ]
+    },
+    {
+      "id": "t14",
+      "name": "Sear steak until crusty crust forms",
+      "canonical_verb": "sear",
+      "duration_min": 4,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t8", "to": "t14", "type": "FS" },
+        { "from": "t13", "to": "t14", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t15",
+      "name": "Flip and cook to desired doneness",
+      "canonical_verb": "cook",
+      "duration_min": 4,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "edges": [
+        { "from": "t14", "to": "t15", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t16",
+      "name": "Rest steak",
+      "canonical_verb": "rest",
+      "duration_min": 5,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "edges": [
+        { "from": "t15", "to": "t16", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t17",
+      "name": "Heat butter in sauté pan",
+      "canonical_verb": "heat",
+      "duration_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t15", "to": "t17", "type": "SS" }
+      ]
+    },
+    {
+      "id": "t18",
+      "name": "Sauté green beans with garlic",
+      "canonical_verb": "saute",
+      "duration_min": 4,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t6", "to": "t18", "type": "FS" },
+        { "from": "t10", "to": "t18", "type": "FS" },
+        { "from": "t17", "to": "t18", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t19",
+      "name": "Slice steak against the grain",
+      "canonical_verb": "slice",
+      "duration_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t16", "to": "t19", "type": "FS" }
+      ]
+    },
+    {
+      "id": "t20",
+      "name": "Plate steak, mashed potatoes, and green beans",
+      "canonical_verb": "plate",
+      "duration_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "edges": [
+        { "from": "t12", "to": "t20", "type": "FS" },
+        { "from": "t18", "to": "t20", "type": "FS" },
+        { "from": "t19", "to": "t20", "type": "FS" }
+      ]
+    }
+  ],
+  "shopping_list": [
+    {
+      "name": "Ribeye steak",
+      "quantity": "1",
+      "unit": "lb",
+      "department": "MEAT"
+    },
+    {
+      "name": "Russet potatoes",
+      "quantity": "2",
+      "unit": "lbs",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Green beans",
+      "quantity": "12",
+      "unit": "oz",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Fresh garlic",
+      "quantity": "6",
+      "unit": "cloves",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Butter",
+      "quantity": "6",
+      "unit": "tbsp",
+      "department": "DAIRY"
+    },
+    {
+      "name": "Heavy cream",
+      "quantity": "1/2",
+      "unit": "cup",
+      "department": "DAIRY"
+    },
+    {
+      "name": "Salt",
+      "quantity": "2",
+      "unit": "tsp",
+      "department": "SPICES"
+    },
+    {
+      "name": "Black pepper",
+      "quantity": "1",
+      "unit": "tsp",
+      "department": "SPICES"
+    }
+  ]
+}

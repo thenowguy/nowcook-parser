@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NowCook Recipe Editor</title>
+  <style>
+    body {
+      font-family: monospace;
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    select, input, textarea {
+      font-family: monospace;
+      font-size: 14px;
+    }
+    .task {
+      border: 1px solid #ccc;
+      padding: 15px;
+      margin: 10px 0;
+      background: #f9f9f9;
+    }
+    .task-header {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .field {
+      margin: 8px 0;
+    }
+    .field label {
+      display: inline-block;
+      width: 150px;
+      font-weight: bold;
+    }
+    .field input, .field textarea {
+      width: 500px;
+    }
+    textarea {
+      height: 60px;
+    }
+    .shopping-item {
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin: 5px 0;
+      background: #fff;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 10px 5px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .section {
+      margin: 30px 0;
+      border-top: 2px solid #333;
+      padding-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>NowCook Recipe Editor</h1>
+  
+  <div>
+    <label for="mealSelect">Select Meal: </label>
+    <select id="mealSelect">
+      <option value="0">Garlic Butter Pasta</option>
+      <option value="1">Mac & Cheese</option>
+      <option value="2">Chicken & Rice</option>
+      <option value="3">Salmon, Asparagus & Couscous</option>
+      <option value="4">Steak, Potatoes & Green Beans</option>
+    </select>
+    <button onclick="loadMeal()">Load Meal</button>
+  </div>
+
+  <div id="editor" style="display:none;">
+    <button onclick="downloadJSON()">Download JSON</button>
+    
+    <div class="section">
+      <h2>Tasks</h2>
+      <div id="tasksContainer"></div>
+    </div>
+    
+    <div class="section">
+      <h2>Shopping List</h2>
+      <div id="shoppingContainer"></div>
+    </div>
+  </div>
+
+  <script>
+    let currentMeal = null;
+    let mealData = null;
+
+    const MEALS = [
+      'garlic_butter_pasta.json',
+      'mac_and_cheese.json',
+      'chicken_and_rice.json',
+      'salmon_asparagus_couscous.json',
+      'steak_potatoes_beans.json'
+    ];
+
+    async function loadMeal() {
+      const idx = document.getElementById('mealSelect').value;
+      const filename = MEALS[idx];
+      
+      try {
+        // Fetch from src/meals via relative path
+        const response = await fetch(`../../src/meals/${filename}`);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        mealData = await response.json();
+        currentMeal = idx;
+        renderEditor();
+      } catch (err) {
+        alert('Error loading meal: ' + err.message);
+        console.error('Fetch error:', err);
+      }
+    }
+
+    function renderEditor() {
+      document.getElementById('editor').style.display = 'block';
+      
+      // Render tasks
+      const tasksContainer = document.getElementById('tasksContainer');
+      tasksContainer.innerHTML = '';
+      
+      mealData.tasks.forEach((task, index) => {
+        const taskDiv = document.createElement('div');
+        taskDiv.className = 'task';
+        taskDiv.innerHTML = `
+          <div class="task-header">Task ${index + 1}: ${task.id}</div>
+          
+          <div class="field">
+            <label>Instruction:</label>
+            <textarea id="task_${index}_name">${task.name}</textarea>
+          </div>
+          
+          <div class="field">
+            <label>Duration (min):</label>
+            <input type="number" id="task_${index}_duration" value="${task.duration_min || task.planned_min || 1}" />
+          </div>
+          
+          <div class="field">
+            <label>Requires Driver:</label>
+            <input type="checkbox" id="task_${index}_driver" ${task.requires_driver ? 'checked' : ''} />
+          </div>
+          
+          <div class="field">
+            <label>Self Running:</label>
+            <input type="checkbox" id="task_${index}_self_running" ${task.self_running_after_start ? 'checked' : ''} />
+          </div>
+          
+          <div class="field">
+            <label>Dependencies:</label>
+            <input type="text" id="task_${index}_deps" value="${(task.edges || []).map(e => e.from).join(', ')}" placeholder="e.g., t1, t2" />
+          </div>
+        `;
+        tasksContainer.appendChild(taskDiv);
+      });
+      
+      // Render shopping list
+      const shoppingContainer = document.getElementById('shoppingContainer');
+      shoppingContainer.innerHTML = '';
+      
+      if (mealData.shopping_list) {
+        mealData.shopping_list.forEach((item, index) => {
+          const itemDiv = document.createElement('div');
+          itemDiv.className = 'shopping-item';
+          itemDiv.innerHTML = `
+            <div class="field">
+              <label>Item:</label>
+              <input type="text" id="shop_${index}_name" value="${item.name}" />
+            </div>
+            
+            <div class="field">
+              <label>Quantity:</label>
+              <input type="text" id="shop_${index}_quantity" value="${item.quantity}" style="width: 100px;" />
+              
+              <label style="margin-left: 20px;">Unit:</label>
+              <input type="text" id="shop_${index}_unit" value="${item.unit}" style="width: 100px;" />
+              
+              <label style="margin-left: 20px;">Department:</label>
+              <input type="text" id="shop_${index}_dept" value="${item.department}" style="width: 100px;" />
+            </div>
+          `;
+          shoppingContainer.appendChild(itemDiv);
+        });
+      }
+    }
+
+    function collectEdits() {
+      // Update tasks
+      mealData.tasks.forEach((task, index) => {
+        task.name = document.getElementById(`task_${index}_name`).value;
+        const duration = parseInt(document.getElementById(`task_${index}_duration`).value);
+        if (task.duration_min !== undefined) {
+          task.duration_min = duration;
+        } else if (task.planned_min !== undefined) {
+          task.planned_min = duration;
+        }
+        task.requires_driver = document.getElementById(`task_${index}_driver`).checked;
+        task.self_running_after_start = document.getElementById(`task_${index}_self_running`).checked;
+        
+        // Update dependencies (simplified - just updates 'from' IDs)
+        const depsInput = document.getElementById(`task_${index}_deps`).value.trim();
+        if (depsInput) {
+          const depIds = depsInput.split(',').map(s => s.trim()).filter(s => s);
+          task.edges = depIds.map(fromId => ({
+            from: fromId,
+            to: task.id,
+            type: 'FS'
+          }));
+        } else {
+          task.edges = [];
+        }
+      });
+      
+      // Update shopping list
+      if (mealData.shopping_list) {
+        mealData.shopping_list.forEach((item, index) => {
+          item.name = document.getElementById(`shop_${index}_name`).value;
+          item.quantity = document.getElementById(`shop_${index}_quantity`).value;
+          item.unit = document.getElementById(`shop_${index}_unit`).value;
+          item.department = document.getElementById(`shop_${index}_dept`).value;
+        });
+      }
+      
+      return mealData;
+    }
+
+    function downloadJSON() {
+      const updatedData = collectEdits();
+      const json = JSON.stringify(updatedData, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = MEALS[currentMeal];
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>

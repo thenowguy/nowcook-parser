@@ -1,0 +1,142 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://nowcook.app/schemas/chain.schema.json",
+  "title": "NowCook Task Chain Schema",
+  "description": "A logical grouping of related tasks that produce a specific outcome (e.g., 'Make the sauce', 'Cook the pasta')",
+  "type": "object",
+  "required": ["id", "name", "tasks"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for this chain",
+      "pattern": "^chain_[a-z0-9_]+$"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name for this chain (e.g., 'Make the Cheese Sauce')",
+      "minLength": 1
+    },
+    "purpose": {
+      "type": "string",
+      "description": "What this chain produces or accomplishes (shown to user for context)"
+    },
+    "tasks": {
+      "type": "array",
+      "description": "Task IDs that belong to this chain, in execution order",
+      "items": {
+        "type": "string",
+        "pattern": "^t[0-9]+$"
+      },
+      "minItems": 1
+    },
+    "outputs": {
+      "type": "array",
+      "description": "Emergent ingredients/states produced by this chain",
+      "items": {
+        "type": "object",
+        "required": ["emergent_id", "ingredient"],
+        "properties": {
+          "emergent_id": {
+            "type": "string",
+            "description": "Unique identifier for this emergent ingredient (e.g., 'e_boiling_water_001')",
+            "pattern": "^e_[a-z0-9_]+$"
+          },
+          "ingredient": {
+            "type": "string",
+            "description": "Base ingredient name"
+          },
+          "state": {
+            "type": "string",
+            "description": "State of the ingredient (e.g., 'boiling', 'grated', 'al_dente')"
+          },
+          "vessel": {
+            "type": "string",
+            "description": "Container/vessel if relevant (e.g., 'pot', 'bowl')"
+          },
+          "temperature": {
+            "type": "string",
+            "description": "Temperature if relevant"
+          },
+          "quantity": {
+            "type": "string",
+            "description": "Amount if relevant"
+          }
+        }
+      }
+    },
+    "inputs": {
+      "type": "array",
+      "description": "Emergent ingredients/states required by this chain",
+      "items": {
+        "type": "object",
+        "required": ["emergent_id"],
+        "properties": {
+          "emergent_id": {
+            "type": "string",
+            "pattern": "^e_[a-z0-9_]+$"
+          },
+          "required": {
+            "type": "boolean",
+            "description": "Whether this input is mandatory",
+            "default": true
+          }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "description": "Dependencies between this chain and other chains",
+      "items": {
+        "type": "object",
+        "required": ["from", "to", "type"],
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "Predecessor chain ID",
+            "pattern": "^chain_[a-z0-9_]+$"
+          },
+          "to": {
+            "type": "string",
+            "description": "Successor chain ID",
+            "pattern": "^chain_[a-z0-9_]+$"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["FS", "SS", "FF", "SF"],
+            "description": "Finish-Start, Start-Start, Finish-Finish, or Start-Finish"
+          },
+          "note": {
+            "type": "string",
+            "description": "Human-readable explanation of this dependency"
+          }
+        }
+      }
+    },
+    "can_run_parallel": {
+      "type": "boolean",
+      "description": "Whether this chain can run parallel to other chains",
+      "default": false
+    },
+    "estimated_duration_min": {
+      "type": "number",
+      "description": "Total estimated time for this chain (sum of critical path)",
+      "minimum": 1
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional chain metadata",
+      "properties": {
+        "detected_by": {
+          "type": "string",
+          "enum": ["explicit_header", "temporal_marker", "convergence_point", "vessel_change", "parallel_indicator", "manual"],
+          "description": "How this chain was identified"
+        },
+        "confidence": {
+          "type": "string",
+          "enum": ["high", "medium", "low"],
+          "description": "Confidence in chain detection"
+        }
+      }
+    }
+  }
+}

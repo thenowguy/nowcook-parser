@@ -1,0 +1,665 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2865
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 HelveticaNeue-Bold;\f1\fnil\fcharset0 .SFNS-Regular;\f2\fswiss\fcharset0 Helvetica;
+\f3\fnil\fcharset0 .SFNS-Semibold;\f4\fnil\fcharset0 .SFNS-RegularItalic;\f5\fmodern\fcharset0 Courier;
+\f6\fnil\fcharset0 .SFNS-Bold;}
+{\colortbl;\red255\green255\blue255;\red14\green14\blue14;\red151\green0\blue126;\red0\green0\blue0;
+\red181\green0\blue19;\red20\green0\blue196;}
+{\*\expandedcolortbl;;\cssrgb\c6700\c6700\c6700;\cssrgb\c66667\c5098\c56863;\csgray\c0;
+\cssrgb\c76863\c10196\c8627;\cssrgb\c10980\c0\c81176;}
+\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f0\b\fs32 \cf2 Document 4 \'97 IP / Legal Report (Professional Counsel Edition)
+\f1\b0 \
+\
+
+\f0\b Purpose
+\f1\b0 \
+This document is structured as a formal legal-technical memorandum suitable for briefing intellectual property counsel. It identifies the protectable mechanisms, processes, and design elements underlying the NowCook system, linking them to functional behavior and potential claim language. It also highlights embodiments, potential UI expressions, and prior-art sensitivities.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f2\fs24 \cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f3\b\fs34 \cf2 1. Overview
+\f1\b0\fs32 \cf2 \
+\
+NowCook is a software system that transforms unstructured culinary instructions into structured, time-aware, human-executable workflows. Its novelty lies in:\
+\pard\tqr\tx100\tx260\li260\fi-260\sl324\slmult1\sb240\partightenfactor0
+\cf2 	\'95	The 
+\f0\b linguistic ontology
+\f1\b0  that converts prose into canonical, validated action structures.\
+	\'95	The 
+\f0\b temporal scheduling model
+\f1\b0  that enforces human attention constraints.\
+	\'95	The 
+\f0\b interactive gate interface (NowLine)
+\f1\b0  that actively governs task progression.\
+	\'95	The 
+\f0\b integration of these mechanisms
+\f1\b0  into an empathetic, smartphone-oriented user experience.\
+\
+This combination\'97linguistic normalization + human-centered scheduling + attention mutex + calm UX\'97creates a protectable technical system distinct from prior recipe, scheduling, or task management tools.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f2\fs24 \cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f3\b\fs34 \cf2 2. Core Technical Mechanisms
+\f1\b0\fs32 \cf2 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f3\b\fs30 \cf2 2.1 Active Temporal Gate (\'93NowLine\'94)
+\f1\b0\fs32 \cf2 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f0\b \cf2 Definition:
+\f1\b0 \
+A software mechanism representing an explicit control barrier that tasks cannot cross until the user acknowledges readiness.\
+\
+
+\f0\b Function:
+\f1\b0 \
+\pard\tqr\tx100\tx260\li260\fi-260\sl324\slmult1\sb240\partightenfactor0
+\cf2 	\'95	Differentiates between 
+\f4\i eligible
+\f1\i0  and 
+\f4\i active
+\f1\i0  tasks based on time and dependency status.\
+	\'95	Enforces explicit human acknowledgment before progression.\
+	\'95	Allows asynchronous unattended tasks to run concurrently once initiated.\
+	\'95	Maintains projection of final serve time with elastic adjustment if user delays.\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f0\b \cf2 Novelty:
+\f1\b0 \
+Traditional scheduling interfaces (Gantt charts, timers) model \'93now\'94 as a passive moment. NowCook\'92s 
+\f0\b NowLine
+\f1\b0  is 
+\f4\i \cf2 interactive and interruptible
+\f1\i0 \cf2 \'97a checkpoint, not a timeline marker.\
+\
+
+\f0\b Embodiment Example (Pseudo-code):
+\f2\b0\fs24 \cf0 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f5\fs28 \cf3 if\cf4  task.state == \cf5 "eligible"\cf4  and user_action == \cf5 "start"\cf4 :\
+    task.state = \cf5 "active"\cf4 \
+    \cf3 if\cf4  task.attention_mode == \cf5 "attended"\cf4 :\
+        driver.lock()\
+    \cf3 if\cf4  task.attention_mode == \cf5 "SRAS"\cf4 :\
+        run_in_background(task)
+\f2\fs24 \cf0 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f0\b\fs32 \cf2 UI Expression:
+\f1\b0 \
+Vertical line fixed mid-screen; tasks slide toward it; user taps to traverse gate.\
+Embodied via smartphone-optimized interface with clear states: 
+\f4\i \cf2 eligible \uc0\u8594  at_gate \u8594  active \u8594  complete.
+\f1\i0 \cf2 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f2\fs24 \cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f3\b\fs30 \cf2 2.2 Driver Mutex (Single-Attended-Task Lock)
+\f1\b0\fs32 \cf2 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f0\b \cf2 Definition:
+\f1\b0 \
+A mutual-exclusion rule limiting one attended task at a time, preventing impossible overlaps for a single cook.\
+\
+
+\f0\b Function:
+\f1\b0 \
+\pard\tqr\tx100\tx260\li260\fi-260\sl324\slmult1\sb240\partightenfactor0
+\cf2 	\'95	Attended task start locks driver; other attended tasks disabled.\
+	\'95	Unlock on task completion or pause.\
+	\'95	Unattended tasks (SRAS) operate independently once launched.\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f0\b \cf2 Novelty:
+\f1\b0 \
+Unlike generic task schedulers that permit arbitrary concurrency, the driver mutex models the 
+\f4\i \cf2 biological constraint of a single actor.
+\f1\i0 \cf2 \
+\
+
+\f0\b Embodiment Example:
+\f2\b0\fs24 \cf0 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f5\fs28 \cf4 function start_task(task):\
+    \cf3 if\cf4  driver.locked and task.attention_mode == \cf5 "attended"\cf4 :\
+        raise Blocked(\cf5 "Driver busy"\cf4 )\
+    \cf3 else\cf4 :\
+        driver.lock()\
+        task.state = \cf5 "active"
+\f2\fs24 \cf0 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f0\b\fs32 \cf2 UI Expression:
+\f1\b0 \
+Blocked tasks visually greyed with tooltip: \'93Waiting \'97 cook\'92s attention occupied by saut\'e9 onions (3m remaining).\'94\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f2\fs24 \cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f3\b\fs30 \cf2 2.3 One-Minute Minimum Normalization
+\f1\b0\fs32 \cf2 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f0\b \cf2 Definition:
+\f1\b0 \
+Every task duration normalized to at least one minute; shorter operations round up but can complete early.\
+\
+
+\f0\b Function:
+\f1\b0 \
+\pard\tqr\tx100\tx260\li260\fi-260\sl324\slmult1\sb240\partightenfactor0
+\cf2 	\'95	Stabilizes timeline rendering and animations.\
+	\'95	Avoids sub-minute \'93flicker\'94 on smartphone screens.\
+	\'95	Enables consistent slip propagation logic.\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f0\b \cf2 Novelty:
+\f1\b0 \
+A UX-driven timing normalization rule encoded into the system\'92s schema validation and scheduler.\
+\
+
+\f0\b Embodiment Example:
+\f2\b0\fs24 \cf0 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f5\fs28 \cf3 if\cf4  task.duration < \cf6 1\cf4 :\
+    task.duration = \cf6 1
+\f2\fs24 \cf0 \
+\
+\
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f3\b\fs30 \cf2 2.4 Emergent Ingredient Modeling
+\f1\b0\fs32 \cf2 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f0\b \cf2 Definition:
+\f1\b0 \
+Outputs of steps become first-class ingredients that can be referenced later by subsequent steps.\
+\
+
+\f0\b Function:
+\f1\b0 \
+\pard\tqr\tx100\tx260\li260\fi-260\sl324\slmult1\sb240\partightenfactor0
+\cf2 	\'95	Enables proper dependency tracking (\'93make sauce\'94 \uc0\u8594  \'93add sauce\'94).\
+	\'95	Carries lineage (created_by_task_id, created_at, freshness window).\
+	\'95	Prevents premature references to non-existent intermediates.\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f0\b \cf2 Novelty:
+\f1\b0 \
+Recipes typically treat ingredients as static; NowCook dynamically reclassifies outputs as new, structured entities.\
+\
+
+\f0\b Embodiment Example:
+\f2\b0\fs24 \cf0 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f5\fs28 \cf4 emergent = Ingredient(name=\cf5 "sauce"\cf4 ,\
+                      created_by=task.id,\
+                      valid_until=task.end_time + 15m)
+\f2\fs24 \cf0 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f0\b\fs32 \cf2 UI Expression:
+\f1\b0 \
+Emergent items visually tagged as \'93ready\'94 assets, appearing in later steps with lineage note (\'93Use sauce prepared earlier\'94).\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f2\fs24 \cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f3\b\fs30 \cf2 2.5 Ontology with Applicability Guards
+\f1\b0\fs32 \cf2 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f0\b \cf2 Definition:
+\f1\b0 \
+Finite verb library, each with parameter schema and allowable ingredient classes.\
+\
+
+\f0\b Function:
+\f1\b0 \
+\pard\tqr\tx100\tx260\li260\fi-260\sl324\slmult1\sb240\partightenfactor0
+\cf2 	\'95	Validates that verbs apply only to compatible ingredient types.\
+	\'95	Defines default durations, readiness cues, and attention modes per verb.\
+	\'95	Reduces ambiguity in parsing and authoring.\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f0\b \cf2 Novelty:
+\f1\b0 \
+No existing culinary platform uses a linguistically constrained ontology enforced by validation at runtime and authoring time.\
+\
+
+\f0\b Embodiment Example:
+\f2\b0\fs24 \cf0 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f5\fs28 \cf3 if\cf4  verb == \cf5 "mash"\cf4  and ingredient.\cf3 class\cf4  not in [\cf5 "root_veg"\cf4 ,\cf5 "legume"\cf4 ]:\
+    raise ValidationError(\cf5 "Verb not applicable to ingredient type"\cf4 )
+\f2\fs24 \cf0 \
+\
+\
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f3\b\fs30 \cf2 2.6 Serve-Time Back-Planning with Elasticity
+\f1\b0\fs32 \cf2 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f0\b \cf2 Definition:
+\f1\b0 \
+Backward scheduling from target serve time; delays shift projections automatically, respecting hold windows.\
+\
+
+\f0\b Function:
+\f1\b0 \
+\pard\tqr\tx100\tx260\li260\fi-260\sl324\slmult1\sb240\partightenfactor0
+\cf2 	\'95	Calculates ideal start times by reversing DAG through durations.\
+	\'95	When slippage occurs, updates serve-time forecast rather than freezing it.\
+	\'95	Communicates delay gently (\'93Dinner about 5 min later than planned\'94).\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f0\b \cf2 Novelty:
+\f1\b0 \
+Combines predictive scheduling with user-controlled pacing\'97elastic time management rather than rigid countdown.\
+\
+
+\f0\b Embodiment Example:
+\f2\b0\fs24 \cf0 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f5\fs28 \cf3 for\cf4  task in reversed(dag):\
+    task.start = task.successor.start - task.duration\
+\cf3 if\cf4  slip > \cf6 0\cf4 :\
+    serve_time += slip
+\f2\fs24 \cf0 \
+\
+\
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f3\b\fs34 \cf2 3. UX / Trade Dress Elements
+\f1\b0\fs32 \cf2 \
+\
+The following design expressions are potential trade dress or UI protection candidates:
+\f2\fs24 \cf0 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f6\b\fs30 \cf2 Feature
+\f2\b0\fs24 \cf0 	
+\f6\b\fs30 \cf2 Description
+\f2\b0\fs24 \cf0 	
+\f6\b\fs30 \cf2 Distinguishing Elements
+\f2\b0\fs24 \cf0 \
+
+\f0\b\fs30 \cf2 NowLine UI Spine
+\f2\b0\fs24 \cf0 	
+\f1\fs30 \cf2 Vertical fixed line dividing pending and active tasks
+\f2\fs24 \cf0 	
+\f1\fs30 \cf2 Interactive gate; tasks move spatially toward it; color transitions reflect eligibility
+\f2\fs24 \cf0 \
+
+\f0\b\fs30 \cf2 Two-Stage Interaction
+\f2\b0\fs24 \cf0 	
+\f1\fs30 \cf2 \'93Peek\'94 to reveal facts, \'93Start\'94 to traverse gate
+\f2\fs24 \cf0 	
+\f1\fs30 \cf2 Separation of information and action unique to NowCook
+\f2\fs24 \cf0 \
+
+\f0\b\fs30 \cf2 Dual Lanes
+\f2\b0\fs24 \cf0 	
+\f1\fs30 \cf2 Attended (top) vs Unattended (SRAS) concurrent display
+\f2\fs24 \cf0 	
+\f1\fs30 \cf2 Models simultaneity without confusion
+\f2\fs24 \cf0 \
+
+\f0\b\fs30 \cf2 Slip Feedback
+\f2\b0\fs24 \cf0 	
+\f1\fs30 \cf2 Human phrasing of delay (\'93a bit later\'94)
+\f2\fs24 \cf0 	
+\f1\fs30 \cf2 Gentle UX tone distinct from countdown timers
+\f2\fs24 \cf0 \
+
+\f0\b\fs30 \cf2 Calm Palette + Typography
+\f2\b0\fs24 \cf0 	
+\f1\fs30 \cf2 High contrast, minimal stress
+\f2\fs24 \cf0 	
+\f1\fs30 \cf2 UX as emotional differentiator (\'93reassuring calm\'94 trademarkable style)
+\f2\fs24 \cf0 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f3\b\fs34 \cf2 4. Functional Claim Templates
+\f1\b0\fs32 \cf2 \
+\
+Potential patent claim scaffolds (conceptual language, not legal text):\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f0\b \cf2 Claim Set 1 \'97 Temporal Gate Control
+\f1\b0 \
+A method of orchestrating a sequence of culinary tasks comprising:\
+\pard\tqr\tx240\tx400\li400\fi-400\sl324\slmult1\sb240\partightenfactor0
+\cf2 	1.	Parsing recipe instructions into canonical action records according to a verb\'96parameter\'96ingredient ontology;\
+	2.	Assigning durations and attention modes;\
+	3.	Scheduling tasks backward from a target serve time;\
+	4.	Displaying an interactive temporal gate that prevents advancement of a task until explicit user initiation;\
+	5.	Enforcing a single-driver mutex for attended tasks;\
+	6.	Allowing autonomous tasks to continue concurrently once initiated;\
+	7.	Adjusting projected completion time in response to user delay.\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f0\b \cf2 Claim Set 2 \'97 Ontological Validation
+\f1\b0 \
+A system that validates instructional text using a finite action vocabulary with applicability constraints between verbs and ingredient classes.\
+\
+
+\f0\b Claim Set 3 \'97 Emergent Ingredient Lifecycle
+\f1\b0 \
+A computing method wherein outputs of steps are promoted to reusable data entities with lineage tracking, used by subsequent steps under freshness constraints.\
+\
+
+\f0\b Claim Set 4 \'97 UX Integration
+\f1\b0 \
+A user interface implementing a vertically fixed temporal gate (NowLine), visual progression of tasks toward the gate, and two-stage activation interactions.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f2\fs24 \cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f3\b\fs34 \cf2 5. Example Implementation Variants
+\f2\b0\fs24 \cf0 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f6\b\fs30 \cf2 Variant
+\f2\b0\fs24 \cf0 	
+\f6\b\fs30 \cf2 Description
+\f2\b0\fs24 \cf0 	
+\f6\b\fs30 \cf2 Distinguishing Implementation
+\f2\b0\fs24 \cf0 \
+
+\f0\b\fs30 \cf2 Web / Mobile Hybrid (Default)
+\f2\b0\fs24 \cf0 	
+\f1\fs30 \cf2 JS-based engine controlling task state, using React or Vue.
+\f2\fs24 \cf0 	
+\f1\fs30 \cf2 Client maintains NowLine state; local persistence for offline continuity.
+\f2\fs24 \cf0 \
+
+\f0\b\fs30 \cf2 Voice-Driven Mode
+\f2\b0\fs24 \cf0 	
+\f1\fs30 \cf2 Voice interface replacing taps.
+\f2\fs24 \cf0 	
+\f1\fs30 \cf2 \'93Ready for next step?\'94 prompt; explicit speech acknowledgment triggers gate traversal.
+\f2\fs24 \cf0 \
+
+\f0\b\fs30 \cf2 Smart Appliance Integration
+\f2\b0\fs24 \cf0 	
+\f1\fs30 \cf2 Synchronization with connected devices.
+\f2\fs24 \cf0 	
+\f1\fs30 \cf2 Gate initiation triggers oven preheat or timer start via API.
+\f2\fs24 \cf0 \
+
+\f0\b\fs30 \cf2 Collaborative Mode
+\f2\b0\fs24 \cf0 	
+\f1\fs30 \cf2 Multi-user synchronization (two cooks).
+\f2\fs24 \cf0 	
+\f1\fs30 \cf2 Distributed driver mutex; shared NowLine; conflict resolution policy.
+\f2\fs24 \cf0 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 Each variant maintains the same underlying invariants (ontology, mutex, gate) and thus extends protection to multiple embodiments.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f2\fs24 \cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f3\b\fs34 \cf2 6. Exclusions and Prior Art Sensitivities
+\f2\b0\fs24 \cf0 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f6\b\fs30 \cf2 Area
+\f2\b0\fs24 \cf0 	
+\f6\b\fs30 \cf2 Potential Overlap
+\f2\b0\fs24 \cf0 	
+\f6\b\fs30 \cf2 Differentiator
+\f2\b0\fs24 \cf0 \
+
+\f0\b\fs30 \cf2 Gantt / Project Tools
+\f2\b0\fs24 \cf0 	
+\f1\fs30 \cf2 Passive \'93now\'94 markers and parallel tasks
+\f2\fs24 \cf0 	
+\f1\fs30 \cf2 No human-attention modeling; NowCook\'92s gate is interactive and mutex-based
+\f2\fs24 \cf0 \
+
+\f0\b\fs30 \cf2 Recipe Apps (Paprika, Whisk, NYT)
+\f2\b0\fs24 \cf0 	
+\f1\fs30 \cf2 Text + timers; static steps
+\f2\fs24 \cf0 	
+\f1\fs30 \cf2 No ontology, no gate, no validation or back-propagated scheduling
+\f2\fs24 \cf0 \
+
+\f0\b\fs30 \cf2 Cooking Robots / Automation
+\f2\b0\fs24 \cf0 	
+\f1\fs30 \cf2 Robotic sequencing, not human orchestration
+\f2\fs24 \cf0 	
+\f1\fs30 \cf2 NowCook assumes human single-driver; UX empathy central
+\f2\fs24 \cf0 \
+
+\f0\b\fs30 \cf2 Pomodoro / Task Managers
+\f2\b0\fs24 \cf0 	
+\f1\fs30 \cf2 Timed focus sessions
+\f2\fs24 \cf0 	
+\f1\fs30 \cf2 No ingredient ontology, no emergent entities, no elastic serve-time propagation
+\f2\fs24 \cf0 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f3\b\fs34 \cf2 7. Potential Protectable Trade Names and Phrases
+\f2\b0\fs24 \cf0 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f6\b\fs30 \cf2 Term
+\f2\b0\fs24 \cf0 	
+\f6\b\fs30 \cf2 Description
+\f2\b0\fs24 \cf0 \
+
+\f0\b\fs30 \cf2 NowLine\'99
+\f2\b0\fs24 \cf0 	
+\f1\fs30 \cf2 The active temporal gate UI and its scheduling logic.
+\f2\fs24 \cf0 \
+
+\f0\b\fs30 \cf2 Driver Mutex\'99
+\f2\b0\fs24 \cf0 	
+\f1\fs30 \cf2 Human attention lock mechanism ensuring single attended task concurrency.
+\f2\fs24 \cf0 \
+
+\f0\b\fs30 \cf2 Emergent Ingredient\'99
+\f2\b0\fs24 \cf0 	
+\f1\fs30 \cf2 Output of cooking step that becomes structured input downstream.
+\f2\fs24 \cf0 \
+
+\f0\b\fs30 \cf2 Serve-Time Elasticity\'99
+\f2\b0\fs24 \cf0 	
+\f1\fs30 \cf2 Scheduler\'92s adaptive timing propagation logic.
+\f2\fs24 \cf0 \
+
+\f0\b\fs30 \cf2 Calm Mode\'99
+\f2\b0\fs24 \cf0 	
+\f1\fs30 \cf2 UX state prioritizing non-intrusive pacing and tone.
+\f2\fs24 \cf0 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f3\b\fs34 \cf2 8. Example Source Snippets (Non-Functional Illustrations)
+\f1\b0\fs32 \cf2 \
+\
+Below are brief pseudo-code fragments demonstrating protected logic; they are not complete programs but evidence of novel implementation detail.\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f0\b \cf2 Elastic Slip Propagation
+\f2\b0\fs24 \cf0 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f5\fs28 \cf4 def propagate_slip(current_slip):\
+    \cf3 for\cf4  dish in meal.dishes:\
+        dish.serve_projection += current_slip\
+    notify_user(f\cf5 "Serve time adjusted by \{current_slip\} minutes."\cf4 )
+\f2\fs24 \cf0 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f0\b\fs32 \cf2 Gate Traversal Logic
+\f2\b0\fs24 \cf0 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f5\fs28 \cf4 def traverse_gate(task):\
+    \cf3 if\cf4  task.state == \cf5 "eligible"\cf4  and confirm_user():\
+        task.state = \cf5 "active"\cf4 \
+        update_UI(NowLine.advance(task))
+\f2\fs24 \cf0 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f0\b\fs32 \cf2 Emergent Ingredient Registration
+\f2\b0\fs24 \cf0 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f5\fs28 \cf4 def register_emergent_output(task):\
+    emergent_id = uuid()\
+    emergent_registry[emergent_id] = \{\
+        \cf5 "name"\cf4 : task.output_label,\
+        \cf5 "created_by"\cf4 : task.id,\
+        \cf5 "usable_until"\cf4 : time.now() + hold_window\
+    \}
+\f2\fs24 \cf0 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 These examples illustrate functional coupling between ontology, scheduling, and UX\'97an integrated behavior not present in any known recipe or scheduling system.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f2\fs24 \cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f3\b\fs34 \cf2 9. Conclusion
+\f1\b0\fs32 \cf2 \
+\
+NowCook\'92s IP portfolio consists of 
+\f0\b interlocking technical and experiential systems
+\f1\b0 :\
+\pard\tqr\tx100\tx260\li260\fi-260\sl324\slmult1\sb240\partightenfactor0
+\cf2 	\'95	a rule-based linguistic parser for culinary language;\
+	\'95	a temporal scheduler constrained by human attention and empathy;\
+	\'95	and an interface whose spatial design (NowLine, dual-lane visualization, calm interaction tone) is inseparable from those rules.\
+\
+Protectable domains include utility (process and method claims), design (interface structure and layout), and branding (terminology, tone, and behavioral trademarks).\
+\
+The combination of 
+\f0\b Ontology + Attention Model + Elastic Gate UI
+\f1\b0  defines a unique category of technology: software that interprets the language of cooking as a live, interactive conversation between time, task, and human capability.}

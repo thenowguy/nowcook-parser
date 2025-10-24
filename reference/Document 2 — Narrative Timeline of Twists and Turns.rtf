@@ -1,0 +1,288 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2865
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 HelveticaNeue-Bold;\f1\fnil\fcharset0 .SFNS-Regular;\f2\fnil\fcharset0 .SFNS-RegularItalic;
+\f3\fswiss\fcharset0 Helvetica;\f4\fnil\fcharset0 .SFNS-Semibold;}
+{\colortbl;\red255\green255\blue255;\red14\green14\blue14;}
+{\*\expandedcolortbl;;\cssrgb\c6700\c6700\c6700;}
+\margl1440\margr1440\vieww14400\viewh29540\viewkind0
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f0\b\fs32 \cf2 Document 2 \'97 Timeline of Twists & Turns (Expanded Narrative with Phase Headings)
+\f1\b0 \
+\
+Purpose\
+This document traces the NowCook project\'92s full evolution \'97 every pivot, breakthrough, and dead-end \'97 in the order they occurred. It is written so that a new collaborator can understand 
+\f2\i \cf2 how
+\f1\i0 \cf2  each change happened and 
+\f2\i \cf2 why
+\f1\i0 \cf2  each decision felt necessary at that point in development.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f3\fs24 \cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f4\b\fs34 \cf2 Phase 1 \'97 The Repo Era: Early Ambition
+\f1\b0\fs32 \cf2 \
+\
+At the beginning, NowCook was conceived as a code-driven project: the idea was to treat cooking language as structured data. The first working model used a 
+\f0\b VS Code repository
+\f1\b0  with JSON schemas and packs.\
+\pard\tqr\tx100\tx260\li260\fi-260\sl324\slmult1\sb240\partightenfactor0
+\cf2 	\'95	
+\f0\b Packs
+\f1\b0  defined verbs, durations, readiness cues, and synonyms.\
+	\'95	
+\f0\b Schemas
+\f1\b0  enforced structure for recipes and meals.\
+	\'95	The intended workflow was deterministic parsing of messy prose into structured \'93atoms\'94 \'97 each atom a combination of verb + parameters + ingredient.\
+\
+The early optimism was high; everything appeared controllable. But as the system expanded, maintenance became brittle. Stateless generation meant context drift. Each incremental change risked breaking alignment between schema, packs, and generated examples. \'93Which version are we on?\'94 became a recurring problem.\
+\
+Despite those struggles, the repo phase established the 
+\f0\b core belief
+\f1\b0  that recipes are programs \'97 sequences of instructions with data, order, and timing that could, in theory, be compiled. That principle stayed intact through every later reboot.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f3\fs24 \cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f4\b\fs34 \cf2 Phase 2 \'97 Defining the NowLine
+\f1\b0\fs32 \cf2 \
+\
+A philosophical breakthrough reframed the system\'92s heart. Instead of treating time as continuous, we treated it as a 
+\f0\b sequence of gated checkpoints
+\f1\b0 .\
+\
+The 
+\f0\b NowLine
+\f1\b0  emerged: an active temporal gate that separates 
+\f2\i \cf2 eligible tasks
+\f1\i0 \cf2  from 
+\f2\i \cf2 future tasks
+\f1\i0 \cf2 . Nothing crosses without explicit user action. This shift changed everything.\
+\pard\tqr\tx100\tx260\li260\fi-260\sl324\slmult1\sb240\partightenfactor0
+\cf2 	\'95	The cook isn\'92t an algorithmic scheduler; they are a single, embodied operator.\
+	\'95	The NowLine enforces attention limits: only one attended task at a time.\
+	\'95	Serve-time elasticity became calculable \'97 delays at the gate ripple forward honestly.\
+\
+This insight grounded the entire runtime model and birthed the 
+\f0\b driver mutex
+\f1\b0  rule (one attended task at a time) and 
+\f0\b SRAS
+\f1\b0  (self-running-after-start) category for autonomous steps.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f3\fs24 \cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f4\b\fs34 \cf2 Phase 3 \'97 Ontology Over Code
+\f1\b0\fs32 \cf2 \
+\
+After the NowLine came another realization: before any code could succeed, the 
+\f2\i \cf2 language
+\f1\i0 \cf2  itself had to be defined. The project pivoted from engineering to linguistics.\
+\pard\tqr\tx100\tx260\li260\fi-260\sl324\slmult1\sb240\partightenfactor0
+\cf2 	\'95	We formalized the 
+\f0\b Verb \uc0\u8594  Parameters \u8594  Ingredient
+\f1\b0  hierarchy.\
+	\'95	We began building a finite, canonical verb list with verb-specific parameters.\
+	\'95	Applicability guards were added (e.g., 
+\f2\i mash
+\f1\i0  valid for root veg, not steak).\
+\
+This was the first explicit 
+\f0\b ontology-first
+\f1\b0  approach: structure the language of cooking before attempting to compute it.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f3\fs24 \cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f4\b\fs34 \cf2 Phase 4 \'97 The Google Sheets Experiment
+\f1\b0\fs32 \cf2 \
+\
+The repo model proved fragile. To give the LLM a persistent memory, we moved the data into a 
+\f0\b Google Sheet
+\f1\b0  \'97 an attempt at a living \'93single source of truth.\'94\
+\
+For a short time, it worked well. Sheets offered visibility; you could scroll, search, and edit instantly. But it came at a cost: proliferation of tabs, inconsistent copies, and informal updates with no mechanical enforcement. Entropy replaced clarity.\
+\
+The insight from this failure was important: 
+\f2\i \cf2 persistence must be mechanical, not cultural.
+\f1\i0 \cf2  Human discipline alone can\'92t maintain canonical truth.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f3\fs24 \cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f4\b\fs34 \cf2 Phase 5 \'97 The Canonical Master
+\f1\b0\fs32 \cf2 \
+\
+The next reboot replaced the spreadsheet with a 
+\f0\b Canonical Master
+\f1\b0  \'97 one authoritative text document containing:\
+\pard\tqr\tx100\tx260\li260\fi-260\sl324\slmult1\sb240\partightenfactor0
+\cf2 	\'95	the latest packs and schemas,\
+	\'95	decisions and rationales,\
+	\'95	rules of engagement (\'93full drop-ins only\'94),\
+	\'95	and the priors and philosophy that guided everything.\
+\
+All generation became deterministic: no snippets, no context drift. Each update replaced the full artifact and logged its purpose. The Canonical Master eliminated ambiguity and preserved reasoning.\
+\
+This protocol finally stabilized collaboration: I would never output partial code; Trevor would always provide the latest full snapshot. Ambiguity was formally defined as a defect.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f3\fs24 \cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f4\b\fs34 \cf2 Phase 6 \'97 Ontology v2 and the Three-Recipe Seed
+\f1\b0\fs32 \cf2 \
+\
+With stable governance, we returned to ontology design, this time grounding it in real test data. We chose 
+\f0\b three seed recipes
+\f1\b0  to serve as validation cases.\
+\pard\tqr\tx100\tx260\li260\fi-260\sl324\slmult1\sb240\partightenfactor0
+\cf2 	\'95	Each recipe was decomposed into canonical verbs and parameters.\
+	\'95	A schema validator enforced duration minima (\uc0\u8805  1 minute) and attention consistency.\
+	\'95	The system flagged invalid verb\'96ingredient pairs or cyclic dependencies.\
+\
+For the first time, ingestion could round-trip: packs \uc0\u8594  parsed recipes \u8594  validated structures \u8594  actionable feedback.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f3\fs24 \cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f4\b\fs34 \cf2 Phase 7 \'97 Human Empathy and Design Reality
+\f1\b0\fs32 \cf2 \
+\
+As the technical architecture matured, the human truth re-entered focus: NowCook is for one person in a normal kitchen, not a brigade of chefs.\
+\
+Key adjustments followed:\
+\pard\tqr\tx100\tx260\li260\fi-260\sl324\slmult1\sb240\partightenfactor0
+\cf2 	\'95	Durations became 
+\f0\b humanly realistic
+\f1\b0 , with a minimum one-minute rule for rhythm and sanity.\
+	\'95	The interface tone was reframed as 
+\f2\i calm
+\f1\i0 , never demanding.\
+	\'95	The 
+\f0\b NowLine UI
+\f1\b0  was reconceived as reassurance: \'93ready when you are,\'94 not \'93you\'92re late.\'94\
+	\'95	A smartphone-first constraint forced the interface to simplify \'97 thumb-driven, vertical, readable under steam.\
+\
+This period re-balanced engineering precision with psychological empathy.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f3\fs24 \cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f4\b\fs34 \cf2 Phase 8 \'97 Simultaneity and Real-World Concurrency
+\f1\b0\fs32 \cf2 \
+\
+We recognized that real cooking includes overlapping actions: you stir while water boils, you preheat while chopping. The scheduler was expanded to model 
+\f0\b simultaneity
+\f1\b0  explicitly:\
+\pard\tqr\tx100\tx260\li260\fi-260\sl324\slmult1\sb240\partightenfactor0
+\cf2 	\'95	One attended task at a time (mutex).\
+	\'95	Multiple unattended tasks may run concurrently once started.\
+	\'95	Slip propagation adjusts projected serve time dynamically.\
+\
+This model captured the chaotic grace of actual cooking without breaking constraints.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f3\fs24 \cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f4\b\fs34 \cf2 Phase 9 \'97 Beyond Recipes: Meals, Browsing, and Shopping
+\f1\b0\fs32 \cf2 \
+\
+Attention shifted from single dishes to 
+\f0\b meals
+\f1\b0  \'97 orchestrations of multiple dishes aligned to one serve time.\
+\
+This introduced two new subsystems:\
+\pard\tqr\tx280\tx440\li440\fi-440\sl324\slmult1\sb240\partightenfactor0
+\cf2 	1.	
+\f0\b Browsing layer
+\f1\b0  \'97 an interface resembling iTunes or a cookbook shelf. Users explore Meals as units, filter by chef, cuisine, or ready-by time.\
+	2.	
+\f0\b Shopping list engine
+\f1\b0  \'97 aggregation of all raw ingredients across dishes, merged and rounded to practical quantities. Three recipes requiring butter output one combined amount, never \'937.53 oz.\'94 Units are normalized to kitchen-friendly scales and grouped by grocery department.\
+\
+These extensions anchored the ontology to user value: what people actually do before they cook.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f3\fs24 \cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f4\b\fs34 \cf2 Phase 10 \'97 Final Stabilization and Philosophy
+\f1\b0\fs32 \cf2 \
+\
+The last stage unified everything into a coherent principle:\
+\pard\tqr\tx100\tx260\li260\fi-260\sl324\slmult1\sb240\partightenfactor0
+\cf2 	\'95	Ontology and empathy coexist.\
+	\'95	The system is 
+\f0\b the GPS of cooking
+\f1\b0  \'97 not reinventing cooking itself, but reinventing 
+\f2\i how instructions are delivered.
+\f1\i0 \
+	\'95	Every element \'97 schema, validator, UI, tone \'97 serves that premise.\
+	\'95	The 
+\f0\b Canonical Master
+\f1\b0  remains the operational backbone: one truth, complete drop-ins, decisions recorded.\
+\
+At this point, the project reached conceptual maturity. The next phase is pure engineering execution: implementing the validator, scheduler, and authoring panel against the existing specifications.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f3\fs24 \cf0 \
+\uc0\u11835 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f1\fs32 \cf2 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl324\slmult1\pardirnatural\partightenfactor0
+
+\f4\b\fs34 \cf2 Closing Note
+\f1\b0\fs32 \cf2 \
+\
+NowCook\'92s journey has been cyclical but convergent. Each restart abandoned unnecessary scaffolding while preserving deeper truths: that recipes are code; that time and attention define the medium; that language must be structured before automation; and that the cook\'92s humanity must never be abstracted away.\
+\
+The twists and turns were not waste \'97 they were the refinement process that carved the product\'92s final shape.}

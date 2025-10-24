@@ -5,7 +5,7 @@
  */
 
 const BULLET_MARKERS = /^\s*(?:[•\-\*]|\d+[\.)]\s)/;
-const SECTION_HEADERS = /^(?:ingredients?|directions?|method|instructions?|steps?)[:.]?\s*$/i;
+const SECTION_HEADERS = /^(?:ingredients?|directions?|method|instructions?|steps?|for the|meanwhile,? for|to finish|to serve|to assemble)[:.]?\s*$/i;
 const TEMPORAL_CUES = /\b(?:meanwhile|then|next|after|while|once)\b/i;
 
 /**

@@ -8,6 +8,8 @@ import { splitIntoSteps, cleanInstructionText, normalizeText } from "./splitter.
 import { extractDuration, extractTemperature } from "./extractors.js";
 import { findCanonicalVerb, getDefaultDuration, getAttentionMode } from "./verbMatcher.js";
 import { inferDependencies, inferSequentialDependencies } from "./dependencies.js";
+import { detectChains } from "./chains.js";
+import { generateEmergentIds, matchEmergentInputs } from "./emergentIngredients.js";
 
 /**
  * Parse raw recipe text into structured meal object
@@ -21,7 +23,8 @@ export async function parseRecipe(rawText, title = "Untitled Recipe", options = 
     autoDependencies = true,
     smartDependencies = false, // Use intelligent inference vs sequential
     roundAboutUp = true,
-    defaultAttention = "attended"
+    defaultAttention = "attended",
+    detectTaskChains = true // NEW: Enable chain detection
   } = options;
 
   if (!rawText || !rawText.trim()) {
@@ -103,7 +106,13 @@ export async function parseRecipe(rawText, title = "Untitled Recipe", options = 
     return task;
   });
 
-  // Step 3: Infer dependencies
+  // Step 3: Generate emergent IDs for outputs (TEMPORARILY DISABLED - debugging)
+  // let tasksWithEmergents = generateEmergentIds(tasks);
+
+  // Step 4: Match emergent IDs to inputs and add dependency edges (TEMPORARILY DISABLED - debugging)
+  // tasksWithEmergents = matchEmergentInputs(tasksWithEmergents);
+
+  // Step 5: Infer additional dependencies (equipment, temporal markers, etc.)
   let finalTasks = tasks;
   if (autoDependencies) {
     if (smartDependencies) {
@@ -113,11 +122,23 @@ export async function parseRecipe(rawText, title = "Untitled Recipe", options = 
     }
   }
 
-  // Step 4: Build meal object
+  // Step 6: Detect chains
+  let chains = [];
+  if (detectTaskChains) {
+    chains = detectChains(finalTasks, rawText);
+
+    // Step 6b: Renumber tasks to show chain context
+    if (chains.length > 0) {
+      finalTasks = renumberTasksWithChainContext(finalTasks, chains);
+    }
+  }
+
+  // Step 7: Build meal object
   const meal = {
     title,
     author: { name: "Local Parser v2.0" },
     tasks: finalTasks,
+    chains: chains.length > 0 ? chains : undefined, // Only include if chains detected
     packs_meta: {
       parser_version: "2.0.0",
       parsed_at: new Date().toISOString(),
@@ -125,12 +146,65 @@ export async function parseRecipe(rawText, title = "Untitled Recipe", options = 
       options: {
         autoDependencies,
         smartDependencies,
-        roundAboutUp
+        roundAboutUp,
+        detectTaskChains
       }
     }
   };
 
   return meal;
+}
+
+/**
+ * Renumber tasks to include chain context
+ * @param {Object[]} tasks - Array of tasks
+ * @param {Object[]} chains - Array of chains
+ * @returns {Object[]} - Tasks with new IDs
+ */
+function renumberTasksWithChainContext(tasks, chains) {
+  // Create a mapping from old task IDs to new chain-contextualized IDs
+  const idMap = new Map();
+  const renumberedTasks = [];
+
+  // Build the id mapping
+  chains.forEach((chain, chainIndex) => {
+    chain.tasks.forEach((oldTaskId, stepIndex) => {
+      const newTaskId = `chain_${chainIndex + 1}/step_${stepIndex + 1}`;
+      idMap.set(oldTaskId, newTaskId);
+    });
+  });
+
+  // Renumber all tasks
+  tasks.forEach(task => {
+    const newId = idMap.get(task.id);
+    if (!newId) {
+      // Task not in any chain - keep original ID
+      renumberedTasks.push(task);
+      return;
+    }
+
+    // Create new task with updated ID
+    const updatedTask = {
+      ...task,
+      id: newId,
+      edges: task.edges ? task.edges.map(edge => ({
+        ...edge,
+        from: idMap.get(edge.from) || edge.from,
+        to: idMap.get(edge.to) || edge.to || newId
+      })) : []
+    };
+
+    renumberedTasks.push(updatedTask);
+  });
+
+  // Update chain task references to use new IDs
+  chains.forEach((chain, chainIndex) => {
+    chain.tasks = chain.tasks.map((oldId, stepIndex) =>
+      `chain_${chainIndex + 1}/step_${stepIndex + 1}`
+    );
+  });
+
+  return renumberedTasks;
 }
 
 /**
