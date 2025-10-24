@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Full Timeline - All Chains with Dependencies</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      padding: 20px;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      overflow-x: auto;
+    }
+
+    .container {
+      min-width: 1200px;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 8px;
+      background: linear-gradient(90deg, #00d4ff, #7b2ff7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: bold;
+    }
+
+    .subtitle {
+      color: #888;
+      margin-bottom: 24px;
+      font-size: 14px;
+    }
+
+    .controls {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+
+    .control-group {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #aaa;
+    }
+
+    input[type="number"], select {
+      background: #0a0a0a;
+      border: 1px solid #444;
+      color: #e0e0e0;
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    input[type="number"] {
+      width: 80px;
+    }
+
+    select {
+      width: 200px;
+    }
+
+    button {
+      background: linear-gradient(135deg, #00d4ff, #7b2ff7);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .chain-section {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+
+    .chain-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .chain-title {
+      font-size: 16px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .chain-info {
+      font-size: 12px;
+      color: #888;
+    }
+
+    /* Chain colors */
+    .chain-0 .chain-title { color: #9b59b6; }
+    .chain-1 .chain-title { color: #3498db; }
+    .chain-2 .chain-title { color: #00d4ff; }
+    .chain-3 .chain-title { color: #e74c3c; }
+    .chain-4 .chain-title { color: #f39c12; }
+    .chain-5 .chain-title { color: #2ecc71; }
+
+    .time-axis {
+      height: 30px;
+      border-bottom: 1px solid #333;
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .time-marker {
+      position: absolute;
+      bottom: 0;
+      transform: translateX(-50%);
+      font-size: 11px;
+      color: #666;
+    }
+
+    .time-marker::before {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 1px;
+      height: 6px;
+      background: #444;
+    }
+
+    .task-track {
+      height: 50px;
+      position: relative;
+      margin-bottom: 6px;
+    }
+
+    .task-label {
+      position: absolute;
+      left: 0;
+      top: 6px;
+      font-size: 12px;
+      color: #aaa;
+      width: 250px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .task-bar-container {
+      position: absolute;
+      left: 270px;
+      right: 0;
+      height: 40px;
+      top: 5px;
+    }
+
+    .task-bar-solid {
+      position: absolute;
+      height: 100%;
+      border-radius: 4px 0 0 4px;
+    }
+
+    /* Chain-specific colors for solid bars */
+    .chain-0 .task-bar-solid { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+    .chain-1 .task-bar-solid { background: linear-gradient(135deg, #3498db, #2980b9); }
+    .chain-2 .task-bar-solid { background: linear-gradient(135deg, #00d4ff, #0099cc); }
+    .chain-3 .task-bar-solid { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+    .chain-4 .task-bar-solid { background: linear-gradient(135deg, #f39c12, #e67e22); }
+    .chain-5 .task-bar-solid { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+
+    .task-bar-extension {
+      position: absolute;
+      height: 100%;
+      border-radius: 0 4px 4px 0;
+      border: 1px dashed rgba(255, 255, 255, 0.2);
+      border-left: none;
+    }
+
+    /* Chain-specific striped extensions */
+    .chain-0 .task-bar-extension {
+      background: repeating-linear-gradient(45deg, rgba(155, 89, 182, 0.15), rgba(155, 89, 182, 0.15) 4px, rgba(155, 89, 182, 0.05) 4px, rgba(155, 89, 182, 0.05) 8px);
+    }
+    .chain-1 .task-bar-extension {
+      background: repeating-linear-gradient(45deg, rgba(52, 152, 219, 0.15), rgba(52, 152, 219, 0.15) 4px, rgba(52, 152, 219, 0.05) 4px, rgba(52, 152, 219, 0.05) 8px);
+    }
+    .chain-2 .task-bar-extension {
+      background: repeating-linear-gradient(45deg, rgba(0, 212, 255, 0.15), rgba(0, 212, 255, 0.15) 4px, rgba(0, 212, 255, 0.05) 4px, rgba(0, 212, 255, 0.05) 8px);
+    }
+    .chain-3 .task-bar-extension {
+      background: repeating-linear-gradient(45deg, rgba(231, 76, 60, 0.15), rgba(231, 76, 60, 0.15) 4px, rgba(231, 76, 60, 0.05) 4px, rgba(231, 76, 60, 0.05) 8px);
+    }
+    .chain-4 .task-bar-extension {
+      background: repeating-linear-gradient(45deg, rgba(243, 156, 18, 0.15), rgba(243, 156, 18, 0.15) 4px, rgba(243, 156, 18, 0.05) 4px, rgba(243, 156, 18, 0.05) 8px);
+    }
+    .chain-5 .task-bar-extension {
+      background: repeating-linear-gradient(45deg, rgba(46, 204, 113, 0.15), rgba(46, 204, 113, 0.15) 4px, rgba(46, 204, 113, 0.05) 4px, rgba(46, 204, 113, 0.05) 8px);
+    }
+
+    .task-duration {
+      position: absolute;
+      z-index: 10;
+      color: white;
+      font-weight: 600;
+      font-size: 11px;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .hold-window-label {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.5);
+      font-style: italic;
+      z-index: 10;
+    }
+
+    .stats {
+      background: #0a0a0a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 16px;
+      font-size: 12px;
+      color: #888;
+      line-height: 1.8;
+    }
+
+    .stats strong {
+      color: #00d4ff;
+    }
+
+    .legend {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 16px;
+      display: flex;
+      gap: 24px;
+      font-size: 12px;
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .legend-box {
+      width: 40px;
+      height: 20px;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Full Timeline Visualization</h1>
+    <p class="subtitle">Mac & Cheese: All Chains with Hold Window Extensions</p>
+
+    <div class="controls">
+      <div class="control-group">
+        <label>
+          Pixels per minute:
+          <input type="number" id="pixelsPerMin" value="12" min="1" max="30">
+        </label>
+        <label>
+          Layout mode:
+          <select id="layoutMode">
+            <option value="sequential">Sequential (one after another)</option>
+            <option value="parallel">Parallel (show actual dependencies)</option>
+          </select>
+        </label>
+        <button onclick="render()">Re-render</button>
+        <button onclick="loadMacAndCheese()">Load Mac & Cheese Data</button>
+      </div>
+    </div>
+
+    <div id="chains"></div>
+
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-box" style="background: linear-gradient(135deg, #00d4ff, #0099cc);"></div>
+        <span>Task Duration (active work)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-box" style="background: repeating-linear-gradient(45deg, rgba(0, 212, 255, 0.15), rgba(0, 212, 255, 0.15) 4px, rgba(0, 212, 255, 0.05) 4px, rgba(0, 212, 255, 0.05) 8px); border: 1px dashed rgba(255,255,255,0.2);"></div>
+        <span>Hold Window (output stays viable)</span>
+      </div>
+    </div>
+
+    <div class="stats" id="stats">
+      Click "Load Mac & Cheese Data" to begin
+    </div>
+  </div>
+
+  <script type="module">
+    import { parseRecipe } from '../src/parser/index.js';
+
+    let parsedData = null;
+
+    window.loadMacAndCheese = async function() {
+      const macCheeseNarrative = `Ingredients
+Kosher salt
+1 pound elbow macaroni
+4 cloves garlic, smashed and divided
+5 1/2 cups shredded sharp white Cheddar
+2 tablespoons butter
+3 tablespoons all-purpose flour
+1 tablespoon powdered mustard
+3 cups milk
+1/2 medium onion, peeled and chopped
+1 bay leaf
+1/2 teaspoon paprika
+1 teaspoon freshly ground black pepper
+8 slices bacon, diced
+1 large onion, diced
+Thyme sprigs
+
+Directions
+Bring a pot of salted water to a boil over high heat. Add the macaroni and cook for 8 to 9 minutes, until al dente. Drain.
+
+Preheat the oven to 400 degrees F.
+
+In a small saucepan heat the milk with the thyme sprigs and 2 garlic cloves. Melt the butter in a large, deep skillet over medium-high heat. Whisk in the flour and cook for about 1 minute, stirring constantly, to keep lumps from forming. Still whisking, add the hot milk, bring up to a bubble, then add the cheese a little at a time. Keep whisking until the sauce is smooth. Add the mustard, paprika, black pepper. Fold the macaroni into the cheese sauce and keep stirring until well combined. Season with salt. Scrape into a buttered 3-quart casserole dish or into individual buttered gratin dishes.
+
+Bake for 25 to 30 minutes, or until bubbly and the top is browned.
+
+While that bakes, heat a saute pan. Add the bacon, render the fat and cook until crispy. Toss in the remaining garlic and the onion. Saute until soft and golden. Season with salt and pepper.
+
+To serve, crumble the bacon mixture over the top of the mac and cheese. If desired, broil for 1 minute to really brown the top.`;
+
+      console.log('🍝 Parsing Mac & Cheese...');
+
+      const result = await parseRecipe(macCheeseNarrative, 'Mac & Cheese', {
+        autoDependencies: false,
+        detectTaskChains: true,
+        useSemanticChains: true
+      });
+
+      console.log('✅ Parse complete:', result);
+
+      parsedData = {
+        chains: result.chains || [],
+        tasks: result.tasks || []
+      };
+
+      render();
+    };
+
+    window.render = function() {
+      if (!parsedData) {
+        document.getElementById('stats').innerHTML = 'No data loaded. Click "Load Mac & Cheese Data" first.';
+        return;
+      }
+
+      const pixelsPerMin = parseInt(document.getElementById('pixelsPerMin').value) || 12;
+      const layoutMode = document.getElementById('layoutMode').value;
+
+      const chainsContainer = document.getElementById('chains');
+      chainsContainer.innerHTML = '';
+
+      let totalTasks = 0;
+      let totalDuration = 0;
+
+      parsedData.chains.forEach((chain, chainIdx) => {
+        const chainTasks = chain.tasks.map(taskId => {
+          return parsedData.tasks.find(t => t.id === taskId);
+        }).filter(Boolean);
+
+        if (chainTasks.length === 0) return;
+
+        totalTasks += chainTasks.length;
+
+        const chainDuration = chainTasks.reduce((sum, t) => sum + (t.planned_min || 0), 0);
+        totalDuration += chainDuration;
+
+        const maxHoldWindow = Math.max(...chainTasks.map(t => t.hold_window_minutes || 0));
+        const timelineWidth = (chainDuration + maxHoldWindow) * pixelsPerMin;
+
+        // Create chain section
+        const section = document.createElement('div');
+        section.className = `chain-section chain-${chainIdx}`;
+
+        const header = document.createElement('div');
+        header.className = 'chain-header';
+
+        const title = document.createElement('div');
+        title.className = 'chain-title';
+        title.textContent = chain.name;
+
+        const info = document.createElement('div');
+        info.className = 'chain-info';
+        info.textContent = `${chainTasks.length} tasks • ${chainDuration} min • max hold: ${formatDuration(maxHoldWindow)}`;
+
+        header.appendChild(title);
+        header.appendChild(info);
+        section.appendChild(header);
+
+        // Time axis
+        const timeAxis = document.createElement('div');
+        timeAxis.className = 'time-axis';
+        timeAxis.style.width = timelineWidth + 'px';
+
+        const markerInterval = 5;
+        for (let t = 0; t <= chainDuration + maxHoldWindow; t += markerInterval) {
+          const marker = document.createElement('div');
+          marker.className = 'time-marker';
+          marker.style.left = (t * pixelsPerMin) + 'px';
+          marker.textContent = t + 'm';
+          timeAxis.appendChild(marker);
+        }
+        section.appendChild(timeAxis);
+
+        // Task tracks
+        let currentStart = 0;
+        chainTasks.forEach((task, idx) => {
+          const duration = task.planned_min || 0;
+          const holdWindow = task.hold_window_minutes || 0;
+
+          const track = document.createElement('div');
+          track.className = 'task-track';
+
+          const label = document.createElement('div');
+          label.className = 'task-label';
+          label.textContent = `${idx + 1}. ${task.name}`;
+          track.appendChild(label);
+
+          const barContainer = document.createElement('div');
+          barContainer.className = 'task-bar-container';
+          barContainer.style.width = timelineWidth + 'px';
+
+          // Solid bar
+          const solidBar = document.createElement('div');
+          solidBar.className = 'task-bar-solid';
+          solidBar.style.left = (currentStart * pixelsPerMin) + 'px';
+          solidBar.style.width = (duration * pixelsPerMin) + 'px';
+          barContainer.appendChild(solidBar);
+
+          // Duration label
+          const durationLabel = document.createElement('div');
+          durationLabel.className = 'task-duration';
+          durationLabel.textContent = duration + ' min';
+          durationLabel.style.left = (currentStart * pixelsPerMin + 10) + 'px';
+          barContainer.appendChild(durationLabel);
+
+          // Hold window extension
+          if (holdWindow > 0) {
+            const extension = document.createElement('div');
+            extension.className = 'task-bar-extension';
+            extension.style.left = ((currentStart + duration) * pixelsPerMin) + 'px';
+            extension.style.width = (holdWindow * pixelsPerMin) + 'px';
+            barContainer.appendChild(extension);
+
+            const holdLabel = document.createElement('div');
+            holdLabel.className = 'hold-window-label';
+            holdLabel.textContent = `hold ${formatDuration(holdWindow)}`;
+            holdLabel.style.left = ((currentStart + duration) * pixelsPerMin + 10) + 'px';
+            barContainer.appendChild(holdLabel);
+          }
+
+          track.appendChild(barContainer);
+          section.appendChild(track);
+
+          currentStart += duration;
+        });
+
+        chainsContainer.appendChild(section);
+      });
+
+      // Update stats
+      document.getElementById('stats').innerHTML = `
+        <strong>Mac & Cheese Full Timeline</strong><br>
+        Total chains: ${parsedData.chains.length}<br>
+        Total tasks: ${totalTasks}<br>
+        Total cook time: ${totalDuration} min<br>
+        Layout mode: ${layoutMode}
+      `;
+    };
+
+    function formatDuration(minutes) {
+      if (minutes >= 1440) {
+        return `${(minutes / 1440).toFixed(1)}d`;
+      } else if (minutes >= 60) {
+        return `${(minutes / 60).toFixed(1)}h`;
+      } else {
+        return `${minutes}m`;
+      }
+    }
+  </script>
+</body>
+</html>
