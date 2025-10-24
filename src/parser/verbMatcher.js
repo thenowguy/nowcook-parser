@@ -215,3 +215,23 @@ export function getAttentionMode(canonicalVerb) {
   const verbDef = getVerbDefinition(canonicalVerb);
   return verbDef?.attention ?? "attended";
 }
+
+/**
+ * Get hold window (how long emergent ingredient stays usable) for verb
+ * @param {string} canonicalVerb - Canonical verb name
+ * @returns {number|null} - Hold window in minutes
+ */
+export function getHoldWindow(canonicalVerb) {
+  const verbDef = getVerbDefinition(canonicalVerb);
+  return verbDef?.hold_window_minutes ?? null;
+}
+
+/**
+ * Get temporal flexibility classification for verb
+ * @param {string} canonicalVerb - Canonical verb name
+ * @returns {string} - "prep_any_time", "hold_days", "hold_hours", "hold_minutes", "serve_immediate"
+ */
+export function getTemporalFlexibility(canonicalVerb) {
+  const verbDef = getVerbDefinition(canonicalVerb);
+  return verbDef?.temporal_flexibility ?? "serve_immediate";
+}

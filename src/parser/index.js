@@ -6,7 +6,7 @@
 
 import { splitIntoSteps, cleanInstructionText, normalizeText } from "./splitter.js";
 import { extractDuration, extractTemperature } from "./extractors.js";
-import { findCanonicalVerb, getDefaultDuration, getAttentionMode } from "./verbMatcher.js";
+import { findCanonicalVerb, getDefaultDuration, getAttentionMode, getHoldWindow, getTemporalFlexibility } from "./verbMatcher.js";
 import { inferDependencies, inferSequentialDependencies } from "./dependencies.js";
 import { detectChains } from "./chains.js";
 import { detectChainsSemanticly } from "./semanticChains.js";
@@ -82,6 +82,8 @@ export async function parseRecipe(rawText, title = "Untitled Recipe", options = 
     // Get defaults from verb definition
     const defaultDuration = getDefaultDuration(canonicalVerb);
     const attentionMode = getAttentionMode(canonicalVerb);
+    const holdWindow = getHoldWindow(canonicalVerb);
+    const temporalFlexibility = getTemporalFlexibility(canonicalVerb);
 
     // Determine final duration
     const plannedMin = extractedDuration ?? defaultDuration ?? null;
@@ -99,6 +101,8 @@ export async function parseRecipe(rawText, title = "Untitled Recipe", options = 
       planned_min: plannedMin,
       requires_driver: requiresDriver,
       self_running_after_start: selfRunningAfterStart,
+      hold_window_minutes: holdWindow,
+      temporal_flexibility: temporalFlexibility,
       inputs: extractIngredients(cleaned),
       outputs: [],
       equipment: extractEquipment(cleaned),
@@ -164,6 +168,10 @@ export async function parseRecipe(rawText, title = "Untitled Recipe", options = 
       // Add sequential dependencies within each chain
       console.log('🔗 Adding sequential dependencies within chains...');
       finalTasks = addSequentialDependenciesWithinChains(finalTasks, chains);
+
+      // Add cross-chain dependencies based on emergent ingredient flow
+      console.log('🔗 Adding cross-chain dependencies with flexible constraints...');
+      finalTasks = addCrossChainDependencies(finalTasks, chains);
     } else {
       // Legacy algorithmic chain detection
       chains = detectChains(finalTasks, rawText);
@@ -200,6 +208,7 @@ export async function parseRecipe(rawText, title = "Untitled Recipe", options = 
 /**
  * Adds sequential Finish-to-Start dependencies within each chain.
  * Each task (except the first) depends on the previous task finishing.
+ * Uses FLEXIBLE vs RIGID constraints based on temporal_flexibility.
  *
  * @param {Object[]} tasks - Array of tasks
  * @param {Object[]} chains - Array of chains with task IDs
@@ -216,25 +225,124 @@ function addSequentialDependenciesWithinChains(tasks, chains) {
       const previousTaskId = chain.tasks[i - 1];
 
       const currentTask = taskMap.get(currentTaskId);
-      if (currentTask) {
+      const previousTask = taskMap.get(previousTaskId);
+
+      if (currentTask && previousTask) {
         // Check if this edge already exists
         const edgeExists = currentTask.edges && currentTask.edges.some(
           edge => edge.from === previousTaskId && edge.to === currentTaskId && edge.type === 'FS'
         );
 
         if (!edgeExists) {
-          // Add FS (Finish-to-Start) dependency
+          // Determine constraint type based on predecessor's temporal flexibility
+          const temporalFlex = previousTask.temporal_flexibility;
+          const holdWindow = previousTask.hold_window_minutes || 0;
+
+          // FLEXIBLE: Task output can hold (prep_any_time, hold_days, hold_hours, hold_minutes)
+          // RIGID: Task output must be used immediately (serve_immediate)
+          const constraint = (temporalFlex === 'serve_immediate') ? 'RIGID' : 'FLEXIBLE';
+
+          // Add FS (Finish-to-Start) dependency with constraint
           if (!currentTask.edges) {
             currentTask.edges = [];
           }
-          currentTask.edges.push({
+
+          const edge = {
             from: previousTaskId,
             to: currentTaskId,
-            type: 'FS'
-          });
+            type: 'FS',
+            constraint: constraint
+          };
+
+          // For FLEXIBLE edges, add hold window metadata
+          if (constraint === 'FLEXIBLE' && holdWindow > 0) {
+            edge.hold_window_minutes = holdWindow;
+            edge.temporal_flexibility = temporalFlex;
+          }
+
+          currentTask.edges.push(edge);
         }
       }
     }
+  });
+
+  return tasks;
+}
+
+/**
+ * Adds cross-chain dependencies based on emergent ingredient flow.
+ * Uses FLEXIBLE constraints since cross-chain dependencies typically involve
+ * ingredients that can hold (sauces, prepped ingredients, cooked components).
+ *
+ * @param {Object[]} tasks - Array of tasks
+ * @param {Object[]} chains - Array of chains with inputs/outputs
+ * @returns {Object[]} - Tasks with updated edges
+ */
+function addCrossChainDependencies(tasks, chains) {
+  // Create maps for quick lookup
+  const taskMap = new Map(tasks.map(t => [t.id, t]));
+  const chainMap = new Map(chains.map(c => [c.id, c]));
+
+  chains.forEach(chain => {
+    // For each input this chain needs from another chain
+    if (!chain.inputs || chain.inputs.length === 0) return;
+
+    chain.inputs.forEach(input => {
+      if (!input.from_chain || !input.required) return;
+
+      const sourceChain = chainMap.get(input.from_chain);
+      if (!sourceChain || !sourceChain.tasks || sourceChain.tasks.length === 0) return;
+
+      // Get the LAST task of the source chain (the one that produces the output)
+      const sourceTaskId = sourceChain.tasks[sourceChain.tasks.length - 1];
+      const sourceTask = taskMap.get(sourceTaskId);
+
+      // Get the FIRST task of the dependent chain (the one that needs the input)
+      const dependentTaskId = chain.tasks[0];
+      const dependentTask = taskMap.get(dependentTaskId);
+
+      if (!sourceTask || !dependentTask) return;
+
+      // Check if edge already exists
+      const edgeExists = dependentTask.edges && dependentTask.edges.some(
+        edge => edge.from === sourceTaskId && edge.to === dependentTaskId
+      );
+
+      if (!edgeExists) {
+        // Cross-chain dependencies are typically FLEXIBLE because:
+        // - Sauces can hold for hours
+        // - Prepped ingredients can hold for days
+        // - Cooked components can usually wait
+
+        const holdWindow = sourceTask.hold_window_minutes || 0;
+        const temporalFlex = sourceTask.temporal_flexibility || 'hold_hours';
+
+        // Use FLEXIBLE constraint unless the source task is serve_immediate
+        const constraint = (temporalFlex === 'serve_immediate') ? 'RIGID' : 'FLEXIBLE';
+
+        if (!dependentTask.edges) {
+          dependentTask.edges = [];
+        }
+
+        const edge = {
+          from: sourceTaskId,
+          to: dependentTaskId,
+          type: 'FS',
+          constraint: constraint,
+          cross_chain: true,
+          emergent_ingredient: input.ingredient
+        };
+
+        if (constraint === 'FLEXIBLE' && holdWindow > 0) {
+          edge.hold_window_minutes = holdWindow;
+          edge.temporal_flexibility = temporalFlex;
+        }
+
+        dependentTask.edges.push(edge);
+
+        console.log(`  ✅ Cross-chain: ${sourceChain.name} → ${chain.name} (${constraint}, ${holdWindow}min hold)`);
+      }
+    });
   });
 
   return tasks;

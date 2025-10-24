@@ -14,7 +14,9 @@
         "\\bcook.*(?:until|till).*(?:soft|golden|translucent)\\b",
         "\\bbrown.*in.*(?:pan|skillet)\\b"
       ],
-      "defaults": { "planned_min": 8 }
+      "defaults": { "planned_min": 8 },
+      "hold_window_minutes": 1440,
+      "temporal_flexibility": "hold_hours"
     },
     {
       "canon": "simmer",
@@ -25,7 +27,9 @@
         "\\bgentle.*boil\\b",
         "\\bcook.*(?:gently|slowly)\\b"
       ],
-      "defaults": { "planned_min": 20 }
+      "defaults": { "planned_min": 20 },
+      "hold_window_minutes": 60,
+      "temporal_flexibility": "hold_hours"
     },
     {
       "canon": "boil",
@@ -35,7 +39,9 @@
         "\\bbring.*to.*(?:a )?boil\\b",
         "\\bboiling.*water\\b"
       ],
-      "defaults": { "planned_min": 10 }
+      "defaults": { "planned_min": 10 },
+      "hold_window_minutes": 5,
+      "temporal_flexibility": "serve_immediate"
     },
     {
       "canon": "roast",
@@ -45,7 +51,9 @@
         "\\broast.*until\\b",
         "\\boven.*roast\\b"
       ],
-      "defaults": { "planned_min": 45 }
+      "defaults": { "planned_min": 45 },
+      "hold_window_minutes": 120,
+      "temporal_flexibility": "hold_hours"
     },
     {
       "canon": "bake",
@@ -56,7 +64,9 @@
         "\\bplace.*in.*oven\\b",
         "\\btransfer.*to.*oven\\b"
       ],
-      "defaults": { "planned_min": 30 }
+      "defaults": { "planned_min": 30 },
+      "hold_window_minutes": 60,
+      "temporal_flexibility": "hold_hours"
     },
     {
       "canon": "slice",
@@ -66,7 +76,9 @@
         "\\bthinly\\s+slice\\b",
         "\\bslice\\s+the\\b"
       ],
-      "defaults": { "planned_min": 3 }
+      "defaults": { "planned_min": 3 },
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days"
     },
     {
       "canon": "dice",
@@ -76,7 +88,9 @@
         "\\bcube\\b",
         "\\bchop.*(?:into|to).*(?:small|fine).*pieces\\b"
       ],
-      "defaults": { "planned_min": 3 }
+      "defaults": { "planned_min": 3 },
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days"
     },
     {
       "canon": "chop",
@@ -86,7 +100,9 @@
         "\\bcut.*into.*pieces\\b",
         "\\bcut.*up\\b"
       ],
-      "defaults": { "planned_min": 2 }
+      "defaults": { "planned_min": 2 },
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days"
     },
     {
       "canon": "mince",
@@ -96,7 +112,9 @@
         "\\bfinely.*chop\\b",
         "\\bchop.*finely\\b"
       ],
-      "defaults": { "planned_min": 3 }
+      "defaults": { "planned_min": 3 },
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days"
     },
     {
       "canon": "preheat_oven",
@@ -106,7 +124,9 @@
         "\\bheat.*oven.*to\\b",
         "\\bset.*oven.*to\\b"
       ],
-      "defaults": { "planned_min": 12 }
+      "defaults": { "planned_min": 12 },
+      "hold_window_minutes": 0,
+      "temporal_flexibility": "serve_immediate"
     },
     {
       "canon": "season",
@@ -117,7 +137,9 @@
         "\\badd.*(?:salt|seasoning)\\b",
         "\\bsprinkle\\s+with\\b"
       ],
-      "defaults": { "planned_min": 1 }
+      "defaults": { "planned_min": 1 },
+      "hold_window_minutes": 0,
+      "temporal_flexibility": "serve_immediate"
     },
     {
       "canon": "stir",
@@ -128,7 +150,9 @@
         "\\bstir\\s+until\\b",
         "\\bmix\\b"
       ],
-      "defaults": { "planned_min": 1 }
+      "defaults": { "planned_min": 1 },
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes"
     },
     {
       "canon": "whisk",
@@ -138,7 +162,9 @@
         "\\bbeat\\b",
         "\\bbeat\\s+together\\b"
       ],
-      "defaults": { "planned_min": 2 }
+      "defaults": { "planned_min": 2 },
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes"
     },
     {
       "canon": "drain",
@@ -149,7 +175,9 @@
         "\\bstrain\\b",
         "\\bpour.*off.*(?:liquid|water)\\b"
       ],
-      "defaults": { "planned_min": 1 }
+      "defaults": { "planned_min": 1 },
+      "hold_window_minutes": 5,
+      "temporal_flexibility": "serve_immediate"
     },
     {
       "canon": "add",
@@ -161,7 +189,9 @@
         "\\bfold.*in\\b",
         "\\bincorporate\\b"
       ],
-      "defaults": { "planned_min": 1 }
+      "defaults": { "planned_min": 1 },
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes"
     },
     {
       "canon": "pour",
@@ -170,7 +200,9 @@
         "\\bpour\\b",
         "\\btransfer.*liquid\\b"
       ],
-      "defaults": { "planned_min": 1 }
+      "defaults": { "planned_min": 1 },
+      "hold_window_minutes": 15,
+      "temporal_flexibility": "hold_minutes"
     },
     {
       "canon": "plate",
@@ -181,7 +213,9 @@
         "\\bdish\\s+up\\b",
         "\\btransfer.*to.*(?:plate|platter|serving dish)\\b"
       ],
-      "defaults": { "planned_min": 2 }
+      "defaults": { "planned_min": 2 },
+      "hold_window_minutes": 0,
+      "temporal_flexibility": "serve_immediate"
     },
     {
       "canon": "rest",
@@ -193,7 +227,9 @@
         "\\bset aside.*for\\b",
         "\\ballow\\s+to\\s+rest\\b"
       ],
-      "defaults": { "planned_min": 10 }
+      "defaults": { "planned_min": 10 },
+      "hold_window_minutes": 60,
+      "temporal_flexibility": "hold_hours"
     },
     {
       "canon": "bring_to_boil",
@@ -203,7 +239,9 @@
         "\\bheat.*until.*boiling\\b",
         "\\bbring\\s+up\\s+to\\s+a\\s+boil\\b"
       ],
-      "defaults": { "planned_min": 8 }
+      "defaults": { "planned_min": 8 },
+      "hold_window_minutes": 0,
+      "temporal_flexibility": "serve_immediate"
     },
     {
       "canon": "reduce_heat",
@@ -213,7 +251,9 @@
         "\\blower.*heat\\b",
         "\\bturn.*(?:down|to low)\\b"
       ],
-      "defaults": { "planned_min": 1 }
+      "defaults": { "planned_min": 1 },
+      "hold_window_minutes": 0,
+      "temporal_flexibility": "serve_immediate"
     },
     {
       "canon": "heat_oil",
@@ -224,7 +264,9 @@
         "\\bmelt.*butter\\b",
         "\\bheat\\s+(?:the\\s+)?(?:olive\\s+)?oil\\b"
       ],
-      "defaults": { "planned_min": 3 }
+      "defaults": { "planned_min": 3 },
+      "hold_window_minutes": 10,
+      "temporal_flexibility": "hold_minutes"
     },
     {
       "canon": "cover",
@@ -234,7 +276,9 @@
         "\\bput.*lid.*on\\b",
         "\\bcover.*with.*(?:lid|foil)\\b"
       ],
-      "defaults": { "planned_min": 1 }
+      "defaults": { "planned_min": 1 },
+      "hold_window_minutes": 0,
+      "temporal_flexibility": "serve_immediate"
     },
     {
       "canon": "grill",
@@ -244,7 +288,9 @@
         "\\bbarbecue\\b",
         "\\bcook.*on.*grill\\b"
       ],
-      "defaults": { "planned_min": 12 }
+      "defaults": { "planned_min": 12 },
+      "hold_window_minutes": 120,
+      "temporal_flexibility": "hold_hours"
     },
     {
       "canon": "marinate",
@@ -254,7 +300,9 @@
         "\\bsoak.*in.*marinade\\b",
         "\\blet.*marinate\\b"
       ],
-      "defaults": { "planned_min": 30 }
+      "defaults": { "planned_min": 30 },
+      "hold_window_minutes": 43200,
+      "temporal_flexibility": "prep_any_time"
     },
     {
       "canon": "toss",
@@ -264,7 +312,9 @@
         "\\bshuffle\\s+the\\s+vegetables\\b",
         "\\bstir\\s+around\\b"
       ],
-      "defaults": { "planned_min": 1 }
+      "defaults": { "planned_min": 1 },
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes"
     },
     {
       "canon": "arrange",
@@ -277,7 +327,9 @@
         "\\bset\\s+on\\s+top\\s+of\\b",
         "\\bspread\\s+the\\b"
       ],
-      "defaults": { "planned_min": 2 }
+      "defaults": { "planned_min": 2 },
+      "hold_window_minutes": 10,
+      "temporal_flexibility": "hold_minutes"
     },
     {
       "canon": "stuff",
@@ -287,7 +339,9 @@
         "\\bfill\\s+cavity\\b",
         "\\binsert\\s+into\\s+the\\s+cavity\\b"
       ],
-      "defaults": { "planned_min": 3 }
+      "defaults": { "planned_min": 3 },
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days"
     },
     {
       "canon": "truss",
@@ -297,7 +351,9 @@
         "\\btie\\s+legs\\b",
         "\\bbind\\s+chicken\\b"
       ],
-      "defaults": { "planned_min": 2 }
+      "defaults": { "planned_min": 2 },
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days"
     },
     {
       "canon": "drizzle",
@@ -307,7 +363,9 @@
         "\\bdrizzle\\s+with\\b",
         "\\bdrizzle\\s+over\\b"
       ],
-      "defaults": { "planned_min": 1 }
+      "defaults": { "planned_min": 1 },
+      "hold_window_minutes": 0,
+      "temporal_flexibility": "serve_immediate"
     },
     {
       "canon": "julienne",
@@ -316,7 +374,9 @@
         "\\bjulienne\\b",
         "\\bcut.*into.*matchsticks\\b"
       ],
-      "defaults": { "planned_min": 5 }
+      "defaults": { "planned_min": 5 },
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days"
     },
     {
       "canon": "sear",
@@ -326,7 +386,9 @@
         "\\bbrown.*quickly\\b",
         "\\bcook.*over.*high.*heat\\b"
       ],
-      "defaults": { "planned_min": 5 }
+      "defaults": { "planned_min": 5 },
+      "hold_window_minutes": 120,
+      "temporal_flexibility": "hold_hours"
     },
     {
       "canon": "deglaze",
@@ -336,7 +398,9 @@
         "\\badd.*wine.*scrape\\b",
         "\\bscrape.*brown.*bits\\b"
       ],
-      "defaults": { "planned_min": 2 }
+      "defaults": { "planned_min": 2 },
+      "hold_window_minutes": 15,
+      "temporal_flexibility": "hold_minutes"
     },
     {
       "canon": "reduce",
@@ -346,7 +410,9 @@
         "\\breduce.*by.*half\\b",
         "\\bcook.*until.*thickened\\b"
       ],
-      "defaults": { "planned_min": 15 }
+      "defaults": { "planned_min": 15 },
+      "hold_window_minutes": 240,
+      "temporal_flexibility": "hold_hours"
     },
     {
       "canon": "blanch",
@@ -356,7 +422,9 @@
         "\\bboil.*briefly\\b",
         "\\bboil.*then.*ice.*water\\b"
       ],
-      "defaults": { "planned_min": 3 }
+      "defaults": { "planned_min": 3 },
+      "hold_window_minutes": 1440,
+      "temporal_flexibility": "hold_hours"
     },
     {
       "canon": "shock",
@@ -366,7 +434,9 @@
         "\\bplunge.*into.*ice.*water\\b",
         "\\bstop.*cooking.*ice\\b"
       ],
-      "defaults": { "planned_min": 2 }
+      "defaults": { "planned_min": 2 },
+      "hold_window_minutes": 1440,
+      "temporal_flexibility": "hold_hours"
     },
     {
       "canon": "peel",
@@ -376,7 +446,9 @@
         "\\bremove.*skin\\b",
         "\\bpeel.*and.*discard\\b"
       ],
-      "defaults": { "planned_min": 2 }
+      "defaults": { "planned_min": 2 },
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days"
     },
     {
       "canon": "zest",
@@ -385,7 +457,9 @@
         "\\bzest\\b",
         "\\bgrate.*(?:lemon|lime|orange).*peel\\b"
       ],
-      "defaults": { "planned_min": 2 }
+      "defaults": { "planned_min": 2 },
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days"
     },
     {
       "canon": "combine",
@@ -395,7 +469,9 @@
         "\\bmix.*together\\b",
         "\\bblend.*together\\b"
       ],
-      "defaults": { "planned_min": 2 }
+      "defaults": { "planned_min": 2 },
+      "hold_window_minutes": 60,
+      "temporal_flexibility": "hold_hours"
     },
     {
       "canon": "fold",
@@ -405,7 +481,9 @@
         "\\bgently.*fold\\b",
         "\\bfold.*in\\b"
       ],
-      "defaults": { "planned_min": 2 }
+      "defaults": { "planned_min": 2 },
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes"
     },
     {
       "canon": "rest_meat",
@@ -416,7 +494,9 @@
         "\\blet\\s+rest\\b",
         "\\bleave\\s+to\\s+rest\\b"
       ],
-      "defaults": { "planned_min": 15 }
+      "defaults": { "planned_min": 15 },
+      "hold_window_minutes": 60,
+      "temporal_flexibility": "hold_hours"
     }
   ]
 }
