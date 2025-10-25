@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Atomic Task Extraction</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .test-case {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .input {
+      background: #f0f0f0;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      font-style: italic;
+    }
+    .output {
+      margin-top: 10px;
+    }
+    .task {
+      padding: 8px;
+      margin: 4px 0;
+      background: #e3f2fd;
+      border-left: 3px solid #2196f3;
+      border-radius: 4px;
+    }
+    h1 { color: #333; }
+    h3 { color: #666; margin-top: 0; }
+  </style>
+</head>
+<body>
+  <h1>Atomic Task Extraction Test</h1>
+  <div id="results"></div>
+
+  <script type="module">
+    // Inline the extractAtomicActions function (matching semanticChains.js)
+    function extractAtomicTasks(text) {
+      // Common cooking verbs to detect (imperative form)
+      const commonVerbs = [
+        'add', 'pour', 'stir', 'whisk', 'mix', 'combine', 'blend',
+        'bring', 'reduce', 'increase', 'adjust',
+        'cook', 'sauté', 'simmer', 'boil', 'bake', 'roast', 'grill', 'fry',
+        'heat', 'warm', 'melt', 'brown',
+        'chop', 'slice', 'dice', 'mince', 'grate', 'peel',
+        'season', 'taste', 'serve', 'plate', 'garnish',
+        'cover', 'uncover', 'remove', 'transfer', 'arrange',
+        'drain', 'rinse', 'pat', 'squeeze',
+        'break', 'tear', 'cut', 'trim',
+        'toss', 'fold', 'roll', 'shape',
+        'scrape', 'deglaze'
+      ];
+
+      const tasks = [];
+
+      // Split by periods first (sentence boundaries)
+      const sentences = text.split(/\.\s+/).filter(s => s.trim().length > 0);
+
+      for (const sentence of sentences) {
+        const words = sentence.split(/\s+/);
+        let potentialSplitIndices = [];
+
+        // Find potential split points
+        for (let i = 0; i < words.length - 1; i++) {
+          const word = words[i].toLowerCase().replace(/[,;]$/, '');
+          const nextWord = words[i + 1].toLowerCase();
+
+          // Check if next word (or word after "then") is a cooking verb
+          let verbIndex = i + 1;
+          if (nextWord === 'then' && i + 2 < words.length) {
+            verbIndex = i + 2;
+          }
+
+          const potentialVerb = words[verbIndex].toLowerCase();
+
+          if (commonVerbs.includes(potentialVerb)) {
+            // This looks like a verb after a conjunction
+            if (word === 'then' || word === 'and' || words[i].endsWith(',') || words[i].endsWith(';')) {
+              potentialSplitIndices.push(verbIndex);
+            }
+          }
+        }
+
+        // Also look for gerund patterns: ", VERBing"
+        const gerundPattern = /,\s+([a-z]+ing\b)/gi;
+        let match;
+        while ((match = gerundPattern.exec(sentence)) !== null) {
+          const gerundStem = match[1].replace(/ing$/, '').toLowerCase();
+          // Check if the stem is a known verb
+          if (commonVerbs.some(v => v.startsWith(gerundStem) || gerundStem.startsWith(v))) {
+            // Mark this as a split point
+            const words_before_gerund = sentence.substring(0, match.index).split(/\s+/).length;
+            if (!potentialSplitIndices.includes(words_before_gerund)) {
+              potentialSplitIndices.push(words_before_gerund);
+            }
+          }
+        }
+
+        // If we found split points, split the sentence
+        if (potentialSplitIndices.length > 0) {
+          potentialSplitIndices.sort((a, b) => a - b);
+          let lastIndex = 0;
+
+          potentialSplitIndices.forEach(splitIndex => {
+            const taskWords = words.slice(lastIndex, splitIndex);
+            const taskText = taskWords.join(' ').trim();
+
+            if (taskText.length > 5) {
+              // Clean up: remove leading/trailing punctuation and conjunctions
+              let cleaned = taskText
+                .replace(/^[,;]\s*/, '')           // Remove leading comma/semicolon
+                .replace(/[,;]\s*$/, '')           // Remove trailing comma/semicolon
+                .replace(/^(then|and)\s+/i, '')    // Remove leading "then"/"and"
+                .replace(/\s+(then|and)$/i, '')    // Remove trailing "then"/"and"
+                .trim();
+
+              if (cleaned.length > 0) {
+                cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+                tasks.push(cleaned);
+              }
+            }
+
+            lastIndex = splitIndex;
+          });
+
+          // Add the final part
+          const finalWords = words.slice(lastIndex);
+          const finalText = finalWords.join(' ').trim();
+          if (finalText.length > 5) {
+            let cleaned = finalText
+              .replace(/^[,;]\s*/, '')           // Remove leading comma/semicolon
+              .replace(/[,;]\s*$/, '')           // Remove trailing comma/semicolon
+              .replace(/^(then|and)\s+/i, '')    // Remove leading "then"/"and"
+              .replace(/\s+(then|and)$/i, '')    // Remove trailing "then"/"and"
+              .trim();
+
+            // Convert gerund to imperative if needed ("cooking" → "cook")
+            cleaned = cleaned.replace(/^([a-z]+)ing\b/i, (_, stem) => {
+              return stem.toLowerCase();  // Just convert to lowercase stem, capitalize later
+            });
+
+            if (cleaned.length > 0) {
+              cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+              tasks.push(cleaned);
+            }
+          }
+        } else {
+          // No splits found, keep the whole sentence
+          tasks.push(sentence.trim());
+        }
+      }
+
+      return tasks.filter(t => t.length > 0);
+    }
+
+    // Test cases from actual Bolognese recipe
+    const testCases = [
+      {
+        name: "Bolognese - Paragraph 1",
+        input: "Begin by heating oil in a large pot over medium-high heat. Add the onion and garlic, cooking until they become light golden and softened, approximately three minutes.",
+        expected: [
+          "Begin by heating oil in a large pot over medium-high heat",
+          "Add the onion and garlic",
+          "Cook until they become light golden and softened, approximately three minutes"
+        ]
+      },
+      {
+        name: "Bolognese - Paragraph 2",
+        input: "Increase the heat to high and add the beef mince. Break it up as it cooks until it reaches a browned state. Pour in the red wine, bringing it to a simmer and cooking for one minute while scraping the pot's bottom until the alcohol aroma dissipates.",
+        expected: [
+          "Increase the heat to high",
+          "Add the beef mince",
+          "Break it up as it cooks until it reaches a browned state",
+          "Pour in the red wine",
+          "Bring it to a simmer",
+          "Cook for one minute while scraping the pot's bottom until the alcohol aroma dissipates"
+        ]
+      },
+      {
+        name: "Bolognese - Paragraph 3",
+        input: "Combine the remaining ingredients into the pot. Stir everything together, bring to a simmer, then reduce heat to medium so the sauce bubbles gently. Cook uncovered for twenty to thirty minutes, stirring occasionally and adding water if the sauce becomes too thick.",
+        expected: [
+          "Combine the remaining ingredients into the pot",
+          "Stir everything together",
+          "Bring to a simmer",
+          "Reduce heat to medium so the sauce bubbles gently",
+          "Cook uncovered for twenty to thirty minutes",
+          "Stir occasionally",
+          "Add water if the sauce becomes too thick"
+        ]
+      },
+      {
+        name: "Simple case",
+        input: "Melt butter in a pan. Add flour and whisk until smooth.",
+        expected: [
+          "Melt butter in a pan",
+          "Add flour",
+          "Whisk until smooth"
+        ]
+      },
+      {
+        name: "Ingredient list (should NOT split)",
+        input: "Add the onion and garlic.",
+        expected: [
+          "Add the onion and garlic"
+        ]
+      }
+    ];
+
+    const resultsDiv = document.getElementById('results');
+
+    testCases.forEach(testCase => {
+      const tasks = extractAtomicTasks(testCase.input);
+      const expected = testCase.expected || [];
+      const match = JSON.stringify(tasks) === JSON.stringify(expected);
+
+      const caseDiv = document.createElement('div');
+      caseDiv.className = 'test-case';
+      caseDiv.innerHTML = `
+        <h3>${testCase.name} ${match ? '✅' : '❌'}</h3>
+        <div class="input">${testCase.input}</div>
+        <div class="output">
+          <strong>Expected ${expected.length} tasks:</strong>
+          ${expected.map(task => `<div class="task" style="background: #e8f5e9;">${task}</div>`).join('')}
+          <br>
+          <strong>Got ${tasks.length} tasks:</strong>
+          ${tasks.map(task => `<div class="task">${task}</div>`).join('')}
+        </div>
+      `;
+
+      resultsDiv.appendChild(caseDiv);
+    });
+  </script>
+</body>
+</html>

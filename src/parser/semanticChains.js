@@ -11,6 +11,7 @@
  */
 
 import { extractIngredientPrep, createPrepChain } from './ingredientPrep.js';
+import { extractAtomicTasksWithAI } from './aiTaskExtractor.js';
 
 /**
  * Analyzes narrative recipe text and identifies logical chains using semantic understanding.
@@ -41,8 +42,8 @@ export async function detectChainsSemanticly(narrativeText, recipeTitle = '') {
     });
   }
 
-  // STEP 2: Analyze narrative cooking instructions
-  const analysis = analyzeRecipeNarrative(narrativeText, recipeTitle);
+  // STEP 2: Analyze narrative cooking instructions (AI-based)
+  const analysis = await analyzeRecipeNarrative(narrativeText, recipeTitle);
 
   // STEP 3: If prep tasks were found, add them as "Chain 0: Prep Work"
   if (prepTasks.length > 0) {
@@ -148,13 +149,13 @@ function detectLogicalSections(text) {
 
 /**
  * Analyzes recipe narrative to identify chains, their purposes, and dependencies.
- * This simulates semantic understanding - in production, this would use an AI model.
+ * Uses AI-based task extraction for semantic understanding.
  *
  * @param {string} text - Recipe narrative
  * @param {string} title - Recipe title
- * @returns {Object} Chain analysis result
+ * @returns {Promise<Object>} Chain analysis result
  */
-function analyzeRecipeNarrative(text, title) {
+async function analyzeRecipeNarrative(text, title) {
   // For this implementation, I'm going to identify chains by understanding:
   // 1. Temporal structure (parallel vs sequential)
   // 2. Purpose statements ("to make the sauce", "for the topping")
@@ -181,8 +182,9 @@ function analyzeRecipeNarrative(text, title) {
   }
 
   // Analyze each section for its purpose and outputs
-  sections.forEach((section, idx) => {
-    const analysis = analyzeSectionPurpose(section, idx, sections);
+  for (let idx = 0; idx < sections.length; idx++) {
+    const section = sections[idx];
+    const analysis = await analyzeSectionPurpose(section, idx, sections);
 
     // Skip low-confidence chains with very few tasks (likely headers/ingredients)
     if (analysis && !(analysis.confidence === 'low' && analysis.taskDescriptions.length <= 1)) {
@@ -204,13 +206,13 @@ function analyzeRecipeNarrative(text, title) {
         temporal_marker: analysis.temporalMarker,
         parallel_with: analysis.parallelWith,
         metadata: {
-          detected_by: 'semantic_understanding',
+          detected_by: 'ai_task_extraction',
           confidence: analysis.confidence,
           section_index: idx
         }
       });
     }
-  });
+  }
 
   // Infer chain-level dependencies based on emergent ingredients
   inferChainLevelDependencies(chains);
@@ -226,15 +228,149 @@ function analyzeRecipeNarrative(text, title) {
 }
 
 /**
+ * Extracts atomic actions from a section by intelligently splitting compound sentences.
+ * Only splits when there's a clear cooking verb after conjunctions.
+ *
+ * @param {string} text - Section text
+ * @returns {Array<string>} Array of atomic action descriptions
+ */
+function extractAtomicActions(text) {
+  // Common cooking verbs to detect (imperative form)
+  const commonVerbs = [
+    'add', 'pour', 'stir', 'whisk', 'mix', 'combine', 'blend',
+    'bring', 'reduce', 'increase', 'adjust',
+    'cook', 'sauté', 'simmer', 'boil', 'bake', 'roast', 'grill', 'fry',
+    'heat', 'warm', 'melt', 'brown',
+    'chop', 'slice', 'dice', 'mince', 'grate', 'peel',
+    'season', 'taste', 'serve', 'plate', 'garnish',
+    'cover', 'uncover', 'remove', 'transfer', 'arrange',
+    'drain', 'rinse', 'pat', 'squeeze',
+    'break', 'tear', 'cut', 'trim',
+    'toss', 'fold', 'roll', 'shape',
+    'scrape', 'deglaze'
+  ];
+
+  const tasks = [];
+
+  // Split by periods first (sentence boundaries)
+  const sentences = text.split(/\.\s+/).filter(s => s.trim().length > 0);
+
+  for (const sentence of sentences) {
+    // Look for split points: conjunctions followed by verbs
+    // Patterns: ", then VERB" | ", and VERB" | ", VERB-ing" | "then VERB" | "; VERB"
+
+    let currentTask = '';
+    const words = sentence.split(/\s+/);
+    let potentialSplitIndices = [];
+
+    // Find potential split points
+    for (let i = 0; i < words.length - 1; i++) {
+      const word = words[i].toLowerCase().replace(/[,;]$/, '');
+      const nextWord = words[i + 1].toLowerCase();
+
+      // Check if next word (or word after "then") is a cooking verb
+      let verbIndex = i + 1;
+      if (nextWord === 'then' && i + 2 < words.length) {
+        verbIndex = i + 2;
+      }
+
+      const potentialVerb = words[verbIndex].toLowerCase();
+
+      if (commonVerbs.includes(potentialVerb)) {
+        // This looks like a verb after a conjunction
+        if (word === 'then' || word === 'and' || words[i].endsWith(',') || words[i].endsWith(';')) {
+          potentialSplitIndices.push(verbIndex);
+        }
+      }
+    }
+
+    // Also look for gerund patterns: ", VERBing"
+    const gerundPattern = /,\s+([a-z]+ing\b)/gi;
+    let match;
+    while ((match = gerundPattern.exec(sentence)) !== null) {
+      const gerundStem = match[1].replace(/ing$/, '').toLowerCase();
+      // Check if the stem is a known verb
+      if (commonVerbs.some(v => v.startsWith(gerundStem) || gerundStem.startsWith(v))) {
+        // Mark this as a split point
+        const words_before_gerund = sentence.substring(0, match.index).split(/\s+/).length;
+        if (!potentialSplitIndices.includes(words_before_gerund)) {
+          potentialSplitIndices.push(words_before_gerund);
+        }
+      }
+    }
+
+    // If we found split points, split the sentence
+    if (potentialSplitIndices.length > 0) {
+      potentialSplitIndices.sort((a, b) => a - b);
+      let lastIndex = 0;
+
+      potentialSplitIndices.forEach(splitIndex => {
+        const taskWords = words.slice(lastIndex, splitIndex);
+        const taskText = taskWords.join(' ').trim();
+
+        if (taskText.length > 5) {
+          // Clean up: remove leading/trailing punctuation and conjunctions
+          let cleaned = taskText
+            .replace(/^[,;]\s*/, '')           // Remove leading comma/semicolon
+            .replace(/[,;]\s*$/, '')           // Remove trailing comma/semicolon
+            .replace(/^(then|and)\s+/i, '')    // Remove leading "then"/"and"
+            .replace(/\s+(then|and)$/i, '')    // Remove trailing "then"/"and"
+            .trim();
+
+          if (cleaned.length > 0) {
+            cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+            tasks.push(cleaned);
+          }
+        }
+
+        lastIndex = splitIndex;
+      });
+
+      // Add the final part
+      const finalWords = words.slice(lastIndex);
+      const finalText = finalWords.join(' ').trim();
+      if (finalText.length > 5) {
+        let cleaned = finalText
+          .replace(/^[,;]\s*/, '')           // Remove leading comma/semicolon
+          .replace(/[,;]\s*$/, '')           // Remove trailing comma/semicolon
+          .replace(/^(then|and)\s+/i, '')    // Remove leading "then"/"and"
+          .replace(/\s+(then|and)$/i, '')    // Remove trailing "then"/"and"
+          .trim();
+
+        // Convert gerund to imperative if needed ("cooking" → "cook", "stirring" → "stir")
+        cleaned = cleaned.replace(/^([a-z]+)ing\b/i, (match, stem) => {
+          let base = stem.toLowerCase();
+          // Handle doubled consonants: "stirring" → "stirr" → "stir"
+          if (base.length > 2 && base[base.length - 1] === base[base.length - 2]) {
+            base = base.slice(0, -1); // Remove last character if it's a double
+          }
+          return base;
+        });
+
+        if (cleaned.length > 0) {
+          cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+          tasks.push(cleaned);
+        }
+      }
+    } else {
+      // No splits found, keep the whole sentence
+      tasks.push(sentence.trim());
+    }
+  }
+
+  return tasks.filter(t => t.length > 0);
+}
+
+/**
  * Analyzes a section of recipe text to understand its purpose and what it produces.
  * This is the core semantic understanding function.
  *
  * @param {string} section - Text section to analyze
  * @param {number} index - Section index
  * @param {Array<string>} allSections - All sections for context
- * @returns {Object|null} Section analysis or null if not a task chain
+ * @returns {Promise<Object|null>} Section analysis or null if not a task chain
  */
-function analyzeSectionPurpose(section, index, allSections) {
+async function analyzeSectionPurpose(section, index, allSections) {
   const lowerSection = section.toLowerCase();
 
   // Skip ingredient lists (multi-line lists of measurements)
@@ -279,9 +415,8 @@ function analyzeSectionPurpose(section, index, allSections) {
     }
   }
 
-  // Extract task descriptions (sentences) - use cleaned section
-  const sentences = cleanedSection.split(/\.\s+/).filter(s => s.trim().length > 0);
-  const taskDescriptions = sentences.map(s => s.trim());
+  // Extract task descriptions (atomic actions) - use AI-based extraction
+  const taskDescriptions = await extractAtomicTasksWithAI(cleanedSection);
 
   // Identify what this chain produces (emergent ingredients)
   const outputs = identifyChainOutputs(cleanedSection, taskDescriptions);

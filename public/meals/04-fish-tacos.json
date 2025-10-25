@@ -1,0 +1,208 @@
+{
+  "title": "Fish Tacos",
+  "author": {
+    "name": "Natasha's Kitchen"
+  },
+  "tasks": [
+    {
+      "id": "chain_1/step_1",
+      "name": "Line a baking sheet with parchment paper",
+      "canonical_verb": "free_text",
+      "duration_min": null,
+      "planned_min": null,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": null,
+      "temporal_flexibility": "serve_immediate",
+      "inputs": [],
+      "outputs": [],
+      "equipment": [],
+      "edges": [],
+      "_meta": {
+        "verb_confidence": "low",
+        "verb_source": "default",
+        "duration_source": null,
+        "duration_approx": false
+      }
+    },
+    {
+      "id": "chain_1/step_2",
+      "name": "Mix seasonings and sprinkle evenly over both sides of tilapia.",
+      "canonical_verb": "stir",
+      "duration_min": null,
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [],
+      "outputs": [],
+      "equipment": [],
+      "edges": [
+        {
+          "from": "chain_1/step_1",
+          "to": "chain_1/step_2",
+          "type": "FS",
+          "constraint": "RIGID"
+        }
+      ],
+      "_meta": {
+        "verb_confidence": "high",
+        "verb_source": "verb_pattern",
+        "duration_source": null,
+        "duration_approx": false
+      }
+    },
+    {
+      "id": "chain_2/step_1",
+      "name": "Drizzle fish with olive oil and dot with butter",
+      "canonical_verb": "drizzle",
+      "duration_min": null,
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 0,
+      "temporal_flexibility": "serve_immediate",
+      "inputs": [
+        "fish",
+        "butter",
+        "oil",
+        "olive oil"
+      ],
+      "outputs": [],
+      "equipment": [],
+      "edges": [],
+      "_meta": {
+        "verb_confidence": "high",
+        "verb_source": "verb_pattern",
+        "duration_source": null,
+        "duration_approx": false
+      }
+    },
+    {
+      "id": "chain_2/step_2",
+      "name": "Bake at 375°F for 20-25 minutes",
+      "canonical_verb": "bake",
+      "duration_min": {
+        "value": 25
+      },
+      "planned_min": 25,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "hold_window_minutes": 60,
+      "temporal_flexibility": "hold_hours",
+      "inputs": [],
+      "outputs": [],
+      "equipment": [],
+      "edges": [
+        {
+          "from": "chain_2/step_1",
+          "to": "chain_2/step_2",
+          "type": "FS",
+          "constraint": "RIGID"
+        }
+      ],
+      "_meta": {
+        "verb_confidence": "high",
+        "verb_source": "verb_pattern",
+        "duration_source": "range",
+        "duration_approx": true
+      },
+      "temperature": {
+        "value": 375,
+        "unit": "F"
+      }
+    },
+    {
+      "id": "chain_2/step_3",
+      "name": "Optional: broil 3-5 minutes to brown edges.",
+      "canonical_verb": "free_text",
+      "duration_min": {
+        "value": 5
+      },
+      "planned_min": 5,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": null,
+      "temporal_flexibility": "serve_immediate",
+      "inputs": [
+        "oil"
+      ],
+      "outputs": [],
+      "equipment": [],
+      "edges": [
+        {
+          "from": "chain_2/step_2",
+          "to": "chain_2/step_3",
+          "type": "FS",
+          "constraint": "FLEXIBLE",
+          "hold_window_minutes": 60,
+          "temporal_flexibility": "hold_hours"
+        }
+      ],
+      "_meta": {
+        "verb_confidence": "low",
+        "verb_source": "default",
+        "duration_source": "range",
+        "duration_approx": true
+      }
+    }
+  ],
+  "chains": [
+    {
+      "id": "chain_1",
+      "name": "Phase 7",
+      "purpose": "Complete cooking phase 7",
+      "tasks": [
+        "chain_1/step_1",
+        "chain_1/step_2"
+      ],
+      "outputs": [],
+      "inputs": [],
+      "temporal_marker": null,
+      "parallel_with": null,
+      "metadata": {
+        "detected_by": "semantic_understanding",
+        "confidence": "low",
+        "section_index": 6
+      }
+    },
+    {
+      "id": "chain_2",
+      "name": "Prepare baked dish",
+      "purpose": "Create baked baked dish",
+      "tasks": [
+        "chain_2/step_1",
+        "chain_2/step_2",
+        "chain_2/step_3"
+      ],
+      "outputs": [
+        {
+          "emergent_id": "e_baked_dish_001",
+          "ingredient": "baked_dish",
+          "state": "baked",
+          "description": "baked baked dish"
+        }
+      ],
+      "inputs": [],
+      "temporal_marker": null,
+      "parallel_with": null,
+      "metadata": {
+        "detected_by": "semantic_understanding",
+        "confidence": "medium",
+        "section_index": 7
+      }
+    }
+  ],
+  "packs_meta": {
+    "parser_version": "2.0.0",
+    "parsed_at": "2025-10-25T05:19:46.061Z",
+    "source": "local",
+    "options": {
+      "autoDependencies": false,
+      "smartDependencies": false,
+      "roundAboutUp": true,
+      "detectTaskChains": true
+    }
+  }
+}

@@ -38,8 +38,8 @@
           "requires_driver": { "type": "boolean" },
           "self_running_after_start": { "type": "boolean" },
           "readiness_signal": { "type": ["null", "string", "object"] },
-          "inputs": { "type": "array", "items": { "type": "string" } },
-          "outputs": { "type": "array", "items": { "type": "string" } },
+          "inputs": { "type": "array", "items": { "type": ["string", "object"] } },
+          "outputs": { "type": "array", "items": { "type": ["string", "object"] } },
           "edges": {
             "type": "array",
             "items": {

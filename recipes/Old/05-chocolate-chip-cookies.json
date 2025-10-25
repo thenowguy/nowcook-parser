@@ -1,0 +1,520 @@
+{
+  "title": "Chocolate Chip Cookies",
+  "author": {
+    "name": "Love and Lemons"
+  },
+  "tasks": [
+    {
+      "id": "chain_1/step_1",
+      "name": "Ingredients:\n- 2 cups all-purpose flour (spooned and leveled)\n- 1 teaspoon baking soda\n- 1 teaspoon sea salt\n- 3/4 cup unsalted butter (1½ sticks, melted and cooled slightly)\n- 1/2 cup packed brown sugar\n- 1/2 cup granulated sugar\n- 1 large egg\n- 1 large egg yolk\n- 2 teaspoons vanilla extract\n- 1 heaping cup dark chocolate chips",
+      "canonical_verb": "free_text",
+      "duration_min": null,
+      "planned_min": null,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": null,
+      "temporal_flexibility": "serve_immediate",
+      "inputs": [
+        "butter",
+        "salt"
+      ],
+      "outputs": [],
+      "equipment": [],
+      "edges": [],
+      "_meta": {
+        "verb_confidence": "low",
+        "verb_source": "default",
+        "duration_source": null,
+        "duration_approx": false
+      }
+    },
+    {
+      "id": "chain_2/step_1",
+      "name": "In a medium bowl, whisk together the flour",
+      "canonical_verb": "whisk",
+      "duration_min": null,
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [],
+      "outputs": [],
+      "equipment": [
+        "bowl",
+        "whisk"
+      ],
+      "edges": [],
+      "_meta": {
+        "verb_confidence": "high",
+        "verb_source": "verb_pattern",
+        "duration_source": null,
+        "duration_approx": false
+      }
+    },
+    {
+      "id": "chain_2/step_2",
+      "name": "Bak soda, and salt.",
+      "canonical_verb": "free_text",
+      "duration_min": null,
+      "planned_min": null,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": null,
+      "temporal_flexibility": "serve_immediate",
+      "inputs": [
+        "salt"
+      ],
+      "outputs": [],
+      "equipment": [],
+      "edges": [
+        {
+          "from": "chain_2/step_1",
+          "to": "chain_2/step_2",
+          "type": "FS",
+          "constraint": "FLEXIBLE",
+          "hold_window_minutes": 30,
+          "temporal_flexibility": "hold_minutes"
+        }
+      ],
+      "_meta": {
+        "verb_confidence": "low",
+        "verb_source": "default",
+        "duration_source": null,
+        "duration_approx": false
+      }
+    },
+    {
+      "id": "chain_3/step_1",
+      "name": "Combine melted butter with both sugars in a large bowl",
+      "canonical_verb": "heat_oil",
+      "duration_min": null,
+      "planned_min": 3,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 10,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [
+        "butter"
+      ],
+      "outputs": [],
+      "equipment": [
+        "bowl"
+      ],
+      "edges": [],
+      "_meta": {
+        "verb_confidence": "high",
+        "verb_source": "verb_pattern",
+        "duration_source": null,
+        "duration_approx": false
+      }
+    },
+    {
+      "id": "chain_3/step_2",
+      "name": "Add egg and yolk",
+      "canonical_verb": "add",
+      "duration_min": null,
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [],
+      "outputs": [],
+      "equipment": [],
+      "edges": [
+        {
+          "from": "chain_3/step_1",
+          "to": "chain_3/step_2",
+          "type": "FS",
+          "constraint": "FLEXIBLE",
+          "hold_window_minutes": 10,
+          "temporal_flexibility": "hold_minutes"
+        }
+      ],
+      "_meta": {
+        "verb_confidence": "high",
+        "verb_source": "verb_pattern",
+        "duration_source": null,
+        "duration_approx": false
+      }
+    },
+    {
+      "id": "chain_3/step_3",
+      "name": "Whisk until well combined with no egg white streaks remaining",
+      "canonical_verb": "whisk",
+      "duration_min": null,
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [],
+      "outputs": [],
+      "equipment": [
+        "whisk"
+      ],
+      "edges": [
+        {
+          "from": "chain_3/step_2",
+          "to": "chain_3/step_3",
+          "type": "FS",
+          "constraint": "FLEXIBLE",
+          "hold_window_minutes": 30,
+          "temporal_flexibility": "hold_minutes"
+        }
+      ],
+      "_meta": {
+        "verb_confidence": "high",
+        "verb_source": "verb_pattern",
+        "duration_source": null,
+        "duration_approx": false
+      }
+    },
+    {
+      "id": "chain_3/step_4",
+      "name": "Mix in vanilla.",
+      "canonical_verb": "stir",
+      "duration_min": null,
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [],
+      "outputs": [],
+      "equipment": [],
+      "edges": [
+        {
+          "from": "chain_3/step_3",
+          "to": "chain_3/step_4",
+          "type": "FS",
+          "constraint": "FLEXIBLE",
+          "hold_window_minutes": 30,
+          "temporal_flexibility": "hold_minutes"
+        }
+      ],
+      "_meta": {
+        "verb_confidence": "high",
+        "verb_source": "verb_pattern",
+        "duration_source": null,
+        "duration_approx": false
+      }
+    },
+    {
+      "id": "chain_4/step_1",
+      "name": "Fold dry ingredients into wet ingredients using a spatula",
+      "canonical_verb": "fold",
+      "duration_min": null,
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [],
+      "outputs": [],
+      "equipment": [
+        "spoon"
+      ],
+      "edges": [],
+      "_meta": {
+        "verb_confidence": "high",
+        "verb_source": "verb_pattern",
+        "duration_source": null,
+        "duration_approx": false
+      }
+    },
+    {
+      "id": "chain_4/step_2",
+      "name": "When mostly combined, add chocolate chips and mix until no dry flour remains.",
+      "canonical_verb": "stir",
+      "duration_min": null,
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [],
+      "outputs": [],
+      "equipment": [],
+      "edges": [
+        {
+          "from": "chain_4/step_1",
+          "to": "chain_4/step_2",
+          "type": "FS",
+          "constraint": "FLEXIBLE",
+          "hold_window_minutes": 30,
+          "temporal_flexibility": "hold_minutes"
+        }
+      ],
+      "_meta": {
+        "verb_confidence": "high",
+        "verb_source": "verb_pattern",
+        "duration_source": null,
+        "duration_approx": false
+      }
+    },
+    {
+      "id": "chain_5/step_1",
+      "name": "Cover and refrigerate for at least 30 minutes and up to 2 days",
+      "canonical_verb": "cover",
+      "duration_min": {
+        "value": 30
+      },
+      "planned_min": 30,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 0,
+      "temporal_flexibility": "serve_immediate",
+      "inputs": [],
+      "outputs": [],
+      "equipment": [],
+      "edges": [],
+      "_meta": {
+        "verb_confidence": "high",
+        "verb_source": "verb_pattern",
+        "duration_source": "single",
+        "duration_approx": false
+      }
+    },
+    {
+      "id": "chain_5/step_2",
+      "name": "Brief chilling (30 minutes) yields flatter, more spread-out cookies; longer chilling (2+ hours) produces thicker cookies.",
+      "canonical_verb": "free_text",
+      "duration_min": {
+        "value": 30
+      },
+      "planned_min": 30,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": null,
+      "temporal_flexibility": "serve_immediate",
+      "inputs": [],
+      "outputs": [],
+      "equipment": [],
+      "edges": [
+        {
+          "from": "chain_5/step_1",
+          "to": "chain_5/step_2",
+          "type": "FS",
+          "constraint": "RIGID"
+        }
+      ],
+      "_meta": {
+        "verb_confidence": "low",
+        "verb_source": "default",
+        "duration_source": "single",
+        "duration_approx": false
+      }
+    },
+    {
+      "id": "chain_6/step_1",
+      "name": "Use a 2-tablespoon cookie scoop to scoop the dough onto the baking sheets",
+      "canonical_verb": "free_text",
+      "duration_min": null,
+      "planned_min": null,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": null,
+      "temporal_flexibility": "serve_immediate",
+      "inputs": [],
+      "outputs": [],
+      "equipment": [],
+      "edges": [],
+      "_meta": {
+        "verb_confidence": "low",
+        "verb_source": "default",
+        "duration_source": null,
+        "duration_approx": false
+      }
+    },
+    {
+      "id": "chain_6/step_2",
+      "name": "Leav at least 2 inches between cookies",
+      "canonical_verb": "free_text",
+      "duration_min": null,
+      "planned_min": null,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": null,
+      "temporal_flexibility": "serve_immediate",
+      "inputs": [],
+      "outputs": [],
+      "equipment": [],
+      "edges": [
+        {
+          "from": "chain_6/step_1",
+          "to": "chain_6/step_2",
+          "type": "FS",
+          "constraint": "RIGID"
+        }
+      ],
+      "_meta": {
+        "verb_confidence": "low",
+        "verb_source": "default",
+        "duration_source": null,
+        "duration_approx": false
+      }
+    },
+    {
+      "id": "chain_6/step_3",
+      "name": "Bake one sheet at a time for 9-11 minutes until edges are golden but tops remain pale.",
+      "canonical_verb": "bake",
+      "duration_min": {
+        "value": 12
+      },
+      "planned_min": 12,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "hold_window_minutes": 60,
+      "temporal_flexibility": "hold_hours",
+      "inputs": [],
+      "outputs": [],
+      "equipment": [],
+      "edges": [
+        {
+          "from": "chain_6/step_2",
+          "to": "chain_6/step_3",
+          "type": "FS",
+          "constraint": "RIGID"
+        }
+      ],
+      "_meta": {
+        "verb_confidence": "high",
+        "verb_source": "verb_pattern",
+        "duration_source": "range",
+        "duration_approx": true
+      }
+    }
+  ],
+  "chains": [
+    {
+      "id": "chain_1",
+      "name": "Make the Cheese Sauce",
+      "purpose": "Create creamy cheese sauce",
+      "tasks": [
+        "chain_1/step_1"
+      ],
+      "outputs": [],
+      "inputs": [],
+      "temporal_marker": null,
+      "parallel_with": null,
+      "metadata": {
+        "detected_by": "ai_task_extraction",
+        "confidence": "high",
+        "section_index": 1
+      }
+    },
+    {
+      "id": "chain_2",
+      "name": "Phase 4",
+      "purpose": "Complete cooking phase 4",
+      "tasks": [
+        "chain_2/step_1",
+        "chain_2/step_2"
+      ],
+      "outputs": [],
+      "inputs": [],
+      "temporal_marker": null,
+      "parallel_with": null,
+      "metadata": {
+        "detected_by": "ai_task_extraction",
+        "confidence": "low",
+        "section_index": 3
+      }
+    },
+    {
+      "id": "chain_3",
+      "name": "Make the Cheese Sauce",
+      "purpose": "Create creamy cheese sauce",
+      "tasks": [
+        "chain_3/step_1",
+        "chain_3/step_2",
+        "chain_3/step_3",
+        "chain_3/step_4"
+      ],
+      "outputs": [],
+      "inputs": [],
+      "temporal_marker": null,
+      "parallel_with": null,
+      "metadata": {
+        "detected_by": "ai_task_extraction",
+        "confidence": "high",
+        "section_index": 4
+      }
+    },
+    {
+      "id": "chain_4",
+      "name": "Phase 6",
+      "purpose": "Complete cooking phase 6",
+      "tasks": [
+        "chain_4/step_1",
+        "chain_4/step_2"
+      ],
+      "outputs": [],
+      "inputs": [],
+      "temporal_marker": null,
+      "parallel_with": null,
+      "metadata": {
+        "detected_by": "ai_task_extraction",
+        "confidence": "low",
+        "section_index": 5
+      }
+    },
+    {
+      "id": "chain_5",
+      "name": "Phase 7",
+      "purpose": "Complete cooking phase 7",
+      "tasks": [
+        "chain_5/step_1",
+        "chain_5/step_2"
+      ],
+      "outputs": [],
+      "inputs": [],
+      "temporal_marker": null,
+      "parallel_with": null,
+      "metadata": {
+        "detected_by": "ai_task_extraction",
+        "confidence": "low",
+        "section_index": 6
+      }
+    },
+    {
+      "id": "chain_6",
+      "name": "Serve",
+      "purpose": "Plate and serve the dish",
+      "tasks": [
+        "chain_6/step_1",
+        "chain_6/step_2",
+        "chain_6/step_3"
+      ],
+      "outputs": [
+        {
+          "emergent_id": "e_baked_dish_001",
+          "ingredient": "baked_dish",
+          "state": "baked",
+          "description": "baked baked dish"
+        }
+      ],
+      "inputs": [],
+      "temporal_marker": null,
+      "parallel_with": null,
+      "metadata": {
+        "detected_by": "ai_task_extraction",
+        "confidence": "high",
+        "section_index": 8
+      }
+    }
+  ],
+  "packs_meta": {
+    "parser_version": "2.0.0",
+    "parsed_at": "2025-10-25T06:50:37.930Z",
+    "source": "local",
+    "options": {
+      "autoDependencies": false,
+      "smartDependencies": false,
+      "roundAboutUp": true,
+      "detectTaskChains": true
+    }
+  }
+}

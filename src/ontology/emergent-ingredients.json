@@ -1,0 +1,402 @@
+{
+  "version": "1.0.0",
+  "description": "Emergent ingredient ontology - tracks hold times for ingredients created during cooking. These are outputs of tasks (e.g., 'drained pasta', 'grated cheese', 'caramelized onions'). Hold windows determine how long the emergent ingredient remains viable for the next step.",
+  "emergent_ingredients": {
+    "drained_pasta": {
+      "source_ingredient": "pasta",
+      "source_verb": "drain",
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "notes": "Will stick together and cool, but still usable for 30 minutes. Toss with oil to extend hold time.",
+      "quality_degradation": {
+        "0-10": "optimal - hot and separated",
+        "10-20": "good - warm, slight sticking",
+        "20-30": "acceptable - needs re-loosening",
+        "30+": "degraded - clumped and cold"
+      }
+    },
+    "grated_cheese": {
+      "source_ingredient": "cheese",
+      "source_verb": "grate",
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "notes": "Can be refrigerated for up to 7 days. Best fresh but completely viable.",
+      "storage": "refrigerated in airtight container"
+    },
+    "shredded_cheese": {
+      "source_ingredient": "cheese",
+      "source_verb": "grate",
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "notes": "Synonym for grated cheese - holds 7 days refrigerated"
+    },
+    "chopped_onion": {
+      "source_ingredient": "onion",
+      "source_verb": "chop",
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "notes": "Refrigerate in airtight container. Flavor intensifies over time.",
+      "storage": "refrigerated in airtight container"
+    },
+    "diced_onion": {
+      "source_ingredient": "onion",
+      "source_verb": "dice",
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "notes": "Refrigerate in airtight container"
+    },
+    "minced_garlic": {
+      "source_ingredient": "garlic",
+      "source_verb": "mince",
+      "hold_window_minutes": 4320,
+      "temporal_flexibility": "hold_days",
+      "notes": "Holds for 3 days refrigerated but flavor degrades. Best used within 24 hours.",
+      "quality_degradation": {
+        "0-24": "optimal - fresh and pungent",
+        "24-72": "good - still aromatic",
+        "72+": "degraded - flavor loss"
+      }
+    },
+    "smashed_garlic": {
+      "source_ingredient": "garlic",
+      "source_verb": "smash",
+      "hold_window_minutes": 1440,
+      "temporal_flexibility": "hold_hours",
+      "notes": "Oxidizes faster than minced. Use within 24 hours for best flavor."
+    },
+    "caramelized_onions": {
+      "source_ingredient": "onion",
+      "source_verb": "caramelize",
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "notes": "Actually improve with storage. Can refrigerate up to 7 days or freeze for months.",
+      "storage": "refrigerated in airtight container"
+    },
+    "sauteed_vegetables": {
+      "source_ingredient": "vegetables",
+      "source_verb": "sauté",
+      "hold_window_minutes": 1440,
+      "temporal_flexibility": "hold_hours",
+      "notes": "Hold well for up to 24 hours refrigerated. Reheat gently before combining with other ingredients.",
+      "storage": "refrigerated, reheat before use"
+    },
+    "sauteed_onion": {
+      "source_ingredient": "onion",
+      "source_verb": "sauté",
+      "hold_window_minutes": 1440,
+      "temporal_flexibility": "hold_hours",
+      "notes": "Sautéed onions hold well refrigerated for 24 hours"
+    },
+    "sauteed_garlic": {
+      "source_ingredient": "garlic",
+      "source_verb": "sauté",
+      "hold_window_minutes": 240,
+      "temporal_flexibility": "hold_hours",
+      "notes": "Sautéed garlic can burn easily. Use within 4 hours for best flavor."
+    },
+    "sauteed_beef": {
+      "source_ingredient": "beef",
+      "source_verb": "sauté",
+      "hold_window_minutes": 10,
+      "temporal_flexibility": "hold_minutes",
+      "notes": "Continue to next step immediately while hot"
+    },
+    "heated_oil": {
+      "source_ingredient": "oil",
+      "source_verb": "heat_oil",
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "notes": "Keep hot for immediate cooking. Can reheat if needed."
+    },
+    "roux": {
+      "source_ingredient": "butter_and_flour",
+      "source_verb": "whisk",
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "notes": "Can be made well in advance. Refrigerate up to 7 days. Bring to room temp before using.",
+      "storage": "refrigerated in airtight container"
+    },
+    "bechamel_sauce": {
+      "source_ingredient": "roux_and_milk",
+      "source_verb": "simmer",
+      "hold_window_minutes": 240,
+      "temporal_flexibility": "hold_hours",
+      "notes": "Best used within 4 hours. Skin forms on surface if left uncovered. Press plastic wrap directly on surface to prevent skin.",
+      "storage": "cover with plastic wrap touching surface"
+    },
+    "cheese_sauce": {
+      "source_ingredient": "bechamel_and_cheese",
+      "source_verb": "stir",
+      "hold_window_minutes": 240,
+      "temporal_flexibility": "hold_hours",
+      "notes": "Hold for up to 4 hours. Keep warm over low heat or double boiler. Can separate if overheated after cooling.",
+      "reheating": "gentle heat, whisk constantly"
+    },
+    "boiled_water": {
+      "source_ingredient": "water",
+      "source_verb": "bring_to_boil",
+      "hold_window_minutes": 60,
+      "temporal_flexibility": "hold_hours",
+      "notes": "Stays hot for quite a while. Can be reheated if needed. Not time-sensitive.",
+      "quality_degradation": {
+        "0-15": "optimal - rolling boil",
+        "15-60": "good - still hot enough for most uses",
+        "60+": "needs reheating"
+      }
+    },
+    "diced_bacon": {
+      "source_ingredient": "bacon",
+      "source_verb": "dice",
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "notes": "Raw diced bacon holds for 7 days refrigerated",
+      "storage": "refrigerated in airtight container"
+    },
+    "cooked_bacon": {
+      "source_ingredient": "bacon",
+      "source_verb": "cook",
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "notes": "Cooked bacon holds for 7 days refrigerated. Can be reheated.",
+      "storage": "refrigerated in airtight container"
+    },
+    "toasted_breadcrumbs": {
+      "source_ingredient": "breadcrumbs",
+      "source_verb": "toast",
+      "hold_window_minutes": 43200,
+      "temporal_flexibility": "hold_days",
+      "notes": "Can be made up to 30 days in advance if stored properly",
+      "storage": "airtight container at room temperature"
+    },
+    "melted_butter": {
+      "source_ingredient": "butter",
+      "source_verb": "melt",
+      "hold_window_minutes": 120,
+      "temporal_flexibility": "hold_hours",
+      "notes": "Stays liquid for 2+ hours. Can be remelted if it solidifies. Not time-critical.",
+      "quality_degradation": {
+        "0-30": "optimal - hot and liquid",
+        "30-120": "good - warm, may need gentle reheating",
+        "120+": "solidified - remelt before use"
+      }
+    },
+    "whisked_eggs": {
+      "source_ingredient": "eggs",
+      "source_verb": "whisk",
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "notes": "Use within 30 minutes. Can separate if left too long.",
+      "quality_degradation": {
+        "0-15": "optimal - well combined",
+        "15-30": "acceptable - may need re-whisking",
+        "30+": "degraded - separation"
+      }
+    },
+    "beaten_egg_whites": {
+      "source_ingredient": "egg_whites",
+      "source_verb": "beat",
+      "hold_window_minutes": 15,
+      "temporal_flexibility": "hold_minutes",
+      "notes": "Deflate quickly. Use immediately for best results.",
+      "quality_degradation": {
+        "0-5": "optimal - stiff peaks",
+        "5-15": "degraded - losing volume",
+        "15+": "unusable - deflated"
+      }
+    },
+    "mixed_batter": {
+      "source_ingredient": "dry_and_wet_ingredients",
+      "source_verb": "mix",
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "notes": "Most batters should be used within 30 minutes. Leavening agents activate immediately.",
+      "quality_degradation": {
+        "0-15": "optimal - leavening active",
+        "15-30": "acceptable - slight degradation",
+        "30+": "degraded - overmixed, dense result"
+      }
+    },
+    "chopped_garlic": {
+      "source_ingredient": "garlic",
+      "source_verb": "chop",
+      "hold_window_minutes": 1440,
+      "temporal_flexibility": "hold_hours",
+      "notes": "Can refrigerate up to 24 hours. Similar to minced but slightly larger pieces."
+    },
+    "chopped_ginger": {
+      "source_ingredient": "ginger",
+      "source_verb": "chop",
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "notes": "Holds well refrigerated for up to 7 days"
+    },
+    "chopped_chilli": {
+      "source_ingredient": "chilli",
+      "source_verb": "chop",
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "notes": "Refrigerate in airtight container for up to 7 days"
+    },
+    "sliced_carrot": {
+      "source_ingredient": "carrot",
+      "source_verb": "slice",
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "notes": "Store refrigerated in water or airtight container"
+    },
+    "sliced_pepper": {
+      "source_ingredient": "pepper",
+      "source_verb": "slice",
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "notes": "Refrigerate in airtight container"
+    },
+    "sliced_mushroom": {
+      "source_ingredient": "mushroom",
+      "source_verb": "slice",
+      "hold_window_minutes": 2880,
+      "temporal_flexibility": "hold_days",
+      "notes": "Best within 2 days. Store in paper bag in fridge."
+    },
+    "trimmed_broccoli": {
+      "source_ingredient": "broccoli",
+      "source_verb": "trim",
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "notes": "Holds well refrigerated for several days"
+    },
+    "cooked_chicken": {
+      "source_ingredient": "chicken",
+      "source_verb": "cook",
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "notes": "Refrigerate cooked chicken up to 7 days"
+    },
+    "cooked_noodles": {
+      "source_ingredient": "noodles",
+      "source_verb": "cook",
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "notes": "Similar to pasta - best used within 30 minutes while hot"
+    },
+    "boiled_noodles": {
+      "source_ingredient": "noodles",
+      "source_verb": "boil",
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "notes": "Best used immediately, will stick together after 30 minutes"
+    },
+    "roasted_vegetables": {
+      "source_ingredient": "vegetables",
+      "source_verb": "roast",
+      "hold_window_minutes": 1440,
+      "temporal_flexibility": "hold_hours",
+      "notes": "Hold well up to 24 hours refrigerated. Reheat before serving."
+    },
+    "roasted_cauliflower": {
+      "source_ingredient": "cauliflower",
+      "source_verb": "roast",
+      "hold_window_minutes": 1440,
+      "temporal_flexibility": "hold_hours",
+      "notes": "Can be made ahead and reheated"
+    },
+    "roasted_carrot": {
+      "source_ingredient": "carrot",
+      "source_verb": "roast",
+      "hold_window_minutes": 1440,
+      "temporal_flexibility": "hold_hours",
+      "notes": "Holds well refrigerated"
+    },
+    "baked_salmon": {
+      "source_ingredient": "salmon",
+      "source_verb": "bake",
+      "hold_window_minutes": 60,
+      "temporal_flexibility": "hold_hours",
+      "notes": "Best served immediately but can hold warm for 1 hour"
+    },
+    "baked_fish": {
+      "source_ingredient": "fish",
+      "source_verb": "bake",
+      "hold_window_minutes": 60,
+      "temporal_flexibility": "hold_hours",
+      "notes": "Best fresh but acceptable for 1 hour"
+    },
+    "baked_tilapia": {
+      "source_ingredient": "tilapia",
+      "source_verb": "bake",
+      "hold_window_minutes": 60,
+      "temporal_flexibility": "hold_hours",
+      "notes": "Serve within 1 hour for best quality"
+    },
+    "sliced_avocado": {
+      "source_ingredient": "avocado",
+      "source_verb": "slice",
+      "hold_window_minutes": 60,
+      "temporal_flexibility": "hold_hours",
+      "notes": "Browns quickly - toss with lime juice to extend hold time to 2-3 hours"
+    },
+    "diced_tomato": {
+      "source_ingredient": "tomato",
+      "source_verb": "dice",
+      "hold_window_minutes": 1440,
+      "temporal_flexibility": "hold_hours",
+      "notes": "Best within 24 hours refrigerated"
+    },
+    "diced_red_onion": {
+      "source_ingredient": "red_onion",
+      "source_verb": "dice",
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "notes": "Refrigerate in airtight container"
+    },
+    "cookie_dough": {
+      "source_ingredient": "flour_butter_sugar",
+      "source_verb": "mix",
+      "hold_window_minutes": 2880,
+      "temporal_flexibility": "hold_days",
+      "notes": "Can refrigerate 30 min to 2+ days. Longer chilling = thicker cookies."
+    },
+    "mixed_dough": {
+      "source_ingredient": "ingredients",
+      "source_verb": "mix",
+      "hold_window_minutes": 2880,
+      "temporal_flexibility": "hold_days",
+      "notes": "Cookie/pastry dough can chill for extended periods"
+    },
+    "browned_beef": {
+      "source_ingredient": "beef",
+      "source_verb": "brown",
+      "hold_window_minutes": 5,
+      "temporal_flexibility": "hold_minutes",
+      "notes": "Continue immediately to next step while hot"
+    },
+    "toasted_tortilla": {
+      "source_ingredient": "tortilla",
+      "source_verb": "toast",
+      "hold_window_minutes": 15,
+      "temporal_flexibility": "hold_minutes",
+      "notes": "Best used immediately while warm and pliable"
+    },
+    "taco_sauce": {
+      "source_ingredient": "sour_cream_mayo",
+      "source_verb": "whisk",
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "notes": "Can be made well in advance. Refrigerate up to 7 days."
+    },
+    "spice_blend": {
+      "source_ingredient": "spices",
+      "source_verb": "mix",
+      "hold_window_minutes": 43200,
+      "temporal_flexibility": "hold_days",
+      "notes": "Dry spice blends hold indefinitely at room temperature"
+    },
+    "mixed_spices": {
+      "source_ingredient": "spices",
+      "source_verb": "combine",
+      "hold_window_minutes": 43200,
+      "temporal_flexibility": "hold_days",
+      "notes": "Store in airtight container"
+    }
+  }
+}

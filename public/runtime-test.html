@@ -482,20 +482,33 @@ Bake for 25 minutes, or until bubbly and the top is browned.`;
       const meta = document.createElement('div');
       meta.className = 'task-meta';
 
-      // Show verb and hold window
+      // Show verb
       if (task.canonical_verb) {
         meta.innerHTML += `<span>${task.canonical_verb}</span>`;
       }
-      if (task.hold_window_minutes) {
-        meta.innerHTML += `<span class="badge ${task.temporal_flexibility?.replace('_', '-')}">${formatHold(task.hold_window_minutes)}</span>`;
-      }
 
-      // Show edges
+      // Show hold window from edges (where emergent ingredient data lives)
+      // This is the correct source - edges have hold windows from emergent ingredients
       if (task.edges && task.edges.length > 0) {
         task.edges.forEach(edge => {
+          // Show hold window from edge (emergent ingredient hold time)
+          if (edge.hold_window_minutes) {
+            const flexClass = edge.temporal_flexibility?.replace('_', '-') || 'hold-hours';
+            meta.innerHTML += `<span class="badge ${flexClass}">${formatHold(edge.hold_window_minutes)}</span>`;
+          }
+
+          // Show constraint type
           const badge = edge.constraint === 'FLEXIBLE' ? 'flexible' : 'rigid';
           meta.innerHTML += `<span class="badge ${badge}">${edge.constraint || 'FS'}</span>`;
+
+          // Show emergent ingredient if present (for debugging)
+          if (edge.emergent_ingredient) {
+            meta.innerHTML += `<span class="badge" style="background: #9b59b6; font-size: 10px;">${edge.emergent_ingredient}</span>`;
+          }
         });
+      } else if (task.hold_window_minutes) {
+        // Fallback to task's own hold window if no edges (first task in chain)
+        meta.innerHTML += `<span class="badge ${task.temporal_flexibility?.replace('_', '-')}">${formatHold(task.hold_window_minutes)}</span>`;
       }
 
       if (blockReason) {

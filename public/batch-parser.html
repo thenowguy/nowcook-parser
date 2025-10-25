@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Batch Recipe Parser</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0a0a0a;
+      color: #e0e0e0;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      color: #00d4ff;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      color: #888;
+      margin-bottom: 30px;
+    }
+
+    button {
+      background: #00d4ff;
+      color: #000;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    button:hover {
+      background: #00b8e6;
+    }
+
+    button:disabled {
+      background: #333;
+      color: #666;
+      cursor: not-allowed;
+    }
+
+    .recipe-card {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .recipe-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .recipe-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .recipe-author {
+      color: #888;
+      font-size: 13px;
+    }
+
+    .status {
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status.pending { background: #333; color: #888; }
+    .status.parsing { background: #f39c12; color: #000; }
+    .status.success { background: #2ecc71; color: #000; }
+    .status.error { background: #e74c3c; color: #fff; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .stat {
+      background: #0a0a0a;
+      padding: 10px;
+      border-radius: 4px;
+    }
+
+    .stat-label {
+      color: #888;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+      color: #00d4ff;
+      font-size: 20px;
+      font-weight: 600;
+      margin-top: 5px;
+    }
+
+    .log {
+      background: #0a0a0a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 30px;
+      max-height: 400px;
+      overflow-y: auto;
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 12px;
+    }
+
+    .log-entry {
+      margin-bottom: 8px;
+      padding: 4px;
+    }
+
+    .log-entry.info { color: #00d4ff; }
+    .log-entry.success { color: #2ecc71; }
+    .log-entry.error { color: #e74c3c; }
+
+    .download-btn {
+      background: #9b59b6;
+      margin-left: 10px;
+    }
+
+    .download-btn:hover {
+      background: #8e44ad;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Batch Recipe Parser</h1>
+    <p class="subtitle">Parse all 5 narrative recipes with semantic chains + emergent ingredients + hold windows</p>
+
+    <button onclick="parseAll()" id="parseBtn">Parse All Recipes</button>
+    <button onclick="downloadAll()" id="downloadBtn" class="download-btn" disabled>Download All JSON</button>
+
+    <div id="recipes"></div>
+
+    <div class="log" id="log"></div>
+  </div>
+
+  <script type="module">
+    import { parseRecipe } from '/src/parser/index.js?v=6';
+
+    const RECIPES = [
+      {
+        id: 'bolognese',
+        file: '/recipes/narrative/01-spaghetti-bolognese.txt',
+        title: 'Spaghetti Bolognese',
+        author: 'RecipeTin Eats'
+      },
+      {
+        id: 'stir-fry',
+        file: '/recipes/narrative/02-chicken-veg-stir-fry.txt',
+        title: 'Chicken & Veg Stir-Fry',
+        author: 'Jamie Oliver'
+      },
+      {
+        id: 'salmon',
+        file: '/recipes/narrative/03-sheet-pan-salmon.txt',
+        title: 'Sheet Pan Salmon with Vegetables',
+        author: 'The Mediterranean Dish'
+      },
+      {
+        id: 'tacos',
+        file: '/recipes/narrative/04-fish-tacos.txt',
+        title: 'Fish Tacos',
+        author: "Natasha's Kitchen"
+      },
+      {
+        id: 'cookies',
+        file: '/recipes/narrative/05-chocolate-chip-cookies.txt',
+        title: 'Chocolate Chip Cookies',
+        author: 'Love and Lemons'
+      }
+    ];
+
+    const parsedRecipes = {};
+
+    function log(message, type = 'info') {
+      const logEl = document.getElementById('log');
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`;
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      logEl.appendChild(entry);
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function renderRecipeCards() {
+      const container = document.getElementById('recipes');
+      container.innerHTML = RECIPES.map(r => `
+        <div class="recipe-card" id="card-${r.id}">
+          <div class="recipe-header">
+            <div>
+              <div class="recipe-title">${r.title}</div>
+              <div class="recipe-author">${r.author}</div>
+            </div>
+            <span class="status pending" id="status-${r.id}">Pending</span>
+          </div>
+          <div class="stats" id="stats-${r.id}" style="display: none;"></div>
+        </div>
+      `).join('');
+    }
+
+    function updateStatus(id, status, text) {
+      const statusEl = document.getElementById(`status-${id}`);
+      statusEl.className = `status ${status}`;
+      statusEl.textContent = text || status;
+    }
+
+    function showStats(id, stats) {
+      const statsEl = document.getElementById(`stats-${id}`);
+      statsEl.style.display = 'grid';
+      statsEl.innerHTML = `
+        <div class="stat">
+          <div class="stat-label">Tasks</div>
+          <div class="stat-value">${stats.taskCount}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Chains</div>
+          <div class="stat-value">${stats.chainCount}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">FLEXIBLE</div>
+          <div class="stat-value">${stats.flexibleEdges}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">RIGID</div>
+          <div class="stat-value">${stats.rigidEdges}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Emergent</div>
+          <div class="stat-value">${stats.emergentIngredients}</div>
+        </div>
+      `;
+
+      // Add download button for this recipe
+      const card = document.getElementById(`card-${id}`);
+      const downloadBtn = document.createElement('button');
+      downloadBtn.textContent = '⬇ Download JSON';
+      downloadBtn.style.marginTop = '15px';
+      downloadBtn.onclick = () => downloadOne(id);
+      card.appendChild(downloadBtn);
+    }
+
+    function downloadOne(id) {
+      const recipe = parsedRecipes[id];
+      if (!recipe) {
+        log(`✗ Recipe ${id} not found`, 'error');
+        return;
+      }
+
+      // Remove internal metadata
+      const cleanRecipe = { ...recipe };
+      delete cleanRecipe._filename;
+
+      const blob = new Blob([JSON.stringify(cleanRecipe, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = recipe._filename;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      log(`Downloaded: ${recipe._filename}`, 'success');
+    }
+
+    async function parseOne(recipe) {
+      updateStatus(recipe.id, 'parsing', 'Parsing...');
+      log(`Parsing: ${recipe.title}`, 'info');
+
+      try {
+        const response = await fetch(recipe.file);
+        const rawText = await response.text();
+
+        const parsed = await parseRecipe(rawText, recipe.title, {
+          autoDependencies: false,
+          detectTaskChains: true,
+          useSemanticChains: true
+        });
+
+        // Add metadata
+        parsed.author = { name: recipe.author };
+
+        // Calculate stats
+        const taskCount = parsed.tasks.length;
+        const chainCount = parsed.chains?.length || 0;
+        const flexibleEdges = parsed.tasks.reduce((sum, t) =>
+          sum + (t.edges?.filter(e => e.constraint === 'FLEXIBLE').length || 0), 0);
+        const rigidEdges = parsed.tasks.reduce((sum, t) =>
+          sum + (t.edges?.filter(e => e.constraint === 'RIGID').length || 0), 0);
+        const emergentIngredients = parsed.tasks.reduce((sum, t) =>
+          sum + (t.edges?.filter(e => e.emergent_ingredient).length || 0), 0);
+
+        const stats = { taskCount, chainCount, flexibleEdges, rigidEdges, emergentIngredients };
+
+        updateStatus(recipe.id, 'success', '✓ Success');
+        showStats(recipe.id, stats);
+        log(`✓ ${recipe.title}: ${taskCount} tasks, ${chainCount} chains, ${emergentIngredients} emergent ingredients`, 'success');
+
+        parsedRecipes[recipe.id] = { ...parsed, _filename: recipe.file.split('/').pop().replace('.txt', '.json') };
+
+        return { success: true, stats };
+
+      } catch (error) {
+        updateStatus(recipe.id, 'error', '✗ Error');
+        log(`✗ ${recipe.title}: ${error.message}`, 'error');
+        return { success: false, error: error.message };
+      }
+    }
+
+    window.parseAll = async function() {
+      document.getElementById('parseBtn').disabled = true;
+      log('Starting batch parse...', 'info');
+
+      for (const recipe of RECIPES) {
+        await parseOne(recipe);
+      }
+
+      document.getElementById('downloadBtn').disabled = false;
+      log('✓ All recipes parsed!', 'success');
+    };
+
+    window.downloadAll = function() {
+      const recipeIds = Object.keys(parsedRecipes);
+
+      if (recipeIds.length === 0) {
+        log('✗ No recipes to download', 'error');
+        return;
+      }
+
+      log(`Downloading ${recipeIds.length} recipe(s)...`, 'info');
+
+      recipeIds.forEach((id, index) => {
+        const recipe = parsedRecipes[id];
+
+        // Remove internal metadata before download
+        const cleanRecipe = { ...recipe };
+        delete cleanRecipe._filename;
+
+        const blob = new Blob([JSON.stringify(cleanRecipe, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = recipe._filename;
+
+        // Stagger downloads slightly to avoid browser blocking
+        setTimeout(() => {
+          a.click();
+          URL.revokeObjectURL(url);
+          log(`Downloaded: ${recipe._filename}`, 'success');
+        }, index * 200);
+      });
+
+      setTimeout(() => {
+        log(`✓ All ${recipeIds.length} JSON files downloaded`, 'success');
+      }, recipeIds.length * 200 + 500);
+    };
+
+    // Initialize
+    renderRecipeCards();
+    log('Ready to parse 5 recipes', 'info');
+  </script>
+</body>
+</html>

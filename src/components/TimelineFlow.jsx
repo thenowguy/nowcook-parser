@@ -31,28 +31,30 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
       if (!task.inputs || task.inputs.length === 0) {
         return task.name; // Fallback to instruction if no ingredients
       }
-      
+
       // Map ingredient IDs to full ingredient info
       const ingredientTexts = task.inputs.map(input => {
-        const ingredientId = input.ingredient;
+        // Handle both string inputs and object inputs {ingredient: "...", ...}
+        const ingredientId = typeof input === 'string' ? input : (input.ingredient || input);
+
         // Try multiple matching strategies
         const fullIngredient = ingredients.find(ing => {
           const normalizedItem = ing.item.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
           const normalizedId = ingredientId.toLowerCase();
-          
+
           // Direct match or ID contains item name
-          return normalizedItem === normalizedId || 
+          return normalizedItem === normalizedId ||
                  normalizedItem.includes(normalizedId) ||
                  normalizedId.includes(normalizedItem);
         });
-        
+
         if (fullIngredient) {
           return `${fullIngredient.amount} ${fullIngredient.item}`;
         }
         // Fallback to just the ID if not found
         return ingredientId.replace(/_/g, ' ');
       });
-      
+
       return ingredientTexts.join(', ') || task.name;
     }
     
@@ -95,17 +97,42 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
     return task.name;
   };
   
+  // SFX paths (must be defined before useMemo that calls playSFX)
+  const SFX = {
+    start: '/SFX/startTask.mp3',
+    dismiss: '/SFX/dismiss.wav',
+    arrive: '/SFX/arrive.wav',
+    error: '/SFX/error.wav',
+  };
+
+  // Simple mobile detection
+  const isMobile = typeof window !== 'undefined' && (
+    'ontouchstart' in window || navigator.maxTouchPoints > 0
+  );
+
+  // Sound effects player (must be defined before useMemo that calls it)
+  function playSFX(type) {
+    if (!isMobile) return;
+    try {
+      const audio = new window.Audio(SFX[type]);
+      audio.volume = 0.7;
+      audio.play().catch(err => console.log('Audio play error:', err));
+    } catch (err) {
+      console.log('Audio setup error:', err);
+    }
+  }
+
   // Gesture state
   const [flashingId, setFlashingId] = useState(null);
   const [swipingId, setSwipingId] = useState(null);
-  
+
   const now = new Date();
-  const currentTimeStr = now.toLocaleTimeString('en-US', { 
-    hour: 'numeric', 
+  const currentTimeStr = now.toLocaleTimeString('en-US', {
+    hour: 'numeric',
     minute: '2-digit',
     second: '2-digit'
   });
-  
+
   const allTracks = useMemo(() => {
     const tracks = [];
     
@@ -244,31 +271,7 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
       }, 2100); // Slight buffer to ensure animations complete
     }
   };
-  
-  // SFX paths
-  const SFX = {
-    start: '/SFX/startTask.mp3',
-    dismiss: '/SFX/dismiss.wav',
-    arrive: '/SFX/arrive.wav',
-    error: '/SFX/error.wav',
-  };
 
-  // Simple mobile detection
-  const isMobile = typeof window !== 'undefined' && (
-    'ontouchstart' in window || navigator.maxTouchPoints > 0
-  );
-
-  function playSFX(type) {
-    if (!isMobile) return;
-    try {
-      const audio = new window.Audio(SFX[type]);
-      audio.volume = 0.7;
-      audio.play().catch(err => console.log('Audio play error:', err));
-    } catch (err) {
-      console.log('Audio setup error:', err);
-    }
-  }
-  
   // Lozenge component with gesture detection
   const GestureLozenge = ({ track }) => {
     const lastTapRef = useRef(0);

@@ -11,6 +11,7 @@ import { inferDependencies, inferSequentialDependencies } from "./dependencies.j
 import { detectChains } from "./chains.js";
 import { detectChainsSemanticly } from "./semanticChains.js";
 import { generateEmergentIds, matchEmergentInputs } from "./emergentIngredients.js";
+import { getHoldWindow as getEmergentHoldWindow, getTemporalFlexibility as getEmergentFlexibility, inferEmergentKey } from "../ontology/loadEmergentIngredients.js";
 
 /**
  * Parse raw recipe text into structured meal object
@@ -234,9 +235,57 @@ function addSequentialDependenciesWithinChains(tasks, chains) {
         );
 
         if (!edgeExists) {
-          // Determine constraint type based on predecessor's temporal flexibility
-          const temporalFlex = previousTask.temporal_flexibility;
-          const holdWindow = previousTask.hold_window_minutes || 0;
+          // Try to infer emergent ingredient from predecessor's verb and task name
+          // e.g., "drain pasta" → "drained_pasta", "grate cheese" → "grated_cheese"
+          let emergentKey = null;
+
+          // Common ingredients to check (expand this list as needed)
+          const commonIngredients = [
+            // Starches & Grains
+            'pasta', 'spaghetti', 'noodles', 'rice', 'flour', 'breadcrumbs', 'tortilla',
+            // Proteins
+            'beef', 'chicken', 'salmon', 'fish', 'tilapia', 'bacon', 'eggs', 'egg_whites',
+            // Dairy
+            'cheese', 'cheddar', 'butter', 'cream', 'milk',
+            // Vegetables (general)
+            'vegetables', 'onion', 'garlic', 'carrot', 'cauliflower', 'broccoli',
+            'pepper', 'mushroom', 'cabbage', 'tomato', 'corn', 'peas', 'ginger', 'chilli',
+            'avocado', 'cilantro', 'lime', 'lemon', 'olive', 'red_onion',
+            // Liquids
+            'water', 'stock', 'wine', 'sauce', 'oil',
+            // Baking
+            'dough', 'batter', 'mixture',
+            // Compounds
+            'spice_blend', 'spices'
+          ];
+
+          // Try to infer emergent key by checking task name for ingredient mentions
+          for (const ingredient of commonIngredients) {
+            const taskNameLower = previousTask.name.toLowerCase();
+            if (taskNameLower.includes(ingredient.replace('_', ' '))) {
+              emergentKey = inferEmergentKey(ingredient, previousTask.canonical_verb);
+              if (emergentKey) {
+                console.log(`✅ Matched: "${ingredient}" in "${previousTask.name.substring(0, 40)}..." + verb "${previousTask.canonical_verb}" → "${emergentKey}"`);
+                break;
+              } else {
+                console.log(`⚠️ Found "${ingredient}" in task but NO emergent key for verb "${previousTask.canonical_verb}"`);
+              }
+            }
+          }
+
+          // Get hold window from emergent ingredient (if found), otherwise fall back to verb
+          let holdWindow = previousTask.hold_window_minutes || 0;
+          let temporalFlex = previousTask.temporal_flexibility;
+
+          if (emergentKey) {
+            // Use emergent ingredient hold window (this is the correct source!)
+            holdWindow = getEmergentHoldWindow(emergentKey, holdWindow);
+            temporalFlex = getEmergentFlexibility(emergentKey, temporalFlex);
+            console.log(`🔗 Edge ${previousTaskId} → ${currentTaskId}: Using emergent ingredient "${emergentKey}" (${holdWindow}min, ${temporalFlex})`);
+          } else {
+            // Fallback to verb hold window (legacy behavior)
+            console.log(`🔗 Edge ${previousTaskId} → ${currentTaskId}: No emergent ingredient found, using verb hold window (${holdWindow}min, ${temporalFlex})`);
+          }
 
           // FLEXIBLE: Task output can hold (prep_any_time, hold_days, hold_hours, hold_minutes)
           // RIGID: Task output must be used immediately (serve_immediate)
@@ -258,6 +307,11 @@ function addSequentialDependenciesWithinChains(tasks, chains) {
           if (constraint === 'FLEXIBLE' && holdWindow > 0) {
             edge.hold_window_minutes = holdWindow;
             edge.temporal_flexibility = temporalFlex;
+          }
+
+          // Add emergent ingredient key for debugging
+          if (emergentKey) {
+            edge.emergent_ingredient = emergentKey;
           }
 
           currentTask.edges.push(edge);

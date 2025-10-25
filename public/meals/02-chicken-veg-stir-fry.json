@@ -1,0 +1,503 @@
+{
+  "title": "Chicken & Veg Stir-Fry",
+  "author": {
+    "name": "Jamie Oliver"
+  },
+  "tasks": [
+    {
+      "id": "chain_1/step_1",
+      "name": "Begin by preparing your aromatics and vegetables",
+      "canonical_verb": "free_text",
+      "duration_min": null,
+      "planned_min": null,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": null,
+      "temporal_flexibility": "serve_immediate",
+      "inputs": [],
+      "outputs": [],
+      "equipment": [],
+      "edges": [],
+      "_meta": {
+        "verb_confidence": "low",
+        "verb_source": "default",
+        "duration_source": null,
+        "duration_approx": false
+      }
+    },
+    {
+      "id": "chain_1/step_2",
+      "name": "Peel and finely chop the garlic and ginger, then deseed and finely chop the chilli",
+      "canonical_verb": "mince",
+      "duration_min": null,
+      "planned_min": 3,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "inputs": [
+        "garlic"
+      ],
+      "outputs": [],
+      "equipment": [],
+      "edges": [
+        {
+          "from": "chain_1/step_1",
+          "to": "chain_1/step_2",
+          "type": "FS",
+          "constraint": "RIGID"
+        }
+      ],
+      "_meta": {
+        "verb_confidence": "high",
+        "verb_source": "pattern",
+        "duration_source": null,
+        "duration_approx": false
+      }
+    },
+    {
+      "id": "chain_1/step_3",
+      "name": "Peel the carrots, halve lengthways, and slice finely",
+      "canonical_verb": "slice",
+      "duration_min": null,
+      "planned_min": 3,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "inputs": [
+        "carrot"
+      ],
+      "outputs": [],
+      "equipment": [],
+      "edges": [
+        {
+          "from": "chain_1/step_2",
+          "to": "chain_1/step_3",
+          "type": "FS",
+          "constraint": "FLEXIBLE",
+          "hold_window_minutes": 4320,
+          "temporal_flexibility": "hold_days",
+          "emergent_ingredient": "minced_garlic"
+        }
+      ],
+      "_meta": {
+        "verb_confidence": "high",
+        "verb_source": "verb_pattern",
+        "duration_source": null,
+        "duration_approx": false
+      }
+    },
+    {
+      "id": "chain_1/step_4",
+      "name": "Peel the onion and deseed the pepper, slicing both thinly",
+      "canonical_verb": "peel",
+      "duration_min": null,
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "inputs": [
+        "onion",
+        "pepper"
+      ],
+      "outputs": [],
+      "equipment": [],
+      "edges": [
+        {
+          "from": "chain_1/step_3",
+          "to": "chain_1/step_4",
+          "type": "FS",
+          "constraint": "FLEXIBLE",
+          "hold_window_minutes": 10080,
+          "temporal_flexibility": "hold_days",
+          "emergent_ingredient": "sliced_carrot"
+        }
+      ],
+      "_meta": {
+        "verb_confidence": "high",
+        "verb_source": "verb_pattern",
+        "duration_source": null,
+        "duration_approx": false
+      }
+    },
+    {
+      "id": "chain_1/step_5",
+      "name": "Trim the broccoli, halving any thick stalks lengthways",
+      "canonical_verb": "free_text",
+      "duration_min": null,
+      "planned_min": null,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": null,
+      "temporal_flexibility": "serve_immediate",
+      "inputs": [],
+      "outputs": [],
+      "equipment": [],
+      "edges": [
+        {
+          "from": "chain_1/step_4",
+          "to": "chain_1/step_5",
+          "type": "FS",
+          "constraint": "FLEXIBLE",
+          "hold_window_minutes": 10080,
+          "temporal_flexibility": "hold_days"
+        }
+      ],
+      "_meta": {
+        "verb_confidence": "low",
+        "verb_source": "default",
+        "duration_source": null,
+        "duration_approx": false
+      }
+    },
+    {
+      "id": "chain_1/step_6",
+      "name": "Wipe the mushrooms clean, trim their stalks, and halve any larger pieces.",
+      "canonical_verb": "free_text",
+      "duration_min": null,
+      "planned_min": null,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": null,
+      "temporal_flexibility": "serve_immediate",
+      "inputs": [],
+      "outputs": [],
+      "equipment": [],
+      "edges": [
+        {
+          "from": "chain_1/step_5",
+          "to": "chain_1/step_6",
+          "type": "FS",
+          "constraint": "RIGID"
+        }
+      ],
+      "_meta": {
+        "verb_confidence": "low",
+        "verb_source": "default",
+        "duration_source": null,
+        "duration_approx": false
+      }
+    },
+    {
+      "id": "chain_2/step_1",
+      "name": "Cut the chicken into 1cm strips and coat them with the Chinese five-spice and sesame oil",
+      "canonical_verb": "free_text",
+      "duration_min": null,
+      "planned_min": null,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": null,
+      "temporal_flexibility": "serve_immediate",
+      "inputs": [
+        "chicken",
+        "oil"
+      ],
+      "outputs": [],
+      "equipment": [],
+      "edges": [],
+      "_meta": {
+        "verb_confidence": "low",
+        "verb_source": "default",
+        "duration_source": null,
+        "duration_approx": false
+      }
+    },
+    {
+      "id": "chain_2/step_2",
+      "name": "Heat a wok or large non-stick frying pan on medium-high heat with vegetable oil",
+      "canonical_verb": "heat_oil",
+      "duration_min": null,
+      "planned_min": 3,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 10,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [
+        "oil"
+      ],
+      "outputs": [],
+      "equipment": [
+        "pan"
+      ],
+      "edges": [
+        {
+          "from": "chain_2/step_1",
+          "to": "chain_2/step_2",
+          "type": "FS",
+          "constraint": "RIGID"
+        }
+      ],
+      "_meta": {
+        "verb_confidence": "high",
+        "verb_source": "verb_pattern",
+        "duration_source": null,
+        "duration_approx": false
+      }
+    },
+    {
+      "id": "chain_2/step_3",
+      "name": "Add the garlic, ginger, and chilli, tossing for 30 seconds before adding the chicken",
+      "canonical_verb": "add",
+      "duration_min": null,
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [
+        "garlic",
+        "chicken"
+      ],
+      "outputs": [],
+      "equipment": [],
+      "edges": [
+        {
+          "from": "chain_2/step_2",
+          "to": "chain_2/step_3",
+          "type": "FS",
+          "constraint": "FLEXIBLE",
+          "hold_window_minutes": 10,
+          "temporal_flexibility": "hold_minutes"
+        }
+      ],
+      "_meta": {
+        "verb_confidence": "high",
+        "verb_source": "verb_pattern",
+        "duration_source": null,
+        "duration_approx": false
+      }
+    },
+    {
+      "id": "chain_2/step_4",
+      "name": "Stir-fry for 1-2 minutes until golden",
+      "canonical_verb": "sauté",
+      "duration_min": {
+        "value": 2
+      },
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 1440,
+      "temporal_flexibility": "hold_hours",
+      "inputs": [],
+      "outputs": [],
+      "equipment": [],
+      "edges": [
+        {
+          "from": "chain_2/step_3",
+          "to": "chain_2/step_4",
+          "type": "FS",
+          "constraint": "FLEXIBLE",
+          "hold_window_minutes": 30,
+          "temporal_flexibility": "hold_minutes"
+        }
+      ],
+      "_meta": {
+        "verb_confidence": "high",
+        "verb_source": "verb_pattern",
+        "duration_source": "range",
+        "duration_approx": true
+      }
+    },
+    {
+      "id": "chain_2/step_5",
+      "name": "Add all vegetables and continue stir-frying for 3-4 minutes until the chicken is cooked through and vegetables are tender yet retain some crunch.",
+      "canonical_verb": "stir",
+      "duration_min": {
+        "value": 5
+      },
+      "planned_min": 5,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [
+        "chicken"
+      ],
+      "outputs": [],
+      "equipment": [],
+      "edges": [
+        {
+          "from": "chain_2/step_4",
+          "to": "chain_2/step_5",
+          "type": "FS",
+          "constraint": "FLEXIBLE",
+          "hold_window_minutes": 1440,
+          "temporal_flexibility": "hold_hours"
+        }
+      ],
+      "_meta": {
+        "verb_confidence": "high",
+        "verb_source": "verb_pattern",
+        "duration_source": "range",
+        "duration_approx": true
+      }
+    },
+    {
+      "id": "chain_3/step_1",
+      "name": "While cooking, boil the noodles in salted water according to packet instructions",
+      "canonical_verb": "boil",
+      "duration_min": null,
+      "planned_min": 10,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "hold_window_minutes": 5,
+      "temporal_flexibility": "serve_immediate",
+      "inputs": [
+        "noodles",
+        "oil",
+        "salt",
+        "water"
+      ],
+      "outputs": [],
+      "equipment": [],
+      "edges": [],
+      "_meta": {
+        "verb_confidence": "high",
+        "verb_source": "verb_pattern",
+        "duration_source": null,
+        "duration_approx": false
+      }
+    },
+    {
+      "id": "chain_3/step_2",
+      "name": "Transfer the noodles directly into the wok using tongs, then add soy and black bean sauce, tossing everything to coat",
+      "canonical_verb": "add",
+      "duration_min": null,
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [
+        "noodles"
+      ],
+      "outputs": [],
+      "equipment": [],
+      "edges": [
+        {
+          "from": "chain_3/step_1",
+          "to": "chain_3/step_2",
+          "type": "FS",
+          "constraint": "FLEXIBLE",
+          "hold_window_minutes": 30,
+          "temporal_flexibility": "hold_minutes",
+          "emergent_ingredient": "boiled_noodles"
+        }
+      ],
+      "_meta": {
+        "verb_confidence": "high",
+        "verb_source": "verb_pattern",
+        "duration_source": null,
+        "duration_approx": false
+      }
+    },
+    {
+      "id": "chain_3/step_3",
+      "name": "Divide between plates, scatter sesame seeds and coriander on top, and serve immediately",
+      "canonical_verb": "plate",
+      "duration_min": null,
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 0,
+      "temporal_flexibility": "serve_immediate",
+      "inputs": [],
+      "outputs": [],
+      "equipment": [],
+      "edges": [
+        {
+          "from": "chain_3/step_2",
+          "to": "chain_3/step_3",
+          "type": "FS",
+          "constraint": "FLEXIBLE",
+          "hold_window_minutes": 30,
+          "temporal_flexibility": "hold_minutes"
+        }
+      ],
+      "_meta": {
+        "verb_confidence": "high",
+        "verb_source": "verb_pattern",
+        "duration_source": null,
+        "duration_approx": false
+      }
+    }
+  ],
+  "chains": [
+    {
+      "id": "chain_1",
+      "name": "Phase 4",
+      "purpose": "Complete cooking phase 4",
+      "tasks": [
+        "chain_1/step_1",
+        "chain_1/step_2",
+        "chain_1/step_3",
+        "chain_1/step_4",
+        "chain_1/step_5",
+        "chain_1/step_6"
+      ],
+      "outputs": [],
+      "inputs": [],
+      "temporal_marker": null,
+      "parallel_with": null,
+      "metadata": {
+        "detected_by": "semantic_understanding",
+        "confidence": "low",
+        "section_index": 3
+      }
+    },
+    {
+      "id": "chain_2",
+      "name": "Phase 5",
+      "purpose": "Complete cooking phase 5",
+      "tasks": [
+        "chain_2/step_1",
+        "chain_2/step_2",
+        "chain_2/step_3",
+        "chain_2/step_4",
+        "chain_2/step_5"
+      ],
+      "outputs": [],
+      "inputs": [],
+      "temporal_marker": null,
+      "parallel_with": null,
+      "metadata": {
+        "detected_by": "semantic_understanding",
+        "confidence": "low",
+        "section_index": 4
+      }
+    },
+    {
+      "id": "chain_3",
+      "name": "Serve",
+      "purpose": "Plate and serve the dish",
+      "tasks": [
+        "chain_3/step_1",
+        "chain_3/step_2",
+        "chain_3/step_3"
+      ],
+      "outputs": [],
+      "inputs": [],
+      "temporal_marker": null,
+      "parallel_with": null,
+      "metadata": {
+        "detected_by": "semantic_understanding",
+        "confidence": "high",
+        "section_index": 5
+      }
+    }
+  ],
+  "packs_meta": {
+    "parser_version": "2.0.0",
+    "parsed_at": "2025-10-25T05:19:46.051Z",
+    "source": "local",
+    "options": {
+      "autoDependencies": false,
+      "smartDependencies": false,
+      "roundAboutUp": true,
+      "detectTaskChains": true
+    }
+  }
+}

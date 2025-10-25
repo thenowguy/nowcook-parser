@@ -1,0 +1,79 @@
+{
+  "title": "Test Recipe - Pasta Chain",
+  "author": { "name": "Test" },
+  "tasks": [
+    {
+      "id": "chain_1/step_1",
+      "name": "Bring a large pot of salted water to a boil",
+      "canonical_verb": "bring_to_boil",
+      "planned_min": 10,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "inputs": ["water", "salt"],
+      "outputs": [],
+      "equipment": ["pot"],
+      "edges": []
+    },
+    {
+      "id": "chain_1/step_2",
+      "name": "Add the pasta to the boiling water",
+      "canonical_verb": "add",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": ["pasta"],
+      "outputs": [],
+      "equipment": ["pot"],
+      "edges": [
+        {
+          "from": "chain_1/step_1",
+          "to": "chain_1/step_2",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_1/step_3",
+      "name": "Cook the pasta until al dente, stirring occasionally",
+      "canonical_verb": "cook",
+      "planned_min": 8,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "inputs": [],
+      "outputs": [],
+      "equipment": ["pot"],
+      "edges": [
+        {
+          "from": "chain_1/step_2",
+          "to": "chain_1/step_3",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_1/step_4",
+      "name": "Drain the pasta",
+      "canonical_verb": "drain",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": [],
+      "outputs": [],
+      "equipment": ["colander"],
+      "edges": [
+        {
+          "from": "chain_1/step_3",
+          "to": "chain_1/step_4",
+          "type": "FS"
+        }
+      ]
+    }
+  ],
+  "chains": [
+    {
+      "id": "chain_1",
+      "name": "Cook the Pasta",
+      "tasks": ["chain_1/step_1", "chain_1/step_2", "chain_1/step_3", "chain_1/step_4"]
+    }
+  ]
+}

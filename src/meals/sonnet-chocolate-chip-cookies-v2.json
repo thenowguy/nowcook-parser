@@ -1,0 +1,383 @@
+{
+  "title": "Chocolate Chip Cookies",
+  "author": { "name": "Love and Lemons" },
+  "tasks": [
+    {
+      "id": "chain_1/step_1",
+      "name": "Whisk together flour, baking soda, and salt in a medium bowl",
+      "canonical_verb": "whisk",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": ["flour", "baking_soda", "salt"],
+      "outputs": [
+        {
+          "ingredient": "dry_mixture",
+          "state": "mixed",
+          "emergent": true
+        }
+      ],
+      "equipment": ["bowl", "whisk"],
+      "edges": []
+    },
+    {
+      "id": "chain_2/step_0",
+      "name": "Melt the butter",
+      "canonical_verb": "heat_oil",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": ["butter"],
+      "outputs": [
+        {
+          "ingredient": "butter",
+          "state": "melted",
+          "emergent": true
+        }
+      ],
+      "equipment": ["microwave"],
+      "edges": []
+    },
+    {
+      "id": "chain_2/step_1",
+      "name": "Combine melted butter with brown sugar and granulated sugar in a large bowl",
+      "canonical_verb": "combine",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": ["brown_sugar", "granulated_sugar"],
+      "outputs": [
+        {
+          "ingredient": "butter_mixture",
+          "state": "creamed",
+          "emergent": true
+        }
+      ],
+      "equipment": ["bowl"],
+      "edges": [
+        {
+          "from": "chain_2/step_0",
+          "to": "chain_2/step_1",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_2/step_2",
+      "name": "Add egg and egg yolk to the butter mixture",
+      "canonical_verb": "add",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": ["egg", "egg_yolk"],
+      "outputs": [],
+      "equipment": ["bowl"],
+      "edges": [
+        {
+          "from": "chain_2/step_1",
+          "to": "chain_2/step_2",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_2/step_3",
+      "name": "Whisk until well combined with no egg white streaks remaining",
+      "canonical_verb": "whisk",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": [],
+      "outputs": [],
+      "equipment": ["whisk"],
+      "edges": [
+        {
+          "from": "chain_2/step_2",
+          "to": "chain_2/step_3",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_2/step_4",
+      "name": "Mix in vanilla extract",
+      "canonical_verb": "stir",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": ["vanilla_extract"],
+      "outputs": [
+        {
+          "ingredient": "wet_mixture",
+          "state": "flavored",
+          "emergent": true
+        }
+      ],
+      "equipment": ["bowl"],
+      "edges": [
+        {
+          "from": "chain_2/step_3",
+          "to": "chain_2/step_4",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_3/step_1",
+      "name": "Fold dry ingredients into wet ingredients using a spatula",
+      "canonical_verb": "fold",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": [],
+      "outputs": [],
+      "equipment": ["spatula"],
+      "edges": [
+        {
+          "from": "chain_1/step_1",
+          "to": "chain_3/step_1",
+          "type": "FS"
+        },
+        {
+          "from": "chain_2/step_4",
+          "to": "chain_3/step_1",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_3/step_2",
+      "name": "Add chocolate chips to the dough",
+      "canonical_verb": "add",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": ["chocolate_chips"],
+      "outputs": [],
+      "equipment": ["bowl"],
+      "edges": [
+        {
+          "from": "chain_3/step_1",
+          "to": "chain_3/step_2",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_3/step_3",
+      "name": "Mix until no dry flour remains",
+      "canonical_verb": "stir",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "ingredient": "cookie_dough",
+          "state": "mixed",
+          "emergent": true
+        }
+      ],
+      "equipment": ["spatula"],
+      "edges": [
+        {
+          "from": "chain_3/step_2",
+          "to": "chain_3/step_3",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_4/step_1",
+      "name": "Cover the dough",
+      "canonical_verb": "cover",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": [],
+      "outputs": [],
+      "equipment": ["plastic_wrap"],
+      "edges": [
+        {
+          "from": "chain_3/step_3",
+          "to": "chain_4/step_1",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_4/step_2",
+      "name": "Refrigerate for at least 30 minutes",
+      "canonical_verb": "rest",
+      "planned_min": 30,
+      "requires_driver": false,
+      "self_running_after_start": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "ingredient": "cookie_dough",
+          "state": "chilled",
+          "emergent": true
+        }
+      ],
+      "equipment": ["refrigerator"],
+      "edges": [
+        {
+          "from": "chain_4/step_1",
+          "to": "chain_4/step_2",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_5/step_1",
+      "name": "Preheat oven to 350°F",
+      "canonical_verb": "preheat_oven",
+      "planned_min": 12,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "inputs": [],
+      "outputs": [],
+      "equipment": ["oven"],
+      "edges": []
+    },
+    {
+      "id": "chain_5/step_2",
+      "name": "Line two baking sheets with parchment paper",
+      "canonical_verb": "arrange",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": ["parchment_paper"],
+      "outputs": [],
+      "equipment": ["baking_sheet"],
+      "edges": []
+    },
+    {
+      "id": "chain_6/step_1",
+      "name": "Use a 2-tablespoon cookie scoop to scoop dough onto baking sheets",
+      "canonical_verb": "divide",
+      "planned_min": 5,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": [],
+      "outputs": [],
+      "equipment": ["cookie_scoop", "baking_sheet"],
+      "edges": [
+        {
+          "from": "chain_4/step_2",
+          "to": "chain_6/step_1",
+          "type": "FS"
+        },
+        {
+          "from": "chain_5/step_2",
+          "to": "chain_6/step_1",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_6/step_2",
+      "name": "Bake one sheet for 9-11 minutes until edges are golden",
+      "canonical_verb": "bake",
+      "planned_min": 10,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "inputs": [],
+      "outputs": [
+        {
+          "ingredient": "cookies",
+          "state": "baked",
+          "emergent": true
+        }
+      ],
+      "equipment": ["oven"],
+      "edges": [
+        {
+          "from": "chain_6/step_1",
+          "to": "chain_6/step_2",
+          "type": "FS"
+        },
+        {
+          "from": "chain_5/step_1",
+          "to": "chain_6/step_2",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_6/step_3",
+      "name": "Let cookies cool on baking sheet for 10 minutes",
+      "canonical_verb": "rest",
+      "planned_min": 10,
+      "requires_driver": false,
+      "self_running_after_start": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "ingredient": "cookies",
+          "state": "cooled",
+          "emergent": true
+        }
+      ],
+      "equipment": ["baking_sheet"],
+      "edges": [
+        {
+          "from": "chain_6/step_2",
+          "to": "chain_6/step_3",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_6/step_4",
+      "name": "Transfer cookies to a wire rack",
+      "canonical_verb": "arrange",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": [],
+      "outputs": [],
+      "equipment": ["wire_rack"],
+      "edges": [
+        {
+          "from": "chain_6/step_3",
+          "to": "chain_6/step_4",
+          "type": "FS"
+        }
+      ]
+    }
+  ],
+  "chains": [
+    {
+      "id": "chain_1",
+      "name": "Mix Dry Ingredients",
+      "tasks": ["chain_1/step_1"]
+    },
+    {
+      "id": "chain_2",
+      "name": "Mix Wet Ingredients",
+      "tasks": ["chain_2/step_0", "chain_2/step_1", "chain_2/step_2", "chain_2/step_3", "chain_2/step_4"]
+    },
+    {
+      "id": "chain_3",
+      "name": "Combine Dough",
+      "tasks": ["chain_3/step_1", "chain_3/step_2", "chain_3/step_3"]
+    },
+    {
+      "id": "chain_4",
+      "name": "Chill Dough",
+      "tasks": ["chain_4/step_1", "chain_4/step_2"]
+    },
+    {
+      "id": "chain_5",
+      "name": "Prepare for Baking",
+      "tasks": ["chain_5/step_1", "chain_5/step_2"]
+    },
+    {
+      "id": "chain_6",
+      "name": "Bake and Cool Cookies",
+      "tasks": ["chain_6/step_1", "chain_6/step_2", "chain_6/step_3", "chain_6/step_4"]
+    }
+  ]
+}

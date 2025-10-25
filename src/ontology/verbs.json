@@ -572,6 +572,71 @@
       "defaults": { "planned_min": 1 },
       "hold_window_minutes": 10080,
       "temporal_flexibility": "hold_days"
+    },
+    {
+      "canon": "taste",
+      "attention": "attended",
+      "patterns": [
+        "\\btaste\\b",
+        "\\btry\\b",
+        "\\bcheck.*seasoning\\b",
+        "\\bsample\\b"
+      ],
+      "defaults": { "planned_min": 1 },
+      "hold_window_minutes": 0,
+      "temporal_flexibility": "serve_immediate"
+    },
+    {
+      "canon": "sprinkle",
+      "attention": "attended",
+      "patterns": [
+        "\\bsprinkle\\b",
+        "\\bscatter\\b",
+        "\\bsprinkle.*with\\b",
+        "\\bscatter.*over\\b"
+      ],
+      "defaults": { "planned_min": 1 },
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes"
+    },
+    {
+      "canon": "remove",
+      "attention": "attended",
+      "patterns": [
+        "\\bremove.*from.*oven\\b",
+        "\\btake.*out\\b",
+        "\\bremove\\s+(?:the\\s+)?(?:pan|pot|dish)\\b",
+        "\\bpull.*out\\b"
+      ],
+      "defaults": { "planned_min": 1 },
+      "hold_window_minutes": 0,
+      "temporal_flexibility": "serve_immediate"
+    },
+    {
+      "canon": "brush",
+      "attention": "attended",
+      "patterns": [
+        "\\bbrush\\b",
+        "\\bcoat.*with.*brush\\b",
+        "\\bbrush.*with\\b",
+        "\\bpaint.*with\\b"
+      ],
+      "defaults": { "planned_min": 1 },
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes"
+    },
+    {
+      "canon": "scoop",
+      "attention": "attended",
+      "patterns": [
+        "\\bscoop\\b",
+        "\\bportion\\b",
+        "\\bscoop.*onto\\b",
+        "\\buse.*scoop\\b"
+      ],
+      "defaults": { "planned_min": 3 },
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes"
     }
   ]
 }
