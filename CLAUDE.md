@@ -729,12 +729,72 @@ Tasks now include:
 }
 ```
 
-### Next Steps
+#### 5. Runtime Integration (runtime.js)
+Updated `depsSatisfied()` to evaluate hold windows at runtime:
+```javascript
+export function depsSatisfied(task, getPred, nowMs = 0, getFinishedAt = null) {
+  return edges.every((e) => {
+    const pred = getPred(e.from);
+    if (!pred || !pred.done) return false;
 
-1. **Expand visualization** to show all chains with dependencies
-2. **Backward scheduling** from serve time using FLEXIBLE/RIGID constraints
-3. **"Could do now" indicators** based on hold window availability
-4. **Critical path calculation** respecting temporal flexibility
+    // If no hold window data, use old behavior
+    if (!e.constraint || !getFinishedAt) return true;
+
+    const finishedAt = getFinishedAt(e.from);
+    const timeSinceFinish = nowMs - finishedAt;
+
+    // RIGID edges: Must use output within 5 minutes
+    if (e.constraint === 'RIGID') {
+      const maxWaitMs = 5 * 60 * 1000;
+      return timeSinceFinish <= maxWaitMs;
+    }
+
+    // FLEXIBLE edges: Can use output within hold window
+    if (e.constraint === 'FLEXIBLE') {
+      const holdWindowMs = (e.hold_window_minutes || 60) * 60 * 1000;
+      return timeSinceFinish <= holdWindowMs;
+    }
+
+    return true;
+  });
+}
+```
+
+**Key behavior**:
+- Tasks track `finished_at_ms` in `completed` array
+- RIGID edges expire after 5 minutes (e.g., drained pasta must be used quickly)
+- FLEXIBLE edges stay available for hold window duration (e.g., sautéed vegetables hold for hours)
+- If hold window expires, dependent tasks become blocked again
+
+#### 6. Interactive Test Harness (runtime-test.html)
+Created test interface to validate hold window logic:
+- Load Mac & Cheese with 46 tasks
+- Complete tasks by clicking "Finish"
+- Skip forward in time (+1min, +5min, +1hour)
+- Watch FLEXIBLE edges stay available, RIGID edges expire
+- Visual indicators: ✅ Available, 🔒 Blocked, ⏸️ Completed
+- Event log shows dependency evaluation results
+
+**Access**: http://localhost:5174/runtime-test.html
+
+**Test Case**: Finish "Boil the macaroni", skip forward 1 hour. The drained pasta has a FLEXIBLE hold window, so it stays available for the next step.
+
+### Implementation Status
+
+**Completed** ✅:
+1. Hold window ontology (46 verbs with temporal metadata)
+2. Ingredient prep extraction (creates Chain 0: Prep Work)
+3. FLEXIBLE vs RIGID constraint system (edge-level metadata)
+4. Hold window visualization (channel extension prototype)
+5. Runtime integration (depsSatisfied with time-based evaluation)
+6. Interactive test harness (validates hold window logic)
+
+**Next Steps** (Pending):
+1. **Add urgency states to production runtime** - Implement must_do_now vs could_do_now classification based on hold window percentage remaining
+2. **Update TimelineFlow visualization** - Add visual indicators (colors, animations) for urgency states in the actual Alpha app
+3. **Test with production Alpha app** - Either re-parse meals with hold window data OR modify app to parse-on-load (decision needed)
+4. **Backward scheduling** from serve time using FLEXIBLE/RIGID constraints
+5. **Critical path calculation** respecting temporal flexibility
 
 ## Additional Resources
 

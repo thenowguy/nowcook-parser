@@ -228,38 +228,62 @@
 
     <div class="controls">
       <button onclick="loadMeal()">Load Mac & Cheese</button>
-      <button onclick="startClock()" id="startBtn">Start Clock</button>
-      <button onclick="skipTime(60)" class="btn-small">+1 min</button>
-      <button onclick="skipTime(300)" class="btn-small">+5 min</button>
-      <button onclick="skipTime(3600)" class="btn-small">+1 hour</button>
       <div style="flex: 1"></div>
       <div class="clock" id="clock">00:00:00</div>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-      <div>
-        <div class="section">
-          <div class="section-title">Available Now</div>
-          <div class="task-list" id="available"></div>
-        </div>
-
-        <div class="section">
-          <div class="section-title">Blocked (dependencies not met)</div>
-          <div class="task-list" id="blocked"></div>
-        </div>
+    <div id="welcome" style="background: #1a1a1a; border: 1px solid #00d4ff; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+      <div style="color: #00d4ff; font-weight: 600; margin-bottom: 12px; font-size: 16px;">🧪 Hold Window Runtime Test</div>
+      <p style="color: #aaa; font-size: 14px; line-height: 1.6; margin-bottom: 16px;">
+        This test demonstrates how <strong>FLEXIBLE</strong> vs <strong>RIGID</strong> constraints control task availability over time.
+      </p>
+      <div style="background: #0a0a0a; border-left: 3px solid #00d4ff; padding: 12px; margin-bottom: 12px;">
+        <div style="color: #2ecc71; font-size: 13px; font-weight: 600; margin-bottom: 4px;">FLEXIBLE edges (most cooking tasks):</div>
+        <div style="color: #888; font-size: 12px;">Stay available for minutes to hours based on the hold window</div>
       </div>
-
-      <div>
-        <div class="section">
-          <div class="section-title">Completed</div>
-          <div class="task-list" id="completed"></div>
-        </div>
-
-        <div class="section">
-          <div class="section-title">Event Log</div>
-          <div class="log" id="log"></div>
-        </div>
+      <div style="background: #0a0a0a; border-left: 3px solid #e74c3c; padding: 12px;">
+        <div style="color: #e74c3c; font-size: 13px; font-weight: 600; margin-bottom: 4px;">RIGID edges (serve immediately tasks):</div>
+        <div style="color: #888; font-size: 12px;">Must be used within 5 minutes or they expire</div>
       </div>
+    </div>
+
+    <div id="instructions" style="background: #1a1a1a; border: 1px solid #f39c12; border-radius: 8px; padding: 16px; margin-bottom: 24px; display: none;">
+      <div style="color: #f39c12; font-weight: 600; margin-bottom: 12px;">📋 How to Use This Test:</div>
+      <ol style="color: #aaa; font-size: 13px; line-height: 1.8; margin-left: 20px;">
+        <li><strong>Complete a task:</strong> Click "Finish" on any green task in the "Available Now" section</li>
+        <li><strong>Watch dependencies unlock:</strong> New tasks will appear as available when their predecessors finish</li>
+        <li><strong>Jump forward in time:</strong> Use the time skip buttons below to test hold windows</li>
+        <li><strong>Observe expiration:</strong> Tasks with RIGID edges will turn red and become blocked after 5 minutes</li>
+      </ol>
+      <div style="background: #0a0a0a; padding: 12px; border-radius: 4px; margin-top: 12px;">
+        <div style="color: #888; font-size: 12px;"><strong>Tip:</strong> Try finishing "Boil the macaroni" and then skipping forward 1 hour. The drained pasta has a FLEXIBLE hold window, so it stays available!</div>
+      </div>
+    </div>
+
+    <div class="controls" id="timeControls" style="display: none; justify-content: center; gap: 12px;">
+      <button onclick="skipTime(60)">Skip +1 min</button>
+      <button onclick="skipTime(300)">Skip +5 min</button>
+      <button onclick="skipTime(3600)">Skip +1 hour</button>
+    </div>
+
+    <div class="section">
+      <div class="section-title">✅ Available Now (Click "Finish" to complete)</div>
+      <div class="task-list" id="available"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">⏸️ Completed Tasks</div>
+      <div class="task-list" id="completed"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">🔒 Blocked (Dependencies not ready or window expired)</div>
+      <div class="task-list" id="blocked"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">📝 Event Log</div>
+      <div class="log" id="log"></div>
     </div>
   </div>
 
@@ -310,6 +334,11 @@ Bake for 25 minutes, or until bubbly and the top is browned.`;
         sum + (t.edges || []).filter(e => e.constraint === 'RIGID').length, 0);
 
       log(`Found ${flexible} FLEXIBLE edges, ${rigid} RIGID edges`, 'info');
+
+      // Hide welcome, show instructions and time controls
+      document.getElementById('welcome').style.display = 'none';
+      document.getElementById('instructions').style.display = 'block';
+      document.getElementById('timeControls').style.display = 'flex';
 
       render();
     };
