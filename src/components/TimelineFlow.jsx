@@ -550,9 +550,9 @@ export default function TimelineFlow({ tasks, chains = [], ingredients = [], tex
             transform: 'translate(-50%, -50%)',
             color: '#fff',
             fontSize: isReady ? '24px' : '20px', // +50% larger (was 16px/13px)
-            fontWeight: '700',
-            fontFamily: 'monospace', // Prevent jitter during countdown
-            opacity: 1.0, // Always visible
+            fontWeight: '700', // Bold for better readability at arm's length
+            fontFamily: '-apple-system, BlinkMacSystemFont, "SF Mono", Menlo, Consolas, "Courier New", monospace', // Clean zeros, no slash
+            opacity: 0.9, // 90% opacity for softer appearance
             transition: 'font-size 0.3s ease-out'
           }}>
             {(() => {
