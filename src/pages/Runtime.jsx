@@ -296,7 +296,7 @@ export default function Runtime() {
                 justifyContent: 'center'
               }}
             >
-              <img 
+              <img
                 src={showBlocked ? '/eye-open.png' : '/eye-closed.png'}
                 alt={showBlocked ? 'Hide blocked tasks' : 'Show blocked tasks'}
                 style={{
@@ -306,6 +306,58 @@ export default function Runtime() {
                 }}
               />
             </button>
+
+            {/* Serve Time Badge - color-coded status */}
+            {rt.started && serveTimeMs && (() => {
+              const now = Date.now();
+              const timeUntilServe = serveTimeMs - now;
+              const minutesUntilServe = timeUntilServe / 60000;
+
+              // Calculate remaining work (sum of all non-completed task durations)
+              const remainingWorkMin = tasks
+                .filter(t => !rt.completed.some(c => c.id === t.id))
+                .reduce((sum, t) => sum + (t.duration_min || t.planned_min || 0), 0);
+
+              // Determine status color
+              let bgColor, label;
+              if (minutesUntilServe >= remainingWorkMin * 1.2) {
+                // 20% buffer - on schedule
+                bgColor = '#4caf50'; // Green
+                label = 'SERVE';
+              } else if (minutesUntilServe >= remainingWorkMin) {
+                // Tight but doable - at risk
+                bgColor = '#ff9800'; // Orange
+                label = 'SERVE';
+              } else {
+                // Not enough time - pushed later
+                bgColor = '#f44336'; // Red
+                label = 'DELAYED';
+              }
+
+              return (
+                <div style={{
+                  position: 'absolute',
+                  right: '115px', // To the left of eye button
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: bgColor,
+                  color: 'white',
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  fontFamily: 'monospace',
+                  whiteSpace: 'nowrap',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  lineHeight: '1.2'
+                }}>
+                  <div style={{ fontSize: '10px', opacity: 0.9 }}>{label}</div>
+                  <div>{serveTimeStr}</div>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Timeline - THE main interface */}
