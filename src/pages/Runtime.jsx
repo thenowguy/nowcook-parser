@@ -74,10 +74,12 @@ export default function Runtime() {
   const handleStartTask = (taskId) => {
     setTextMode('instructions');
     rt.startTask(taskId);
-    // Auto-disable smart task filter when user starts any task
-    // (return to full view - badge remains as passive indicator)
+    // Auto-disable smart task filter after 5 seconds
+    // (gives user time to see task is moving before returning to full view)
     if (showOnlySmartTasks) {
-      setShowOnlySmartTasks(false);
+      setTimeout(() => {
+        setShowOnlySmartTasks(false);
+      }, 5000); // 5 second delay
     }
   };
 
@@ -337,7 +339,7 @@ export default function Runtime() {
                     top: '50%',
                     transform: 'translateY(-50%)',
                     background: showOnlySmartTasks
-                      ? '#2196f3' // Blue when filter is active
+                      ? '#222328' // Dark background when filter is active
                       : (hasSmartTasks ? '#4caf50' : '#575762'), // Green when tasks available, gray otherwise
                     color: 'white',
                     width: '36px',

@@ -40,7 +40,7 @@ export default function TimelineFlow({ tasks, chains = [], ingredients = [], tex
   // Helper to get chain index for color mapping
   const getChainIndex = (chainId) => {
     const match = chainId?.match(/^chain_(\d+)$/);
-    return match ? parseInt(match[1]) - 1 : 0; // chain_1 -> index 0
+    return match ? parseInt(match[1]) : 0; // chain_0 -> index 0, chain_1 -> index 1
   };
 
   // Helper to get chain metadata
@@ -178,17 +178,20 @@ export default function TimelineFlow({ tasks, chains = [], ingredients = [], tex
       // Skip if dismissed
       if (doneIds.has(task.id)) return;
 
+      // Check if running (needed for filter logic below)
+      const runningState = running.find(r => r.id === task.id);
+
       // If smart task filter is active, only show tasks that are:
-      // 1. Ready (can-do at NowLine)
+      // 1. Ready (can-do at NowLine) OR already running
       // 2. Unattended after start (can run in background)
       if (showOnlySmartTasks) {
         const isReady = ready.find(t => t.id === task.id);
+        const isRunning = !!runningState;
         const isSmartTask = task.self_running_after_start === true;
-        if (!isReady || !isSmartTask) return;
-      }
 
-      // Check if running
-      const runningState = running.find(r => r.id === task.id);
+        // Show if it's a smart task AND (ready OR running)
+        if (!isSmartTask || (!isReady && !isRunning)) return;
+      }
       
       if (runningState) {
         // RUNNING or STOPPED-WAITING
@@ -546,24 +549,27 @@ export default function TimelineFlow({ tasks, chains = [], ingredients = [], tex
             left: '50%',
             transform: 'translate(-50%, -50%)',
             color: '#fff',
-            fontSize: isReady ? '16px' : '13px', // Slightly smaller when running
+            fontSize: isReady ? '24px' : '20px', // +50% larger (was 16px/13px)
             fontWeight: '700',
             fontFamily: 'monospace', // Prevent jitter during countdown
             opacity: 1.0, // Always visible
             transition: 'font-size 0.3s ease-out'
           }}>
             {(() => {
-              // Format time based on duration
+              // Smart time formatting based on threshold:
+              // ≥10min: show minutes only (150m, 76m, 34m, 11m, 10m)
+              // <10min: show mm:ss format (9:59, 5:30, 1:00) - no leading zeros
               const mins = Math.ceil(remainingMin);
-              if (mins < 60) {
+
+              if (mins >= 10) {
+                // Show minutes only
                 return `${mins}m`;
-              } else if (mins < 120) {
-                const hours = Math.floor(mins / 60);
-                const remaining = mins % 60;
-                return remaining > 0 ? `${hours}h${remaining}m` : `${hours}h`;
               } else {
-                const hours = Math.floor(mins / 60);
-                return `${hours}h+`;
+                // Show mm:ss (no leading zero on minutes)
+                const totalSeconds = Math.ceil(remainingMin * 60);
+                const m = Math.floor(totalSeconds / 60);
+                const s = totalSeconds % 60;
+                return `${m}:${String(s).padStart(2, '0')}`;
               }
             })()}
           </div>
