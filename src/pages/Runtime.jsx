@@ -26,7 +26,10 @@ export default function Runtime() {
   
   // Toggle state for showing/hiding blocked tasks
   const [showBlocked, setShowBlocked] = useState(true);
-  
+
+  // Toggle state for filtering to smart background tasks (can-do + unattended-after-start)
+  const [showOnlySmartTasks, setShowOnlySmartTasks] = useState(false);
+
   // Toggle state for text display mode: 'instructions' | 'ingredients' | 'time'
   const [textMode, setTextMode] = useState('instructions');
   
@@ -64,6 +67,11 @@ export default function Runtime() {
   const handleStartTask = (taskId) => {
     setTextMode('instructions');
     rt.startTask(taskId);
+    // Auto-disable smart task filter when user starts any task
+    // (return to full view - badge remains as passive indicator)
+    if (showOnlySmartTasks) {
+      setShowOnlySmartTasks(false);
+    }
   };
 
   const handleStart = () => {
@@ -301,12 +309,12 @@ export default function Runtime() {
               />
             </button>
 
-            {/* Smart Background Tasks Badge - shows count of unattended tasks ready to start */}
+            {/* Smart Background Tasks Badge - filter to unattended tasks ready to start */}
             {rt.started && (() => {
               // Count tasks that are:
               // 1. Can-do (ready at NowLine)
               // 2. Unattended after start (can run in background)
-              const smartBackgroundTasks = ready.filter(task =>
+              const smartBackgroundTasks = rt.ready.filter(task =>
                 task.self_running_after_start === true
               );
 
@@ -314,26 +322,34 @@ export default function Runtime() {
               const hasSmartTasks = count > 0;
 
               return (
-                <div style={{
-                  position: 'absolute',
-                  right: '115px', // Between NOW time and eye button
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: hasSmartTasks ? '#4caf50' : '#575762',
-                  color: 'white',
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '16px',
-                  fontWeight: 'bold',
-                  fontFamily: 'monospace',
-                  transition: 'background 0.3s ease'
-                }}>
+                <button
+                  onClick={() => setShowOnlySmartTasks(!showOnlySmartTasks)}
+                  style={{
+                    position: 'absolute',
+                    right: '115px', // Between NOW time and eye button
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: showOnlySmartTasks
+                      ? '#2196f3' // Blue when filter is active
+                      : (hasSmartTasks ? '#4caf50' : '#575762'), // Green when tasks available, gray otherwise
+                    color: 'white',
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    fontFamily: 'monospace',
+                    border: showOnlySmartTasks ? '2px solid #fff' : 'none', // White border when active
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    padding: 0
+                  }}
+                >
                   {hasSmartTasks ? count : ''}
-                </div>
+                </button>
               );
             })()}
           </div>
@@ -362,6 +378,7 @@ export default function Runtime() {
               nowMs={rt.nowMs}
               onStartTask={handleStartTask}
               onDismissTask={rt.finishTask}
+              showOnlySmartTasks={showOnlySmartTasks}
             />
           </div>
 

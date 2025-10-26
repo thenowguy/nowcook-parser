@@ -3,7 +3,7 @@ import Lottie from 'lottie-react';
 import { getPlannedMinutes } from '../utils/runtime';
 import chevronAnimation from '../assets/chevron-left-green.json';
 
-export default function TimelineFlow({ tasks, chains = [], ingredients = [], textMode = 'instructions', running, ready = [], driverBusy = [], blocked = [], completed = [], doneIds, nowMs, onStartTask, onDismissTask }) {
+export default function TimelineFlow({ tasks, chains = [], ingredients = [], textMode = 'instructions', running, ready = [], driverBusy = [], blocked = [], completed = [], doneIds, nowMs, onStartTask, onDismissTask, showOnlySmartTasks = false }) {
   // iPhone 11 Configuration - Physical dimensions (2x scale)
   const PIXELS_PER_SECOND = 2;
   const TRACK_HEIGHT = 120; // 240px physical / 2 = 120px logical
@@ -172,12 +172,21 @@ export default function TimelineFlow({ tasks, chains = [], ingredients = [], tex
 
   const allTracks = useMemo(() => {
     const tracks = [];
-    
+
     // Iterate through ALL tasks in their original order
     tasks.forEach((task) => {
       // Skip if dismissed
       if (doneIds.has(task.id)) return;
-      
+
+      // If smart task filter is active, only show tasks that are:
+      // 1. Ready (can-do at NowLine)
+      // 2. Unattended after start (can run in background)
+      if (showOnlySmartTasks) {
+        const isReady = ready.find(t => t.id === task.id);
+        const isSmartTask = task.self_running_after_start === true;
+        if (!isReady || !isSmartTask) return;
+      }
+
       // Check if running
       const runningState = running.find(r => r.id === task.id);
       
@@ -292,7 +301,7 @@ export default function TimelineFlow({ tasks, chains = [], ingredients = [], tex
     });
     
     return tracks;
-  }, [tasks, running, ready, driverBusy, blocked, doneIds, nowMs, byId, textMode, ingredients]);
+  }, [tasks, running, ready, driverBusy, blocked, doneIds, nowMs, byId, textMode, ingredients, showOnlySmartTasks]);
 
   // Group tracks by chain and insert chain headers
   const groupedItems = useMemo(() => {
@@ -537,12 +546,26 @@ export default function TimelineFlow({ tasks, chains = [], ingredients = [], tex
             left: '50%',
             transform: 'translate(-50%, -50%)',
             color: '#fff',
-            fontSize: '16px', // 25% larger (13px * 1.25 ≈ 16px)
+            fontSize: isReady ? '16px' : '13px', // Slightly smaller when running
             fontWeight: '700',
-            opacity: isReady ? 1.0 : 0, // Fade off when task starts
-            transition: 'opacity 0.3s ease-out'
+            fontFamily: 'monospace', // Prevent jitter during countdown
+            opacity: 1.0, // Always visible
+            transition: 'font-size 0.3s ease-out'
           }}>
-            {Math.ceil(remainingMin)}m
+            {(() => {
+              // Format time based on duration
+              const mins = Math.ceil(remainingMin);
+              if (mins < 60) {
+                return `${mins}m`;
+              } else if (mins < 120) {
+                const hours = Math.floor(mins / 60);
+                const remaining = mins % 60;
+                return remaining > 0 ? `${hours}h${remaining}m` : `${hours}h`;
+              } else {
+                const hours = Math.floor(mins / 60);
+                return `${hours}h+`;
+              }
+            })()}
           </div>
         </div>
       );
