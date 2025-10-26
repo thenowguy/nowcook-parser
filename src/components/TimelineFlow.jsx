@@ -695,7 +695,7 @@ export default function TimelineFlow({ tasks, chains = [], ingredients = [], tex
               >
                 <span style={{
                   color: item.chainColor.label,
-                  fontSize: '13px',
+                  fontSize: '15px', // Increased from 13px for better readability
                   fontWeight: '600',
                   textTransform: 'uppercase',
                   letterSpacing: '0.5px'
@@ -790,7 +790,7 @@ export default function TimelineFlow({ tasks, chains = [], ingredients = [], tex
               paddingLeft: '10px',
               fontFamily: textMode === 'time' ? 'monospace' : 'Verdana, sans-serif',
               fontSize: textMode === 'time' ? '22px' : '18px',
-              color: '#ffffff',
+              color: 'rgba(255, 255, 255, 0.8)', // 80% white - softer for mobile
               opacity: (track.status === 'blocked' || track.status === 'driver-busy') ? 0.5 : 1.0,
               textAlign: 'right',
               zIndex: 2,

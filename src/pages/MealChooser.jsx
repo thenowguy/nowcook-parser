@@ -80,20 +80,25 @@ export default function MealChooser() {
                   fontSize: '14px',
                   color: '#999'
                 }}>
-                  {/* Placeholder - will be replaced with actual images */}
-                  <img 
-                    src={`/meals/${meal.idx}.jpg`} 
-                    alt={meal.title}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover'
-                    }}
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.parentElement.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:#999;">Image Coming Soon</div>';
-                    }}
-                  />
+                  {meal.image ? (
+                    <img
+                      src={meal.image}
+                      alt={meal.title}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover'
+                      }}
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.parentElement.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:#999;">Image Coming Soon</div>';
+                      }}
+                    />
+                  ) : (
+                    <div style={{display:'flex',alignItems:'center',justifyContent:'center',width:'100%',height:'100%',color:'#999'}}>
+                      Image Coming Soon
+                    </div>
+                  )}
                 </div>
 
                 <div style={{ padding: '20px' }}>

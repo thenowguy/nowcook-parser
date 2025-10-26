@@ -168,15 +168,17 @@ export default function Runtime() {
             overflow: 'hidden',
             background: '#000'
           }}>
-            <img 
-              src="/mealPics/MacnCheese_pic.png" 
-              alt={meal.title}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover'
-              }}
-            />
+            {meal.image && (
+              <img
+                src={meal.image}
+                alt={meal.title}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover'
+                }}
+              />
+            )}
             
             {/* Home button - top left corner of hero image */}
             <button

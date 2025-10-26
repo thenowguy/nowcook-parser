@@ -11,72 +11,75 @@ import MEAL_COOKIES_SONNET_V2 from "../meals/sonnet-chocolate-chip-cookies-v2.js
 import MEAL_COOKIES_SONNET from "../meals/chocolate_chip_cookies_sonnet.json";
 
 export const MEALS = [
-  { 
-    title: "Garlic Butter Pasta", 
-    author: "Trev Harmon", 
-    idx: 0,
-    data: MEAL_GARLIC_PASTA 
-  },
-  { 
-    title: "Mac & Cheese", 
-    author: "Trev Harmon", 
-    idx: 1,
-    data: MEAL_MAC_CHEESE 
-  },
-  { 
-    title: "Chicken & Rice", 
-    author: "Trev Harmon", 
-    idx: 2,
-    data: MEAL_CHICKEN_RICE 
-  },
-  { 
-    title: "Salmon, Asparagus & Couscous", 
-    author: "Trev Harmon", 
-    idx: 3,
-    data: MEAL_SALMON 
-  },
+  // ORIGINAL 5 RECIPES - HIDDEN FOR PRESENTATION (no chain data yet)
+  // {
+  //   title: "Garlic Butter Pasta",
+  //   author: "Trev Harmon",
+  //   idx: 0,
+  //   data: MEAL_GARLIC_PASTA
+  // },
+  // {
+  //   title: "Mac & Cheese",
+  //   author: "Trev Harmon",
+  //   idx: 1,
+  //   data: MEAL_MAC_CHEESE
+  // },
+  // {
+  //   title: "Chicken & Rice",
+  //   author: "Trev Harmon",
+  //   idx: 2,
+  //   data: MEAL_CHICKEN_RICE
+  // },
+  // {
+  //   title: "Salmon, Asparagus & Couscous",
+  //   author: "Trev Harmon",
+  //   idx: 3,
+  //   data: MEAL_SALMON
+  // },
+  // {
+  //   title: "Steak, Potatoes & Green Beans",
+  //   author: "Trev Harmon",
+  //   idx: 4,
+  //   data: MEAL_STEAK
+  // },
+
+  // SONNET-PARSED RECIPES - WITH CHAIN DATA & IMAGES
   {
-    title: "Steak, Potatoes & Green Beans",
-    author: "Trev Harmon",
-    idx: 4,
-    data: MEAL_STEAK
-  },
-  {
-    title: "Chocolate Chip Cookies (Sonnet)",
-    author: "Love and Lemons",
-    idx: 5,
-    data: MEAL_COOKIES_SONNET
-  },
-  {
-    title: "Seared Steak with Garlic Mashed Potatoes & Green Beans (Sonnet)",
-    author: "NowCook",
-    idx: 6,
-    data: MEAL_STEAK_SONNET
-  },
-  {
-    title: "Spaghetti Bolognese (Sonnet v2)",
+    title: "Spaghetti Bolognese",
     author: "RecipeTin Eats",
-    idx: 7,
+    idx: 0,
+    image: "/mealPics/SpaghettiBolognese_pic.jpg",
     data: MEAL_BOLOGNESE_SONNET
   },
   {
-    title: "Chicken & Veg Stir-Fry (Sonnet v2)",
+    title: "Chicken & Veg Stir-Fry",
     author: "Jamie Oliver",
-    idx: 8,
+    idx: 1,
+    image: "/mealPics/StirFry_pic.jpg",
     data: MEAL_STIR_FRY_SONNET
   },
   {
-    title: "Sheet Pan Salmon with Vegetables (Sonnet v2)",
+    title: "Sheet Pan Salmon with Vegetables",
     author: "The Mediterranean Dish",
-    idx: 9,
+    idx: 2,
+    image: "/mealPics/Salmon_pic.jpg",
     data: MEAL_SALMON_SONNET
   },
   {
-    title: "Chocolate Chip Cookies (Sonnet v2)",
+    title: "Chocolate Chip Cookies",
     author: "Love and Lemons",
-    idx: 10,
+    idx: 3,
+    image: "/mealPics/Cookies_pic.jpg",
     data: MEAL_COOKIES_SONNET_V2
   },
+  // NOTE: Steak dinner needs image - placeholder for now
+  // {
+  //   title: "Seared Steak with Garlic Mashed Potatoes & Green Beans",
+  //   author: "NowCook",
+  //   idx: 4,
+  //   image: "/mealPics/Steak_pic.jpg",
+  //   data: MEAL_STEAK_SONNET
+  // },
 ];
 
 export function getMeal(idx) {
