@@ -66,8 +66,8 @@ export default function TimelineFlow({ tasks, chains = [], ingredients = [], tex
         // Handle both string inputs and object inputs {ingredient: "...", ...}
         const ingredientId = typeof input === 'string' ? input : (input.ingredient || input);
 
-        // Try multiple matching strategies
-        const fullIngredient = ingredients.find(ing => {
+        // Try to find ingredient with quantity from ingredients array
+        const fullIngredient = ingredients?.find(ing => {
           const normalizedItem = ing.item.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
           const normalizedId = ingredientId.toLowerCase();
 
@@ -77,11 +77,19 @@ export default function TimelineFlow({ tasks, chains = [], ingredients = [], tex
                  normalizedId.includes(normalizedItem);
         });
 
-        if (fullIngredient) {
+        if (fullIngredient && fullIngredient.amount) {
+          // Show quantity + ingredient name
           return `${fullIngredient.amount} ${fullIngredient.item}`;
         }
-        // Fallback to just the ID if not found
-        return ingredientId.replace(/_/g, ' ');
+
+        // Fallback: format ingredient name nicely (replace underscores, capitalize)
+        const formattedName = ingredientId
+          .replace(/_/g, ' ')
+          .split(' ')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+
+        return formattedName;
       });
 
       return ingredientTexts.join(', ') || task.name;
