@@ -706,7 +706,7 @@
       ]
     }
   ],
-  "shopping": [
+  "shopping_list": [
     {
       "name": "Olive oil",
       "quantity": "2",
