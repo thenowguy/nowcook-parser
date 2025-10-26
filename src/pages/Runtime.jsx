@@ -169,7 +169,7 @@ export default function Runtime() {
             background: '#000'
           }}>
             <img 
-              src="/MacnCheese_pic.png" 
+              src="/mealPics/MacnCheese_pic.png" 
               alt={meal.title}
               style={{
                 width: '100%',
