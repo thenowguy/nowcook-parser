@@ -217,7 +217,7 @@ export default function Runtime() {
             background: '#575762',
             opacity: 1
           }}>
-            {/* Text mode toggle button - 30px from left edge */}
+            {/* Text mode toggle button - 20px from left edge */}
             <button
               onClick={() => {
                 const modes = ['instructions', 'ingredients', 'time'];
@@ -227,7 +227,7 @@ export default function Runtime() {
               }}
               style={{
                 position: 'absolute',
-                left: '30px',
+                left: '20px',
                 top: '50%',
                 transform: 'translateY(-50%)',
                 background: 'transparent',
@@ -264,7 +264,7 @@ export default function Runtime() {
               color: 'white',
               padding: '10px 12px',
               borderRadius: '10px',
-              fontSize: '18px',
+              fontSize: '20px',
               fontWeight: 'bold',
               fontFamily: 'monospace',
               whiteSpace: 'nowrap'
