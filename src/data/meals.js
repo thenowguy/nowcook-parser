@@ -72,14 +72,13 @@ export const MEALS = [
     image: "/mealPics/Cookies_pic.jpg",
     data: MEAL_COOKIES_SONNET_V2
   },
-  // NOTE: Steak dinner needs image - placeholder for now
-  // {
-  //   title: "Seared Steak with Garlic Mashed Potatoes & Green Beans",
-  //   author: "NowCook",
-  //   idx: 4,
-  //   image: "/mealPics/Steak_pic.jpg",
-  //   data: MEAL_STEAK_SONNET
-  // },
+  {
+    title: "Seared Steak with Garlic Mashed Potatoes & Green Beans",
+    author: "NowCook",
+    idx: 4,
+    image: "/mealPics/Steak_pic.jpg", // ADD YOUR STEAK IMAGE HERE
+    data: MEAL_STEAK_SONNET
+  },
 ];
 
 export function getMeal(idx) {
