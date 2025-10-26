@@ -96,8 +96,8 @@ export default function Runtime() {
         @media (max-width: 768px) {
           .timeline-background {
             background-image: url('/TimelineBG.jpg') !important;
-            background-size: cover !important;
-            background-position: center !important;
+            background-size: auto !important;
+            background-position: top left !important;
             background-repeat: no-repeat !important;
             background-color: #222328 !important;
           }
