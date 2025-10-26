@@ -186,7 +186,8 @@ export default function Runtime() {
                 left: '20px',
                 top: '20px',
                 background: 'transparent',
-                border: '1px solid rgba(255, 255, 255, 0.3)',
+                border: '2px solid rgba(255, 255, 255, 0.3)',
+                borderRadius: '15px',
                 cursor: 'pointer',
                 padding: 0,
                 display: 'flex',
@@ -213,7 +214,7 @@ export default function Runtime() {
             width: '100%',
             height: '50px', // 100px physical / 2 = 50px logical
             background: '#575762',
-            opacity: 0.7
+            opacity: 1
           }}>
             {/* Text mode toggle button - 30px from left edge */}
             <button
