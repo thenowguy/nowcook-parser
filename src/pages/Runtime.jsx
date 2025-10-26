@@ -85,14 +85,8 @@ export default function Runtime() {
     navigate('/');
   };
 
-  // Calculate serve time
-  const serveTimeMs = rt.started ? Date.now() + (meal.data.min_time || 20) * 60000 : null;
-  const serveTimeStr = serveTimeMs 
-    ? new Date(serveTimeMs).toLocaleTimeString('en-US', { 
-        hour: 'numeric', 
-        minute: '2-digit' 
-      })
-    : null;
+  // Calculate serve time (kept for future use)
+  // const serveTimeMs = rt.started ? Date.now() + (meal.data.min_time || 20) * 60000 : null;
 
   return (
     <div style={{
@@ -307,54 +301,38 @@ export default function Runtime() {
               />
             </button>
 
-            {/* Serve Time Badge - color-coded status */}
-            {rt.started && serveTimeMs && (() => {
-              const now = Date.now();
-              const timeUntilServe = serveTimeMs - now;
-              const minutesUntilServe = timeUntilServe / 60000;
+            {/* Smart Background Tasks Badge - shows count of unattended tasks ready to start */}
+            {rt.started && (() => {
+              // Count tasks that are:
+              // 1. Can-do (ready at NowLine)
+              // 2. Unattended after start (can run in background)
+              const smartBackgroundTasks = ready.filter(task =>
+                task.self_running_after_start === true
+              );
 
-              // Calculate remaining work (sum of all non-completed task durations)
-              const remainingWorkMin = tasks
-                .filter(t => !rt.completed.some(c => c.id === t.id))
-                .reduce((sum, t) => sum + (t.duration_min || t.planned_min || 0), 0);
-
-              // Determine status color
-              let bgColor, label;
-              if (minutesUntilServe >= remainingWorkMin * 1.2) {
-                // 20% buffer - on schedule
-                bgColor = '#4caf50'; // Green
-                label = 'SERVE';
-              } else if (minutesUntilServe >= remainingWorkMin) {
-                // Tight but doable - at risk
-                bgColor = '#ff9800'; // Orange
-                label = 'SERVE';
-              } else {
-                // Not enough time - pushed later
-                bgColor = '#f44336'; // Red
-                label = 'DELAYED';
-              }
+              const count = smartBackgroundTasks.length;
+              const hasSmartTasks = count > 0;
 
               return (
                 <div style={{
                   position: 'absolute',
-                  right: '115px', // To the left of eye button
+                  right: '115px', // Between NOW time and eye button
                   top: '50%',
                   transform: 'translateY(-50%)',
-                  background: bgColor,
+                  background: hasSmartTasks ? '#4caf50' : '#575762',
                   color: 'white',
-                  padding: '8px 12px',
-                  borderRadius: '8px',
-                  fontSize: '14px',
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '16px',
                   fontWeight: 'bold',
                   fontFamily: 'monospace',
-                  whiteSpace: 'nowrap',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  lineHeight: '1.2'
+                  transition: 'background 0.3s ease'
                 }}>
-                  <div style={{ fontSize: '10px', opacity: 0.9 }}>{label}</div>
-                  <div>{serveTimeStr}</div>
+                  {hasSmartTasks ? count : ''}
                 </div>
               );
             })()}
