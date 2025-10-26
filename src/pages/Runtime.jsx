@@ -188,7 +188,7 @@ export default function Runtime() {
                 background: 'transparent',
                 border: '2px solid rgba(255, 255, 255, 0.5)',
                 borderRadius: '15px',
-                boxShadow: '10px 10px 5px #222328',
+                boxShadow: '10px 10px 5px #292b3495',
                 cursor: 'pointer',
                 padding: 0,
                 display: 'flex',
