@@ -201,7 +201,7 @@ export default function Runtime() {
                 style={{
                   width: '60px',
                   height: '60px',
-                  opacity: 0.9
+                  opacity: 1
                 }}
               />
             </button>
@@ -212,7 +212,8 @@ export default function Runtime() {
             position: 'relative',
             width: '100%',
             height: '50px', // 100px physical / 2 = 50px logical
-            background: '#575762'
+            background: '#575762',
+            opacity: 0.7
           }}>
             {/* Text mode toggle button - 30px from left edge */}
             <button
@@ -259,7 +260,7 @@ export default function Runtime() {
               transform: 'translate(-50%, -50%)',
               background: '#4caf50',
               color: 'white',
-              padding: '6px 12px',
+              padding: '0px 12px',
               borderRadius: '12px',
               fontSize: '18px',
               fontWeight: 'bold',
