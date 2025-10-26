@@ -3,23 +3,52 @@ import Lottie from 'lottie-react';
 import { getPlannedMinutes } from '../utils/runtime';
 import chevronAnimation from '../assets/chevron-left-green.json';
 
-export default function TimelineFlow({ tasks, ingredients = [], textMode = 'instructions', running, ready = [], driverBusy = [], blocked = [], completed = [], doneIds, nowMs, onStartTask, onDismissTask }) {
+export default function TimelineFlow({ tasks, chains = [], ingredients = [], textMode = 'instructions', running, ready = [], driverBusy = [], blocked = [], completed = [], doneIds, nowMs, onStartTask, onDismissTask }) {
   // iPhone 11 Configuration - Physical dimensions (2x scale)
   const PIXELS_PER_SECOND = 2;
-  const TRACK_HEIGHT = 115; // 230px physical / 2 = 115px logical
+  const TRACK_HEIGHT = 120; // 240px physical / 2 = 120px logical
+  const CHAIN_HEADER_HEIGHT = 40; // 80px physical / 2 = 40px logical
   const LEFT_PANEL_WIDTH = 160; // 320px physical / 2 = 160px logical
   const LOZENGE_HEIGHT = 100; // 200px physical / 2 = 100px logical
   const LOZENGE_RADIUS = 50; // 100px physical / 2 = 50px logical (pill shape)
   const NOWLINE_X = 160; // 320px physical / 2 = 160px logical (at edge of left panel)
   const NOWLINE_WIDTH = 2; // 4px physical / 2 = 2px logical
   const TEXT_PADDING = 15; // 30px physical / 2 = 15px logical (from NowLine)
+
+  // Chain color palette (vibrant, contemporary colors for dark mode)
+  const CHAIN_COLORS = [
+    { bg: 'rgba(100, 181, 246, 0.12)', accent: '#64b5f6', label: '#90caf9', lozengeTint: 'rgba(100, 181, 246, 0.08)' }, // vibrant blue
+    { bg: 'rgba(255, 167, 38, 0.12)', accent: '#ffa726', label: '#ffb74d', lozengeTint: 'rgba(255, 167, 38, 0.08)' }, // vibrant orange
+    { bg: 'rgba(240, 98, 146, 0.12)', accent: '#f06292', label: '#f48fb1', lozengeTint: 'rgba(240, 98, 146, 0.08)' }, // vibrant pink
+    { bg: 'rgba(129, 199, 132, 0.12)', accent: '#81c784', label: '#a5d6a7', lozengeTint: 'rgba(129, 199, 132, 0.08)' }, // vibrant green
+    { bg: 'rgba(149, 117, 205, 0.12)', accent: '#9575cd', label: '#b39ddb', lozengeTint: 'rgba(149, 117, 205, 0.08)' }, // vibrant purple
+    { bg: 'rgba(255, 238, 88, 0.12)', accent: '#ffee58', label: '#fff59d', lozengeTint: 'rgba(255, 238, 88, 0.08)' }  // vibrant yellow
+  ];
   
   // Get viewport width for full-width lozenges
   const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 414;
   const AVAILABLE_WIDTH = viewportWidth - NOWLINE_X; // Width from NowLine to right edge
   
   const byId = useMemo(() => new Map(tasks.map((t) => [t.id, t])), [tasks]);
-  
+
+  // Helper to extract chain ID from task ID (e.g., "chain_1/step_2" -> "chain_1")
+  const getChainId = (taskId) => {
+    const match = taskId.match(/^(chain_\d+)\//);
+    return match ? match[1] : null;
+  };
+
+  // Helper to get chain index for color mapping
+  const getChainIndex = (chainId) => {
+    const match = chainId?.match(/^chain_(\d+)$/);
+    return match ? parseInt(match[1]) - 1 : 0; // chain_1 -> index 0
+  };
+
+  // Helper to get chain metadata
+  const getChainMeta = (chainId) => {
+    const chain = chains.find(c => c.id === chainId);
+    return chain || { id: chainId, name: 'Unknown Chain' };
+  };
+
   // Helper to get display text based on mode
   const getDisplayText = (task, mode, remainingMs = null) => {
     if (mode === 'instructions') {
@@ -166,6 +195,10 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
           playSFX('arrive');
         }
         
+        const chainId = getChainId(task.id);
+        const chainIdx = getChainIndex(chainId);
+        const chainColor = CHAIN_COLORS[chainIdx % CHAIN_COLORS.length];
+
         tracks.push({
           id: task.id,
           task: task, // Keep full task object for display text
@@ -175,16 +208,23 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
           status,
           remainingMs,
           color: status === 'stopped-waiting' ? '#9e1212' : '#4caf50',
-          needsAction: status === 'stopped-waiting'
+          needsAction: status === 'stopped-waiting',
+          chainId,
+          chainColor,
+          circleX: NOWLINE_X + 10 // Circle stays fixed at NowLine + 10px inset (where it was when ready)
         });
       } else if (ready.find(t => t.id === task.id)) {
         // READY
         const durationMin = getPlannedMinutes(task);
-        
+
         // Linear width: 1 minute = 200px (2:1 ratio with 100px height)
         const lozengeWidth = durationMin * 200;
         const lozengeX = NOWLINE_X;
-        
+
+        const chainId = getChainId(task.id);
+        const chainIdx = getChainIndex(chainId);
+        const chainColor = CHAIN_COLORS[chainIdx % CHAIN_COLORS.length];
+
         tracks.push({
           id: task.id,
           task: task,
@@ -193,16 +233,23 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
           lozengeWidth,
           status: 'ready',
           color: '#4caf50',
-          needsAction: true
+          needsAction: true,
+          chainId,
+          chainColor,
+          circleX: lozengeX + 10 // Circle position: 10px inset from lozenge left edge
         });
       } else if (driverBusy.find(t => t.id === task.id)) {
         // DRIVER-BUSY
         const durationMin = getPlannedMinutes(task);
-        
+
         // Linear width: 1 minute = 200px (2:1 ratio with 100px height)
         const lozengeWidth = durationMin * 200;
         const lozengeX = NOWLINE_X;
-        
+
+        const chainId = getChainId(task.id);
+        const chainIdx = getChainIndex(chainId);
+        const chainColor = CHAIN_COLORS[chainIdx % CHAIN_COLORS.length];
+
         tracks.push({
           id: task.id,
           task: task,
@@ -211,10 +258,16 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
           lozengeWidth,
           status: 'driver-busy',
           color: '#565761',
-          needsAction: false
+          needsAction: false,
+          chainId,
+          chainColor
         });
       } else if (blocked.find(t => t.id === task.id)) {
         // BLOCKED (preview only)
+        const chainId = getChainId(task.id);
+        const chainIdx = getChainIndex(chainId);
+        const chainColor = CHAIN_COLORS[chainIdx % CHAIN_COLORS.length];
+
         tracks.push({
           id: task.id,
           task: task,
@@ -223,14 +276,44 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
           lozengeWidth: 0,
           status: 'blocked',
           color: '#666',
-          needsAction: false
+          needsAction: false,
+          chainId,
+          chainColor
         });
       }
     });
     
     return tracks;
   }, [tasks, running, ready, driverBusy, blocked, doneIds, nowMs, byId, textMode, ingredients]);
-  
+
+  // Group tracks by chain and insert chain headers
+  const groupedItems = useMemo(() => {
+    const items = [];
+    let currentChainId = null;
+
+    allTracks.forEach((track) => {
+      // If chain changed, insert header
+      if (track.chainId !== currentChainId) {
+        currentChainId = track.chainId;
+        const chainMeta = getChainMeta(currentChainId);
+        const chainIdx = getChainIndex(currentChainId);
+        const chainColor = CHAIN_COLORS[chainIdx % CHAIN_COLORS.length];
+
+        items.push({
+          type: 'chain-header',
+          chainId: currentChainId,
+          chainName: chainMeta.name,
+          chainColor
+        });
+      }
+
+      // Add the track
+      items.push({ type: 'track', ...track });
+    });
+
+    return items;
+  }, [allTracks, chains]);
+
   // Gesture handlers
   const handleDoubleTap = (trackId, status) => {
     if (status === 'ready' && onStartTask) {
@@ -358,38 +441,160 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
     if (track.status === 'blocked') {
       return null;
     }
-    
-    return (
+
+    // CIRCLE TIMER: Renders for both READY and RUNNING states
+    // Ready: shows full circle 10px inset from lozenge left edge
+    // Running: shows depleting circle FIXED at same position while lozenge slides left
+    const isCircleTimer = track.status === 'ready' || track.status === 'running';
+    let circleElement = null;
+
+    if (isCircleTimer) {
+      const durationMin = track.task ? getPlannedMinutes(track.task) : 10;
+      const circleSize = 80; // 80px diameter (160px physical)
+      const strokeWidth = 6;
+      const radius = (circleSize - strokeWidth) / 2;
+      const circumference = 2 * Math.PI * radius;
+
+      // Calculate progress based on status
+      let progress = 100; // Ready: full circle
+      let remainingMin = durationMin;
+
+      if (track.status === 'running' && track.remainingMs !== undefined) {
+        // Running: deplete circle as time runs out
+        const totalMs = durationMin * 60000;
+        progress = (track.remainingMs / totalMs) * 100;
+        remainingMin = Math.ceil(track.remainingMs / 60000);
+      }
+
+      const dashOffset = circumference - (progress / 100) * circumference;
+
+      // Circle position: use stored circleX (stays fixed even when lozenge moves)
+      const circleX = track.circleX;
+
+      // Circle colors: consistent green (#6DAD59) for both fill and stroke
+      const isReady = track.status === 'ready';
+      const greenColor = '#6DAD59'; // Bright green for can-do indicator
+
+      circleElement = (
+        <div
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUp}
+          onContextMenu={handleContextMenu}
+          style={{
+            position: 'absolute',
+            left: `${circleX}px`, // Left edge aligns with lozenge left edge
+            top: `${(TRACK_HEIGHT - circleSize) / 2}px`,
+            width: `${circleSize}px`,
+            height: `${circleSize}px`,
+            zIndex: 3, // Always on top (buttons sit on lozenges)
+            cursor: 'pointer', // Always show pointer cursor for circle timers
+            animation: isFlashing ? 'flash 0.3s ease-out' : 'none',
+            touchAction: 'none',
+            userSelect: 'none',
+            pointerEvents: 'auto' // Circle is always interactive (tap to start/dismiss)
+          }}
+        >
+          <svg width={circleSize} height={circleSize} style={{ transform: 'rotate(-90deg)' }}>
+            {/* Background circle - solid green for ready, depleting for running */}
+            <circle
+              cx={circleSize / 2}
+              cy={circleSize / 2}
+              r={radius}
+              fill={greenColor}
+              stroke={greenColor}
+              strokeWidth={strokeWidth}
+              opacity={isReady ? 1.0 : 0.3}
+            />
+            {/* Progress circle - radial wipe countdown (only visible for running tasks) */}
+            {!isReady && (
+              <circle
+                cx={circleSize / 2}
+                cy={circleSize / 2}
+                r={radius}
+                fill="transparent"
+                stroke={greenColor}
+                strokeWidth={strokeWidth}
+                strokeDasharray={circumference}
+                strokeDashoffset={dashOffset}
+                strokeLinecap="round"
+              />
+            )}
+          </svg>
+          {/* Remaining time text in center */}
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            color: '#fff',
+            fontSize: '16px', // 25% larger (13px * 1.25 ≈ 16px)
+            fontWeight: '700',
+            opacity: isReady ? 1.0 : 0, // Fade off when task starts
+            transition: 'opacity 0.3s ease-out'
+          }}>
+            {Math.ceil(remainingMin)}m
+          </div>
+        </div>
+      );
+
+      // For READY tasks, return both grey lozenge AND green circle
+      if (track.status === 'ready') {
+        // Continue to render grey lozenge below
+      }
+
+      // For RUNNING tasks, we'll render the circle along with the lozenge below
+    }
+
+    // GREY LOZENGE RENDERING: All lozenges are grey, state shown by circle color
+    const chainAccent = track.chainColor?.accent || '#888';
+
+    // Lozenge color: grey by default, dark green when running
+    const lozengeGrey = '#4D535E'; // Neutral grey for all lozenges
+    const lozengeRunning = '#365236'; // Dark green when task is started
+    const lozengeColor = track.status === 'running' ? lozengeRunning : lozengeGrey;
+
+    const lozengeElement = (
       <div
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUp}
-        onContextMenu={handleContextMenu}
         style={{
           position: 'absolute',
           left: `${track.lozengeX}px`,
           top: `${(TRACK_HEIGHT - LOZENGE_HEIGHT) / 2}px`,
           width: `${track.lozengeWidth}px`,
           height: `${LOZENGE_HEIGHT}px`,
-          background: track.color,
+          background: lozengeColor, // Grey normally, dark green when running
           borderRadius: `${LOZENGE_RADIUS}px`,
+          borderLeft: `4px solid ${chainAccent}`, // Only chain color is the left stripe
           zIndex: 1,
           transition: 'left 1s linear',
-          cursor: track.needsAction ? 'pointer' : 'default',
-          animation: isFlashing ? 'flash 0.3s ease-out' : 'none',
+          cursor: 'default',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: 'rgba(0,0,0,0.7)',
+          color: 'rgba(255,255,255,0.7)', // White text on grey
           fontSize: '14px',
           fontWeight: '600',
-          touchAction: 'none', // Prevent default touch behaviors
+          touchAction: 'none',
           userSelect: 'none',
-          pointerEvents: 'auto' // Re-enable pointer events on the lozenge
+          pointerEvents: 'none' // Non-interactive - only circle handles touches
         }}
       ></div>
     );
+
+    // For READY and RUNNING tasks, return both lozenge AND circle
+    // (Ready: grey lozenge + solid green circle, Running: grey lozenge + depleting timer circle)
+    if (isCircleTimer) {
+      return (
+        <>
+          {lozengeElement}
+          {circleElement}
+        </>
+      );
+    }
+
+    // For all other tasks (stopped-waiting, driver-busy), return just the lozenge
+    return lozengeElement;
   };
   
   return (
@@ -465,10 +670,49 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
           pointerEvents: 'none'
         }} />
         
-        {/* Tracks Stack */}
-        {allTracks.map((track) => {
+        {/* Tracks Stack with Chain Headers */}
+        {groupedItems.map((item, idx) => {
+          // Render chain header
+          if (item.type === 'chain-header') {
+            // Remove "Prepare " prefix from chain name
+            const cleanChainName = item.chainName.replace(/^Prepare\s+/i, '');
+
+            return (
+              <div
+                key={`header-${item.chainId}`}
+                style={{
+                  position: 'relative',
+                  width: '100%',
+                  height: `${CHAIN_HEADER_HEIGHT}px`,
+                  background: item.chainColor.bg,
+                  borderBottom: `1px solid ${item.chainColor.accent}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  paddingLeft: `${NOWLINE_X + 10}px`, // 10px to the right of NowLine
+                  paddingTop: '10px', // Match spacing above and below header
+                  zIndex: 2
+                }}
+              >
+                <span style={{
+                  color: item.chainColor.label,
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px'
+                }}>
+                  {cleanChainName}
+                </span>
+              </div>
+            );
+          }
+
+          // Render track
+          const track = item;
           const isSwiping = swipingId === track.id;
-          
+
+          // Check if previous item was a chain header (first track in group)
+          const isFirstInGroup = idx > 0 && groupedItems[idx - 1].type === 'chain-header';
+
           return (
             <div
               key={track.id}
@@ -477,6 +721,7 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
                 position: 'relative',
                 width: '100%',
                 height: `${TRACK_HEIGHT}px`,
+                marginTop: isFirstInGroup ? '10px' : '0', // Add 10px margin above first track in group
                 overflow: 'hidden',
                 pointerEvents: 'none', // Allow touches to pass through to lower tracks
                 transition: 'all 1s ease-out', // Smooth transition when tracks move up
@@ -499,15 +744,16 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
             {track.status === 'running' && (
               <div style={{
                 position: 'absolute',
-                left: `${NOWLINE_X + 50}px`, // Fixed at 50px right of NowLine (210px from left edge)
+                left: `${NOWLINE_X + 150}px`, // Fixed at 150px right of NowLine (moved 40px further right)
                 top: `${TRACK_HEIGHT / 2}px`,
-                width: '60px',
-                height: '60px',
+                width: '80px', // Same as circle diameter
+                height: '80px', // Same as circle diameter
                 transform: 'translate(-50%, -50%) rotate(90deg)',
                 zIndex: 3,
-                pointerEvents: 'none'
+                pointerEvents: 'none',
+                opacity: 0.25 // 25% opacity - subtle sense of movement
               }}>
-                <Lottie 
+                <Lottie
                   animationData={chevronAnimation}
                   loop={true}
                   style={{
@@ -525,7 +771,7 @@ export default function TimelineFlow({ tasks, ingredients = [], textMode = 'inst
               top: 0,
               width: `${NOWLINE_X}px`,
               height: '100%',
-              background: 'rgba(42, 42, 42, 0.3)',
+              background: 'rgba(34, 35, 40, 0.3)', // 30% opacity of #222328
               pointerEvents: 'none',
               zIndex: 2
             }} />

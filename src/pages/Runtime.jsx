@@ -99,12 +99,12 @@ export default function Runtime() {
             background-size: cover !important;
             background-position: center !important;
             background-repeat: no-repeat !important;
-            background-color: #2a2a2a !important;
+            background-color: #222328 !important;
           }
         }
         @media (min-width: 769px) {
           .timeline-background {
-            background: #2a2a2a !important;
+            background: #222328 !important;
           }
         }
       `}</style>
@@ -294,17 +294,18 @@ export default function Runtime() {
           </div>
 
           {/* Timeline - THE main interface */}
-          <div 
+          <div
             className="timeline-background"
             style={{
               flex: 1,
               overflow: 'auto',
               padding: 0,
-              background: '#2a2a2a'
+              background: '#222328'
             }}
           >
             <TimelineFlow
               tasks={tasks}
+              chains={meal.data.chains || []}
               ingredients={meal.data.ingredients || []}
               textMode={textMode}
               running={rt.running}
