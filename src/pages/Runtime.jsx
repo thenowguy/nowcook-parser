@@ -279,15 +279,15 @@ export default function Runtime() {
               borderRadius: '10px',
               fontSize: '20px',
               fontWeight: 'bold',
-              fontFamily: 'monospace',
+              fontFamily: '-apple-system, BlinkMacSystemFont, "SF Mono", Menlo, Consolas, "Courier New", monospace', // Clean zeros, no slash
               whiteSpace: 'nowrap'
             }}>
-              {new Date().toLocaleTimeString('en-US', { 
-                hour: '2-digit', 
+              {new Date().toLocaleTimeString('en-US', {
+                hour: 'numeric', // No leading zero
                 minute: '2-digit',
                 second: '2-digit',
                 hour12: true
-              })}
+              }).replace(/\s?(AM|PM)$/i, '')} {/* Remove AM/PM */}
             </div>
             
             {/* Eye toggle button - 60px from right edge */}

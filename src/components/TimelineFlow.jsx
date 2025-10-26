@@ -167,8 +167,9 @@ export default function TimelineFlow({ tasks, chains = [], ingredients = [], tex
   const currentTimeStr = now.toLocaleTimeString('en-US', {
     hour: 'numeric',
     minute: '2-digit',
-    second: '2-digit'
-  });
+    second: '2-digit',
+    hour12: true
+  }).replace(/\s?(AM|PM)$/i, ''); // Remove AM/PM, keep 12hr format without leading zero
 
   const allTracks = useMemo(() => {
     const tracks = [];
