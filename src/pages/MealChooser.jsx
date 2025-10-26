@@ -71,7 +71,7 @@ export default function MealChooser() {
                   boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
                   display: 'flex',
                   flexDirection: 'column',
-                  borderTop: '4px solid #d0d0d0', // Neutral light grey top accent
+                  borderTop: '2px solid #d0d0d0', // Neutral light grey top accent (subtle)
                   backgroundImage: 'linear-gradient(to bottom, rgba(208, 208, 208, 0.15) 0%, transparent 60px)' // Subtle gradient fade
                 }}
               >
