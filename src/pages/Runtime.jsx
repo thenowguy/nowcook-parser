@@ -8,21 +8,28 @@ export default function Runtime() {
   const navigate = useNavigate();
   const { mealIdx } = useParams();
   const location = useLocation();
-  
-  const meal = getMeal(parseInt(mealIdx));
-  
-  if (!meal || !meal.data) {
-    navigate('/');
-    return null;
-  }
 
-  const tasks = meal.data.tasks || [];
+  const meal = getMeal(parseInt(mealIdx));
+  const tasks = meal?.data?.tasks || [];
   const rt = useRuntime(tasks);
-  
+
   // Auto-start cooking interface immediately for alpha testing
   useEffect(() => {
-    rt.setStarted(true);
-  }, []);
+    if (meal && meal.data) {
+      rt.setStarted(true);
+    }
+  }, [meal, rt]);
+
+  // Redirect if meal not found
+  useEffect(() => {
+    if (!meal || !meal.data) {
+      navigate('/');
+    }
+  }, [meal, navigate]);
+
+  if (!meal || !meal.data) {
+    return null;
+  }
   
   // Toggle state for showing/hiding blocked tasks
   const [showBlocked, setShowBlocked] = useState(true);
