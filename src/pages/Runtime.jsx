@@ -110,7 +110,6 @@ export default function Runtime() {
             background-position: top left !important;
             background-repeat: no-repeat !important;
             background-color: #222328 !important;
-            box-shadow: 10px 10px 5px #222328;
           }
         }
         @media (min-width: 769px) {
@@ -189,6 +188,7 @@ export default function Runtime() {
                 background: 'transparent',
                 border: '2px solid rgba(255, 255, 255, 0.5)',
                 borderRadius: '15px',
+                boxShadow: '10px 10px 5px #222328',
                 cursor: 'pointer',
                 padding: 0,
                 display: 'flex',
