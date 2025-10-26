@@ -60,11 +60,16 @@ npm run lint                     # ESLint check
 
 **Critical Files**:
 
-1. **[src/components/TimelineFlow.jsx](src/components/TimelineFlow.jsx)** - NEW vertical timeline (NOT Timeline.jsx.old)
+1. **[src/components/TimelineFlow.jsx](src/components/TimelineFlow.jsx)** - Chain-based timeline with circular timer UI
    - `NOWLINE_X = 160px` - vertical line representing current moment
    - Tasks slide LEFT as time passes (lozengeX = NOWLINE_X - elapsedPixels)
    - "Turnstile pattern": running tasks stop at NowLine waiting for dismissal
-   - iPhone 11 dimensions: TRACK_HEIGHT=115px, LOZENGE_HEIGHT=100px, PIXELS_PER_SECOND=2
+   - **Mobile-first dimensions (iPhone 14)**: TRACK_HEIGHT=120px, LOZENGE_HEIGHT=100px, CIRCLE_DIAMETER=80px
+   - **Chain visualization**: 6-color palette, chain headers with colored sections
+   - **Circular timer pattern**: Stationary green circles (80px) indicate state, stay fixed while lozenges slide
+   - **State indication**: Circle color (not lozenge color) shows Can-Do vs Running
+   - All lozenges grey (#4D535E) with chain-colored 4px left borders
+   - Touch interaction isolated to circles only (lozenges non-interactive)
 
 2. **[src/pages/Runtime.jsx](src/pages/Runtime.jsx)** - Main cooking interface
    - Renders `<TimelineFlow />` (NOT old Timeline component)
@@ -368,6 +373,69 @@ scripts/                         # validate.js, validate-ontology.js, test-parse
 ```
 
 ## Recent Implementations (Latest Session)
+
+### Chain Visualization UI (Oct 26, 2024) ✅
+
+Comprehensive timeline UI redesign implementing chain-based visualization with circular timer pattern for mobile-first cooking interface.
+
+**Chain-Based Organization**:
+- 6-color vibrant palette for chain differentiation (blues, oranges, pinks, greens, purples, yellows)
+- Chain headers: 40px height, 10px right of NowLine, 10px padding top/bottom
+- Removed redundant "Prepare" prefix from chain names (e.g., "Prepare the Pasta" → "the Pasta")
+- Equal 10px spacing above headers and below (matching inter-lozenge gaps)
+- First track in each group has 10px marginTop for consistent spacing
+
+**Circular Timer Pattern** (Major UX Innovation):
+- **80px green circles** (#6DAD59) replace lozenge color as primary state indicator
+- Circles positioned **10px inset** from lozenge left edge
+- **Stationary design**: Circle stays fixed at `NOWLINE_X + 10px` while lozenge slides left underneath
+- Duration text (16px, bold) **fades out** when task starts (opacity 1.0 → 0)
+- Running tasks: circle depletes radially (100% → 0%) via SVG strokeDashoffset
+- **Touch interaction isolated to circles only** - lozenges are non-interactive (`pointerEvents: 'none'`)
+- User must tap green circle specifically to start/dismiss tasks (no more guessing)
+
+**Lozenge Simplification**:
+- All lozenges **grey by default** (#4D535E) - state shown by circle color, not lozenge color
+- **Dark green** (#365236) when running (lozenge turns green after circle is tapped)
+- **4px colored left border** indicating chain membership (only color on lozenge)
+- No gradient fills - clean, minimal design
+
+**Mobile-First Dimensions** (iPhone 14 - 390px width):
+- Track height: **120px** (10px gaps top/bottom for 100px lozenge)
+- Lozenge height: **100px** (vertically centered in track)
+- Circle diameter: **80px** (proportional to lozenge)
+- Lottie chevrons: **80px, 25% opacity, 150px right of NowLine** (subtle movement indicator)
+
+**Visual Polish**:
+- Background color: **#222328** (contemporary dark grey, more modern than old #2a2a2a)
+- Past overlay (left of NowLine): **rgba(34, 35, 40, 0.3)** - 30% of background color for consistency
+- Mobile: TimelineBG.jpg image preserved (critical for user experience)
+- Desktop: Solid #222328 background
+
+**Z-Index Layering**:
+- Z-Layer 3: Circle timers (always on top, interactive)
+- Z-Layer 2: Past overlay + task label text
+- Z-Layer 1: Lozenges (non-interactive, slide underneath circles)
+- Z-Layer 0: Track backgrounds (transparent)
+
+**Technical Implementation**:
+- Pass `chains` prop from Runtime.jsx to TimelineFlow
+- Helper functions: `getChainId()`, `getChainIndex()`, `getChainMeta()`
+- `groupedItems` useMemo creates alternating chain-header/track structure
+- Store `circleX` position in track objects (calculated once, stays fixed)
+- Circle rendering separate from lozenge rendering (both returned in fragment)
+- Conditional styling: `isFirstInGroup` adds marginTop to first track
+
+**Files Modified**:
+- [src/components/TimelineFlow.jsx](src/components/TimelineFlow.jsx) - 285 lines added (chain colors, circle timers, stationary positioning)
+- [src/pages/Runtime.jsx](src/pages/Runtime.jsx) - Pass chains prop, update background colors
+
+**User Experience Impact**:
+- Precise tap targets (80px circles vs ambiguous lozenge areas)
+- Clear visual hierarchy (circle color = state, lozenge color = running/not running)
+- Reduced cognitive load (no more testing where to tap)
+- Professional, contemporary aesthetic (#222328 background)
+- Improved spacing consistency throughout all chain sections
 
 ### Chain Detection & Grouping ✅
 - Section headers ("For the pasta:", "Meanwhile, for the sauce:") now filtered from tasks
