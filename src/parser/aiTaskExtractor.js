@@ -34,7 +34,8 @@ Return JSON array only:`;
 
   try {
     // Use Claude API for actual semantic understanding
-    const API_KEY = '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';
+    // NOTE: API key should be stored in environment variable, not hardcoded
+    const API_KEY = process.env.ANTHROPIC_API_KEY || 'YOUR_API_KEY_HERE';
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',

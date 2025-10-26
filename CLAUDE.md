@@ -1082,7 +1082,7 @@ Paragraph: ${sectionText}`;
 # Create server-side parser
 node scripts/ai-parse-recipes.js
 
-# Uses Claude API with key: sk-ant-api03-Q07YSMOm99a3rXR87L2Z4ChhFVj-...
+# Uses Claude API with key from .env file
 # Generates clean JSON files in recipes/ directory
 ```
 
@@ -1187,10 +1187,10 @@ ls -lh recipes/*.json
 
 Claude API Key (for server-side use):
 ```
-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
+YOUR_ANTHROPIC_API_KEY_HERE
 ```
 
-**DO NOT** commit this to git. Store in `.env` file for server-side scripts.
+**DO NOT** commit actual keys to git. Store in `.env` file for server-side scripts.
 
 ## Emergent Ingredients Implementation (Current Session - Oct 2024)
 
