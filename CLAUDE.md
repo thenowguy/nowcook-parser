@@ -19,11 +19,46 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
    - Production codebase in `src/`
    - **Version**: 2.0.0 (Mobile-first multi-page refactor)
 
+## Recent Updates (Oct 26, 2024 - Presentation Polish)
+
+**Visual & UX Improvements**:
+- Instruction text reduced to 80% opacity for softer mobile appearance
+- Chain headers increased to 15px for better visibility
+- NOW time badge: 12-hour format without AM/PM, no leading zeros (e.g., "1:07:23")
+- All time displays use clean system fonts (SF Mono) - no slashed zeros
+- Time in CircleTimers: bold, 90% opacity, smart formatting:
+  - ≥10min: show minutes only ("34m", "150m")
+  - <10min: show mm:ss format ("9:59", "1:00")
+- Time mode toggle: SF Mono font, 80% opacity
+
+**Smart Background Tasks Badge**:
+- Green count badge showing can-do + unattended-after-start tasks
+- Click to filter timeline to smart tasks only
+- 5-second auto-disable after starting task (lets user see movement)
+- Badge turns dark (#222328) when filter active
+
+**Recipe Management**:
+- Recipe editor available at `/editor.html` for all 10 meals
+- Sonnet recipes synced between `public/meals/` (editor) and `src/meals/` (app)
+- Workflow: Edit → Download → Replace → Run `./scripts/sync-meals.sh`
+
+**Critical Fixes**:
+- Fixed chain_0 index bug (Spaghetti Bolognese now works)
+- Fixed React hooks violation causing production build failures
+- Added Vercel routing configuration for client-side routes
+
+**Active Recipes (Presentation Mode)**:
+- 5 Sonnet-parsed recipes shown with chain data and images
+- Original 5 recipes hidden (no chain data yet)
+
 ## Development Commands
 
 ```bash
 # Development (Vite often uses port 5174 as 5173 is occupied)
 npm run dev -- --host --force   # --force clears module cache (important after component renames)
+
+# Recipe Management
+./scripts/sync-meals.sh         # Sync editor changes from public/meals/ to src/meals/
 
 # Building & Preview
 npm run build                    # Production build
