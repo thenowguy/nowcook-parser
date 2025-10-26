@@ -14,7 +14,7 @@ export default function MealChooser() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: '#222328', // Match timeline background
       padding: '20px',
     }}>
       <div style={{
@@ -27,15 +27,19 @@ export default function MealChooser() {
           marginBottom: '32px',
           paddingTop: '20px'
         }}>
-          <h1 style={{ 
-            fontSize: '32px', 
-            margin: '0 0 8px 0',
-            fontWeight: 'bold'
-          }}>
-            NowCook
-          </h1>
-          <p style={{ 
-            fontSize: '16px', 
+          {/* NowCook Logo */}
+          <img
+            src="/nowcook-icon.png"
+            alt="NowCook"
+            style={{
+              width: '80px',
+              height: '80px',
+              margin: '0 auto 16px auto',
+              display: 'block'
+            }}
+          />
+          <p style={{
+            fontSize: '16px',
             margin: 0,
             opacity: 0.9
           }}>
