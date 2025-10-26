@@ -1,6 +1,8 @@
 {
   "title": "Seared Steak with Garlic Mashed Potatoes & Green Beans",
-  "author": { "name": "NowCook" },
+  "author": {
+    "name": "NowCook"
+  },
   "tasks": [
     {
       "id": "chain_1/step_1",
@@ -9,9 +11,15 @@
       "planned_min": 5,
       "requires_driver": true,
       "self_running_after_start": false,
-      "inputs": ["potatoes"],
+      "inputs": [
+        "potatoes"
+      ],
       "outputs": [],
-      "equipment": ["peeler", "knife", "cutting_board"],
+      "equipment": [
+        "peeler",
+        "knife",
+        "cutting_board"
+      ],
       "edges": []
     },
     {
@@ -21,9 +29,14 @@
       "planned_min": 15,
       "requires_driver": false,
       "self_running_after_start": true,
-      "inputs": ["water", "salt"],
+      "inputs": [
+        "water",
+        "salt"
+      ],
       "outputs": [],
-      "equipment": ["pot"],
+      "equipment": [
+        "pot"
+      ],
       "edges": [
         {
           "from": "chain_1/step_1",
@@ -39,7 +52,9 @@
       "planned_min": 2,
       "requires_driver": true,
       "self_running_after_start": false,
-      "inputs": ["garlic"],
+      "inputs": [
+        "garlic"
+      ],
       "outputs": [
         {
           "ingredient": "garlic",
@@ -47,7 +62,10 @@
           "emergent": true
         }
       ],
-      "equipment": ["knife", "cutting_board"],
+      "equipment": [
+        "knife",
+        "cutting_board"
+      ],
       "edges": []
     },
     {
@@ -59,7 +77,9 @@
       "self_running_after_start": false,
       "inputs": [],
       "outputs": [],
-      "equipment": ["colander"],
+      "equipment": [
+        "colander"
+      ],
       "edges": [
         {
           "from": "chain_1/step_2",
@@ -75,7 +95,10 @@
       "planned_min": 3,
       "requires_driver": true,
       "self_running_after_start": false,
-      "inputs": ["butter", "cream"],
+      "inputs": [
+        "butter",
+        "cream"
+      ],
       "outputs": [
         {
           "ingredient": "potatoes",
@@ -83,7 +106,10 @@
           "emergent": true
         }
       ],
-      "equipment": ["masher", "bowl"],
+      "equipment": [
+        "masher",
+        "bowl"
+      ],
       "edges": [
         {
           "from": "chain_1/step_4",
@@ -104,9 +130,14 @@
       "planned_min": 4,
       "requires_driver": true,
       "self_running_after_start": false,
-      "inputs": ["green_beans"],
+      "inputs": [
+        "green_beans"
+      ],
       "outputs": [],
-      "equipment": ["knife", "cutting_board"],
+      "equipment": [
+        "knife",
+        "cutting_board"
+      ],
       "edges": []
     },
     {
@@ -116,9 +147,14 @@
       "planned_min": 8,
       "requires_driver": false,
       "self_running_after_start": true,
-      "inputs": ["water", "salt"],
+      "inputs": [
+        "water",
+        "salt"
+      ],
       "outputs": [],
-      "equipment": ["pot"],
+      "equipment": [
+        "pot"
+      ],
       "edges": []
     },
     {
@@ -136,7 +172,9 @@
           "emergent": true
         }
       ],
-      "equipment": ["pot"],
+      "equipment": [
+        "pot"
+      ],
       "edges": [
         {
           "from": "chain_2/step_1",
@@ -157,7 +195,9 @@
       "planned_min": 1,
       "requires_driver": true,
       "self_running_after_start": false,
-      "inputs": ["ice_water"],
+      "inputs": [
+        "ice_water"
+      ],
       "outputs": [
         {
           "ingredient": "green_beans",
@@ -165,7 +205,9 @@
           "emergent": true
         }
       ],
-      "equipment": ["bowl"],
+      "equipment": [
+        "bowl"
+      ],
       "edges": [
         {
           "from": "chain_2/step_3",
@@ -176,12 +218,14 @@
     },
     {
       "id": "chain_2/step_5",
-      "name": "Mince garlic for sautéed beans",
+      "name": "Mince garlic for saut\u00e9ed beans",
       "canonical_verb": "mince",
       "planned_min": 1,
       "requires_driver": true,
       "self_running_after_start": false,
-      "inputs": ["garlic"],
+      "inputs": [
+        "garlic"
+      ],
       "outputs": [
         {
           "ingredient": "garlic",
@@ -189,31 +233,40 @@
           "emergent": true
         }
       ],
-      "equipment": ["knife", "cutting_board"],
+      "equipment": [
+        "knife",
+        "cutting_board"
+      ],
       "edges": []
     },
     {
       "id": "chain_2/step_6",
-      "name": "Heat butter in sauté pan",
+      "name": "Heat butter in saut\u00e9 pan",
       "canonical_verb": "heat_oil",
       "planned_min": 2,
       "requires_driver": true,
       "self_running_after_start": false,
-      "inputs": ["butter"],
+      "inputs": [
+        "butter"
+      ],
       "outputs": [],
-      "equipment": ["saute_pan"],
+      "equipment": [
+        "saute_pan"
+      ],
       "edges": []
     },
     {
       "id": "chain_2/step_7",
-      "name": "Sauté beans with minced garlic",
-      "canonical_verb": "sauté",
+      "name": "Saut\u00e9 beans with minced garlic",
+      "canonical_verb": "saut\u00e9",
       "planned_min": 5,
       "requires_driver": true,
       "self_running_after_start": false,
       "inputs": [],
       "outputs": [],
-      "equipment": ["saute_pan"],
+      "equipment": [
+        "saute_pan"
+      ],
       "edges": [
         {
           "from": "chain_2/step_4",
@@ -239,7 +292,9 @@
       "planned_min": 20,
       "requires_driver": false,
       "self_running_after_start": false,
-      "inputs": ["steak"],
+      "inputs": [
+        "steak"
+      ],
       "outputs": [
         {
           "ingredient": "steak",
@@ -257,7 +312,10 @@
       "planned_min": 1,
       "requires_driver": true,
       "self_running_after_start": false,
-      "inputs": ["salt", "pepper"],
+      "inputs": [
+        "salt",
+        "pepper"
+      ],
       "outputs": [
         {
           "ingredient": "steak",
@@ -283,7 +341,9 @@
       "self_running_after_start": false,
       "inputs": [],
       "outputs": [],
-      "equipment": ["cast_iron_skillet"],
+      "equipment": [
+        "cast_iron_skillet"
+      ],
       "edges": []
     },
     {
@@ -295,7 +355,9 @@
       "self_running_after_start": false,
       "inputs": [],
       "outputs": [],
-      "equipment": ["cast_iron_skillet"],
+      "equipment": [
+        "cast_iron_skillet"
+      ],
       "edges": [
         {
           "from": "chain_3/step_2",
@@ -324,7 +386,9 @@
           "emergent": true
         }
       ],
-      "equipment": ["cast_iron_skillet"],
+      "equipment": [
+        "cast_iron_skillet"
+      ],
       "edges": [
         {
           "from": "chain_3/step_4",
@@ -348,7 +412,9 @@
           "emergent": true
         }
       ],
-      "equipment": ["cutting_board"],
+      "equipment": [
+        "cutting_board"
+      ],
       "edges": [
         {
           "from": "chain_3/step_5",
@@ -366,7 +432,10 @@
       "self_running_after_start": false,
       "inputs": [],
       "outputs": [],
-      "equipment": ["knife", "cutting_board"],
+      "equipment": [
+        "knife",
+        "cutting_board"
+      ],
       "edges": [
         {
           "from": "chain_3/step_6",
@@ -377,14 +446,16 @@
     },
     {
       "id": "chain_4/step_1",
-      "name": "Arrange sliced steak, mashed potatoes, and sautéed beans on plates",
+      "name": "Arrange sliced steak, mashed potatoes, and saut\u00e9ed beans on plates",
       "canonical_verb": "plate",
       "planned_min": 2,
       "requires_driver": true,
       "self_running_after_start": false,
       "inputs": [],
       "outputs": [],
-      "equipment": ["plates"],
+      "equipment": [
+        "plates"
+      ],
       "edges": [
         {
           "from": "chain_1/step_5",
@@ -408,22 +479,84 @@
     {
       "id": "chain_1",
       "name": "Prepare Garlic Mashed Potatoes",
-      "tasks": ["chain_1/step_1", "chain_1/step_2", "chain_1/step_3", "chain_1/step_4", "chain_1/step_5"]
+      "tasks": [
+        "chain_1/step_1",
+        "chain_1/step_2",
+        "chain_1/step_3",
+        "chain_1/step_4",
+        "chain_1/step_5"
+      ]
     },
     {
       "id": "chain_2",
-      "name": "Prepare Sautéed Green Beans",
-      "tasks": ["chain_2/step_1", "chain_2/step_2", "chain_2/step_3", "chain_2/step_4", "chain_2/step_5", "chain_2/step_6", "chain_2/step_7"]
+      "name": "Prepare Saut\u00e9ed Green Beans",
+      "tasks": [
+        "chain_2/step_1",
+        "chain_2/step_2",
+        "chain_2/step_3",
+        "chain_2/step_4",
+        "chain_2/step_5",
+        "chain_2/step_6",
+        "chain_2/step_7"
+      ]
     },
     {
       "id": "chain_3",
       "name": "Prepare Seared Steak",
-      "tasks": ["chain_3/step_1", "chain_3/step_2", "chain_3/step_3", "chain_3/step_4", "chain_3/step_5", "chain_3/step_6", "chain_3/step_7"]
+      "tasks": [
+        "chain_3/step_1",
+        "chain_3/step_2",
+        "chain_3/step_3",
+        "chain_3/step_4",
+        "chain_3/step_5",
+        "chain_3/step_6",
+        "chain_3/step_7"
+      ]
     },
     {
       "id": "chain_4",
       "name": "Plate and Serve",
-      "tasks": ["chain_4/step_1"]
+      "tasks": [
+        "chain_4/step_1"
+      ]
+    }
+  ],
+  "shopping": [
+    {
+      "name": "Olive oil",
+      "quantity": "2",
+      "unit": "tbsp",
+      "department": "OTHER"
+    },
+    {
+      "name": "Salt",
+      "quantity": "1",
+      "unit": "tsp",
+      "department": "SPICES"
+    },
+    {
+      "name": "Black pepper",
+      "quantity": "1/2",
+      "unit": "tsp",
+      "department": "SPICES"
+    },
+    {
+      "name": "Garlic",
+      "quantity": "4",
+      "unit": "cloves",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Onion",
+      "quantity": "1",
+      "unit": "medium",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Butter",
+      "quantity": "2",
+      "unit": "tbsp",
+      "department": "DAIRY"
     }
   ]
 }

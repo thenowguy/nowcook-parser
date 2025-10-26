@@ -1,6 +1,8 @@
 {
   "title": "Spaghetti Bolognese",
-  "author": { "name": "RecipeTin Eats" },
+  "author": {
+    "name": "RecipeTin Eats"
+  },
   "tasks": [
     {
       "id": "chain_0/step_1",
@@ -9,7 +11,9 @@
       "planned_min": 3,
       "requires_driver": true,
       "self_running_after_start": false,
-      "inputs": ["onion"],
+      "inputs": [
+        "onion"
+      ],
       "outputs": [
         {
           "ingredient": "onion",
@@ -17,7 +21,10 @@
           "emergent": true
         }
       ],
-      "equipment": ["knife", "cutting_board"],
+      "equipment": [
+        "knife",
+        "cutting_board"
+      ],
       "edges": []
     },
     {
@@ -27,7 +34,9 @@
       "planned_min": 2,
       "requires_driver": true,
       "self_running_after_start": false,
-      "inputs": ["garlic"],
+      "inputs": [
+        "garlic"
+      ],
       "outputs": [
         {
           "ingredient": "garlic",
@@ -35,7 +44,10 @@
           "emergent": true
         }
       ],
-      "equipment": ["knife", "cutting_board"],
+      "equipment": [
+        "knife",
+        "cutting_board"
+      ],
       "edges": []
     },
     {
@@ -45,9 +57,13 @@
       "planned_min": 2,
       "requires_driver": true,
       "self_running_after_start": false,
-      "inputs": ["olive_oil"],
+      "inputs": [
+        "olive_oil"
+      ],
       "outputs": [],
-      "equipment": ["pot"],
+      "equipment": [
+        "pot"
+      ],
       "edges": []
     },
     {
@@ -59,7 +75,9 @@
       "self_running_after_start": false,
       "inputs": [],
       "outputs": [],
-      "equipment": ["pot"],
+      "equipment": [
+        "pot"
+      ],
       "edges": [
         {
           "from": "chain_2/step_1",
@@ -81,7 +99,7 @@
     {
       "id": "chain_2/step_3",
       "name": "Cook until light golden and softened",
-      "canonical_verb": "sauté",
+      "canonical_verb": "saut\u00e9",
       "planned_min": 3,
       "requires_driver": true,
       "self_running_after_start": false,
@@ -93,7 +111,9 @@
           "emergent": true
         }
       ],
-      "equipment": ["pot"],
+      "equipment": [
+        "pot"
+      ],
       "edges": [
         {
           "from": "chain_2/step_2",
@@ -111,7 +131,9 @@
       "self_running_after_start": false,
       "inputs": [],
       "outputs": [],
-      "equipment": ["pot"],
+      "equipment": [
+        "pot"
+      ],
       "edges": [
         {
           "from": "chain_2/step_3",
@@ -127,9 +149,13 @@
       "planned_min": 1,
       "requires_driver": true,
       "self_running_after_start": false,
-      "inputs": ["beef_mince"],
+      "inputs": [
+        "beef_mince"
+      ],
       "outputs": [],
-      "equipment": ["pot"],
+      "equipment": [
+        "pot"
+      ],
       "edges": [
         {
           "from": "chain_2/step_4",
@@ -141,7 +167,7 @@
     {
       "id": "chain_2/step_6",
       "name": "Cook until browned",
-      "canonical_verb": "sauté",
+      "canonical_verb": "saut\u00e9",
       "planned_min": 8,
       "requires_driver": true,
       "self_running_after_start": false,
@@ -153,7 +179,9 @@
           "emergent": true
         }
       ],
-      "equipment": ["pot"],
+      "equipment": [
+        "pot"
+      ],
       "edges": [
         {
           "from": "chain_2/step_5",
@@ -169,9 +197,13 @@
       "planned_min": 1,
       "requires_driver": true,
       "self_running_after_start": false,
-      "inputs": ["red_wine"],
+      "inputs": [
+        "red_wine"
+      ],
       "outputs": [],
-      "equipment": ["pot"],
+      "equipment": [
+        "pot"
+      ],
       "edges": [
         {
           "from": "chain_2/step_6",
@@ -189,7 +221,9 @@
       "self_running_after_start": false,
       "inputs": [],
       "outputs": [],
-      "equipment": ["pot"],
+      "equipment": [
+        "pot"
+      ],
       "edges": [
         {
           "from": "chain_2/step_7",
@@ -205,9 +239,21 @@
       "planned_min": 2,
       "requires_driver": true,
       "self_running_after_start": false,
-      "inputs": ["crushed_tomato", "tomato_paste", "bouillon_cubes", "sugar", "worcestershire_sauce", "bay_leaves", "thyme", "salt", "pepper"],
+      "inputs": [
+        "crushed_tomato",
+        "tomato_paste",
+        "bouillon_cubes",
+        "sugar",
+        "worcestershire_sauce",
+        "bay_leaves",
+        "thyme",
+        "salt",
+        "pepper"
+      ],
       "outputs": [],
-      "equipment": ["pot"],
+      "equipment": [
+        "pot"
+      ],
       "edges": [
         {
           "from": "chain_2/step_8",
@@ -225,7 +271,9 @@
       "self_running_after_start": false,
       "inputs": [],
       "outputs": [],
-      "equipment": ["pot"],
+      "equipment": [
+        "pot"
+      ],
       "edges": [
         {
           "from": "chain_2/step_9",
@@ -243,7 +291,9 @@
       "self_running_after_start": true,
       "inputs": [],
       "outputs": [],
-      "equipment": ["pot"],
+      "equipment": [
+        "pot"
+      ],
       "edges": [
         {
           "from": "chain_2/step_10",
@@ -261,7 +311,9 @@
       "self_running_after_start": false,
       "inputs": [],
       "outputs": [],
-      "equipment": ["pot"],
+      "equipment": [
+        "pot"
+      ],
       "edges": [
         {
           "from": "chain_2/step_11",
@@ -285,7 +337,9 @@
           "emergent": true
         }
       ],
-      "equipment": ["pot"],
+      "equipment": [
+        "pot"
+      ],
       "edges": [
         {
           "from": "chain_2/step_12",
@@ -301,9 +355,14 @@
       "planned_min": 10,
       "requires_driver": false,
       "self_running_after_start": true,
-      "inputs": ["water", "salt"],
+      "inputs": [
+        "water",
+        "salt"
+      ],
       "outputs": [],
-      "equipment": ["pot"],
+      "equipment": [
+        "pot"
+      ],
       "edges": []
     },
     {
@@ -313,9 +372,13 @@
       "planned_min": 1,
       "requires_driver": true,
       "self_running_after_start": false,
-      "inputs": ["spaghetti"],
+      "inputs": [
+        "spaghetti"
+      ],
       "outputs": [],
-      "equipment": ["pot"],
+      "equipment": [
+        "pot"
+      ],
       "edges": [
         {
           "from": "chain_3/step_1",
@@ -333,7 +396,9 @@
       "self_running_after_start": true,
       "inputs": [],
       "outputs": [],
-      "equipment": ["pot"],
+      "equipment": [
+        "pot"
+      ],
       "edges": [
         {
           "from": "chain_3/step_2",
@@ -357,7 +422,9 @@
           "emergent": true
         }
       ],
-      "equipment": ["colander"],
+      "equipment": [
+        "colander"
+      ],
       "edges": [
         {
           "from": "chain_3/step_3",
@@ -373,9 +440,13 @@
       "planned_min": 1,
       "requires_driver": true,
       "self_running_after_start": false,
-      "inputs": ["salt"],
+      "inputs": [
+        "salt"
+      ],
       "outputs": [],
-      "equipment": ["spoon"],
+      "equipment": [
+        "spoon"
+      ],
       "edges": [
         {
           "from": "chain_2/step_13",
@@ -393,7 +464,9 @@
       "self_running_after_start": false,
       "inputs": [],
       "outputs": [],
-      "equipment": ["plates"],
+      "equipment": [
+        "plates"
+      ],
       "edges": [
         {
           "from": "chain_4/step_1",
@@ -412,22 +485,85 @@
     {
       "id": "chain_0",
       "name": "Prep Work",
-      "tasks": ["chain_0/step_1", "chain_0/step_2"]
+      "tasks": [
+        "chain_0/step_1",
+        "chain_0/step_2"
+      ]
     },
     {
       "id": "chain_2",
       "name": "Make the Bolognese Sauce",
-      "tasks": ["chain_2/step_1", "chain_2/step_2", "chain_2/step_3", "chain_2/step_4", "chain_2/step_5", "chain_2/step_6", "chain_2/step_7", "chain_2/step_8", "chain_2/step_9", "chain_2/step_10", "chain_2/step_11", "chain_2/step_12", "chain_2/step_13"]
+      "tasks": [
+        "chain_2/step_1",
+        "chain_2/step_2",
+        "chain_2/step_3",
+        "chain_2/step_4",
+        "chain_2/step_5",
+        "chain_2/step_6",
+        "chain_2/step_7",
+        "chain_2/step_8",
+        "chain_2/step_9",
+        "chain_2/step_10",
+        "chain_2/step_11",
+        "chain_2/step_12",
+        "chain_2/step_13"
+      ]
     },
     {
       "id": "chain_3",
       "name": "Cook the Spaghetti",
-      "tasks": ["chain_3/step_1", "chain_3/step_2", "chain_3/step_3", "chain_3/step_4"]
+      "tasks": [
+        "chain_3/step_1",
+        "chain_3/step_2",
+        "chain_3/step_3",
+        "chain_3/step_4"
+      ]
     },
     {
       "id": "chain_4",
       "name": "Assemble and Serve",
-      "tasks": ["chain_4/step_1", "chain_4/step_2"]
+      "tasks": [
+        "chain_4/step_1",
+        "chain_4/step_2"
+      ]
+    }
+  ],
+  "shopping": [
+    {
+      "name": "Olive oil",
+      "quantity": "2",
+      "unit": "tbsp",
+      "department": "OTHER"
+    },
+    {
+      "name": "Salt",
+      "quantity": "1",
+      "unit": "tsp",
+      "department": "SPICES"
+    },
+    {
+      "name": "Black pepper",
+      "quantity": "1/2",
+      "unit": "tsp",
+      "department": "SPICES"
+    },
+    {
+      "name": "Garlic",
+      "quantity": "4",
+      "unit": "cloves",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Onion",
+      "quantity": "1",
+      "unit": "medium",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Butter",
+      "quantity": "2",
+      "unit": "tbsp",
+      "department": "DAIRY"
     }
   ]
 }

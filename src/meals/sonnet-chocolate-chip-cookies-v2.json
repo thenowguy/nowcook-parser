@@ -1,6 +1,8 @@
 {
   "title": "Chocolate Chip Cookies",
-  "author": { "name": "Love and Lemons" },
+  "author": {
+    "name": "Love and Lemons"
+  },
   "tasks": [
     {
       "id": "chain_1/step_1",
@@ -9,7 +11,11 @@
       "planned_min": 2,
       "requires_driver": true,
       "self_running_after_start": false,
-      "inputs": ["flour", "baking_soda", "salt"],
+      "inputs": [
+        "flour",
+        "baking_soda",
+        "salt"
+      ],
       "outputs": [
         {
           "ingredient": "dry_mixture",
@@ -17,7 +23,10 @@
           "emergent": true
         }
       ],
-      "equipment": ["bowl", "whisk"],
+      "equipment": [
+        "bowl",
+        "whisk"
+      ],
       "edges": []
     },
     {
@@ -27,7 +36,9 @@
       "planned_min": 2,
       "requires_driver": true,
       "self_running_after_start": false,
-      "inputs": ["butter"],
+      "inputs": [
+        "butter"
+      ],
       "outputs": [
         {
           "ingredient": "butter",
@@ -35,7 +46,9 @@
           "emergent": true
         }
       ],
-      "equipment": ["microwave"],
+      "equipment": [
+        "microwave"
+      ],
       "edges": []
     },
     {
@@ -45,7 +58,10 @@
       "planned_min": 2,
       "requires_driver": true,
       "self_running_after_start": false,
-      "inputs": ["brown_sugar", "granulated_sugar"],
+      "inputs": [
+        "brown_sugar",
+        "granulated_sugar"
+      ],
       "outputs": [
         {
           "ingredient": "butter_mixture",
@@ -53,7 +69,9 @@
           "emergent": true
         }
       ],
-      "equipment": ["bowl"],
+      "equipment": [
+        "bowl"
+      ],
       "edges": [
         {
           "from": "chain_2/step_0",
@@ -69,9 +87,14 @@
       "planned_min": 1,
       "requires_driver": true,
       "self_running_after_start": false,
-      "inputs": ["egg", "egg_yolk"],
+      "inputs": [
+        "egg",
+        "egg_yolk"
+      ],
       "outputs": [],
-      "equipment": ["bowl"],
+      "equipment": [
+        "bowl"
+      ],
       "edges": [
         {
           "from": "chain_2/step_1",
@@ -89,7 +112,9 @@
       "self_running_after_start": false,
       "inputs": [],
       "outputs": [],
-      "equipment": ["whisk"],
+      "equipment": [
+        "whisk"
+      ],
       "edges": [
         {
           "from": "chain_2/step_2",
@@ -105,7 +130,9 @@
       "planned_min": 1,
       "requires_driver": true,
       "self_running_after_start": false,
-      "inputs": ["vanilla_extract"],
+      "inputs": [
+        "vanilla_extract"
+      ],
       "outputs": [
         {
           "ingredient": "wet_mixture",
@@ -113,7 +140,9 @@
           "emergent": true
         }
       ],
-      "equipment": ["bowl"],
+      "equipment": [
+        "bowl"
+      ],
       "edges": [
         {
           "from": "chain_2/step_3",
@@ -131,7 +160,9 @@
       "self_running_after_start": false,
       "inputs": [],
       "outputs": [],
-      "equipment": ["spatula"],
+      "equipment": [
+        "spatula"
+      ],
       "edges": [
         {
           "from": "chain_1/step_1",
@@ -152,9 +183,13 @@
       "planned_min": 1,
       "requires_driver": true,
       "self_running_after_start": false,
-      "inputs": ["chocolate_chips"],
+      "inputs": [
+        "chocolate_chips"
+      ],
       "outputs": [],
-      "equipment": ["bowl"],
+      "equipment": [
+        "bowl"
+      ],
       "edges": [
         {
           "from": "chain_3/step_1",
@@ -178,7 +213,9 @@
           "emergent": true
         }
       ],
-      "equipment": ["spatula"],
+      "equipment": [
+        "spatula"
+      ],
       "edges": [
         {
           "from": "chain_3/step_2",
@@ -196,7 +233,9 @@
       "self_running_after_start": false,
       "inputs": [],
       "outputs": [],
-      "equipment": ["plastic_wrap"],
+      "equipment": [
+        "plastic_wrap"
+      ],
       "edges": [
         {
           "from": "chain_3/step_3",
@@ -220,7 +259,9 @@
           "emergent": true
         }
       ],
-      "equipment": ["refrigerator"],
+      "equipment": [
+        "refrigerator"
+      ],
       "edges": [
         {
           "from": "chain_4/step_1",
@@ -231,14 +272,16 @@
     },
     {
       "id": "chain_5/step_1",
-      "name": "Preheat oven to 350°F",
+      "name": "Preheat oven to 350\u00b0F",
       "canonical_verb": "preheat_oven",
       "planned_min": 12,
       "requires_driver": false,
       "self_running_after_start": true,
       "inputs": [],
       "outputs": [],
-      "equipment": ["oven"],
+      "equipment": [
+        "oven"
+      ],
       "edges": []
     },
     {
@@ -248,9 +291,13 @@
       "planned_min": 2,
       "requires_driver": true,
       "self_running_after_start": false,
-      "inputs": ["parchment_paper"],
+      "inputs": [
+        "parchment_paper"
+      ],
       "outputs": [],
-      "equipment": ["baking_sheet"],
+      "equipment": [
+        "baking_sheet"
+      ],
       "edges": []
     },
     {
@@ -262,7 +309,10 @@
       "self_running_after_start": false,
       "inputs": [],
       "outputs": [],
-      "equipment": ["cookie_scoop", "baking_sheet"],
+      "equipment": [
+        "cookie_scoop",
+        "baking_sheet"
+      ],
       "edges": [
         {
           "from": "chain_4/step_2",
@@ -291,7 +341,9 @@
           "emergent": true
         }
       ],
-      "equipment": ["oven"],
+      "equipment": [
+        "oven"
+      ],
       "edges": [
         {
           "from": "chain_6/step_1",
@@ -320,7 +372,9 @@
           "emergent": true
         }
       ],
-      "equipment": ["baking_sheet"],
+      "equipment": [
+        "baking_sheet"
+      ],
       "edges": [
         {
           "from": "chain_6/step_2",
@@ -338,7 +392,9 @@
       "self_running_after_start": false,
       "inputs": [],
       "outputs": [],
-      "equipment": ["wire_rack"],
+      "equipment": [
+        "wire_rack"
+      ],
       "edges": [
         {
           "from": "chain_6/step_3",
@@ -352,32 +408,93 @@
     {
       "id": "chain_1",
       "name": "Mix Dry Ingredients",
-      "tasks": ["chain_1/step_1"]
+      "tasks": [
+        "chain_1/step_1"
+      ]
     },
     {
       "id": "chain_2",
       "name": "Mix Wet Ingredients",
-      "tasks": ["chain_2/step_0", "chain_2/step_1", "chain_2/step_2", "chain_2/step_3", "chain_2/step_4"]
+      "tasks": [
+        "chain_2/step_0",
+        "chain_2/step_1",
+        "chain_2/step_2",
+        "chain_2/step_3",
+        "chain_2/step_4"
+      ]
     },
     {
       "id": "chain_3",
       "name": "Combine Dough",
-      "tasks": ["chain_3/step_1", "chain_3/step_2", "chain_3/step_3"]
+      "tasks": [
+        "chain_3/step_1",
+        "chain_3/step_2",
+        "chain_3/step_3"
+      ]
     },
     {
       "id": "chain_4",
       "name": "Chill Dough",
-      "tasks": ["chain_4/step_1", "chain_4/step_2"]
+      "tasks": [
+        "chain_4/step_1",
+        "chain_4/step_2"
+      ]
     },
     {
       "id": "chain_5",
       "name": "Prepare for Baking",
-      "tasks": ["chain_5/step_1", "chain_5/step_2"]
+      "tasks": [
+        "chain_5/step_1",
+        "chain_5/step_2"
+      ]
     },
     {
       "id": "chain_6",
       "name": "Bake and Cool Cookies",
-      "tasks": ["chain_6/step_1", "chain_6/step_2", "chain_6/step_3", "chain_6/step_4"]
+      "tasks": [
+        "chain_6/step_1",
+        "chain_6/step_2",
+        "chain_6/step_3",
+        "chain_6/step_4"
+      ]
+    }
+  ],
+  "shopping": [
+    {
+      "name": "Olive oil",
+      "quantity": "2",
+      "unit": "tbsp",
+      "department": "OTHER"
+    },
+    {
+      "name": "Salt",
+      "quantity": "1",
+      "unit": "tsp",
+      "department": "SPICES"
+    },
+    {
+      "name": "Black pepper",
+      "quantity": "1/2",
+      "unit": "tsp",
+      "department": "SPICES"
+    },
+    {
+      "name": "Garlic",
+      "quantity": "4",
+      "unit": "cloves",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Onion",
+      "quantity": "1",
+      "unit": "medium",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Butter",
+      "quantity": "2",
+      "unit": "tbsp",
+      "department": "DAIRY"
     }
   ]
 }

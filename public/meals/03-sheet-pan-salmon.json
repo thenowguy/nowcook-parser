@@ -1,17 +1,21 @@
 {
   "title": "Sheet Pan Salmon with Vegetables",
-  "author": { "name": "The Mediterranean Dish" },
+  "author": {
+    "name": "The Mediterranean Dish"
+  },
   "tasks": [
     {
       "id": "chain_1/step_1",
-      "name": "Preheat the oven to 450°F",
+      "name": "Preheat the oven to 450\u00b0F",
       "canonical_verb": "preheat_oven",
       "planned_min": 12,
       "requires_driver": false,
       "self_running_after_start": true,
       "inputs": [],
       "outputs": [],
-      "equipment": ["oven"],
+      "equipment": [
+        "oven"
+      ],
       "edges": []
     },
     {
@@ -21,7 +25,12 @@
       "planned_min": 2,
       "requires_driver": true,
       "self_running_after_start": false,
-      "inputs": ["paprika", "baharat", "salt", "pepper"],
+      "inputs": [
+        "paprika",
+        "baharat",
+        "salt",
+        "pepper"
+      ],
       "outputs": [
         {
           "ingredient": "spice_blend",
@@ -29,7 +38,9 @@
           "emergent": true
         }
       ],
-      "equipment": ["bowl"],
+      "equipment": [
+        "bowl"
+      ],
       "edges": []
     },
     {
@@ -39,7 +50,9 @@
       "planned_min": 2,
       "requires_driver": true,
       "self_running_after_start": false,
-      "inputs": ["garlic"],
+      "inputs": [
+        "garlic"
+      ],
       "outputs": [
         {
           "ingredient": "garlic",
@@ -47,7 +60,10 @@
           "emergent": true
         }
       ],
-      "equipment": ["knife", "cutting_board"],
+      "equipment": [
+        "knife",
+        "cutting_board"
+      ],
       "edges": []
     },
     {
@@ -57,9 +73,14 @@
       "planned_min": 2,
       "requires_driver": true,
       "self_running_after_start": false,
-      "inputs": ["cauliflower"],
+      "inputs": [
+        "cauliflower"
+      ],
       "outputs": [],
-      "equipment": ["knife", "cutting_board"],
+      "equipment": [
+        "knife",
+        "cutting_board"
+      ],
       "edges": []
     },
     {
@@ -77,7 +98,10 @@
           "emergent": true
         }
       ],
-      "equipment": ["knife", "cutting_board"],
+      "equipment": [
+        "knife",
+        "cutting_board"
+      ],
       "edges": [
         {
           "from": "chain_3/step_1",
@@ -93,9 +117,14 @@
       "planned_min": 2,
       "requires_driver": true,
       "self_running_after_start": false,
-      "inputs": ["carrots"],
+      "inputs": [
+        "carrots"
+      ],
       "outputs": [],
-      "equipment": ["knife", "cutting_board"],
+      "equipment": [
+        "knife",
+        "cutting_board"
+      ],
       "edges": []
     },
     {
@@ -113,7 +142,10 @@
           "emergent": true
         }
       ],
-      "equipment": ["knife", "cutting_board"],
+      "equipment": [
+        "knife",
+        "cutting_board"
+      ],
       "edges": [
         {
           "from": "chain_3/step_3",
@@ -129,7 +161,9 @@
       "planned_min": 2,
       "requires_driver": true,
       "self_running_after_start": false,
-      "inputs": ["olive_oil"],
+      "inputs": [
+        "olive_oil"
+      ],
       "outputs": [
         {
           "ingredient": "vegetables",
@@ -137,7 +171,9 @@
           "emergent": true
         }
       ],
-      "equipment": ["bowl"],
+      "equipment": [
+        "bowl"
+      ],
       "edges": [
         {
           "from": "chain_3/step_2",
@@ -170,7 +206,9 @@
       "self_running_after_start": false,
       "inputs": [],
       "outputs": [],
-      "equipment": ["baking_sheet"],
+      "equipment": [
+        "baking_sheet"
+      ],
       "edges": [
         {
           "from": "chain_3/step_5",
@@ -194,7 +232,9 @@
           "emergent": true
         }
       ],
-      "equipment": ["oven"],
+      "equipment": [
+        "oven"
+      ],
       "edges": [
         {
           "from": "chain_1/step_1",
@@ -215,9 +255,14 @@
       "planned_min": 1,
       "requires_driver": true,
       "self_running_after_start": false,
-      "inputs": ["salmon", "olive_oil"],
+      "inputs": [
+        "salmon",
+        "olive_oil"
+      ],
       "outputs": [],
-      "equipment": ["brush"],
+      "equipment": [
+        "brush"
+      ],
       "edges": []
     },
     {
@@ -258,7 +303,9 @@
       "self_running_after_start": false,
       "inputs": [],
       "outputs": [],
-      "equipment": ["oven_mitts"],
+      "equipment": [
+        "oven_mitts"
+      ],
       "edges": [
         {
           "from": "chain_4/step_1",
@@ -274,7 +321,9 @@
       "planned_min": 1,
       "requires_driver": true,
       "self_running_after_start": false,
-      "inputs": ["olives"],
+      "inputs": [
+        "olives"
+      ],
       "outputs": [],
       "equipment": [],
       "edges": [
@@ -341,7 +390,9 @@
           "emergent": true
         }
       ],
-      "equipment": ["oven"],
+      "equipment": [
+        "oven"
+      ],
       "edges": [
         {
           "from": "chain_6/step_4",
@@ -359,7 +410,9 @@
       "self_running_after_start": false,
       "inputs": [],
       "outputs": [],
-      "equipment": ["oven_mitts"],
+      "equipment": [
+        "oven_mitts"
+      ],
       "edges": [
         {
           "from": "chain_6/step_5",
@@ -375,7 +428,9 @@
       "planned_min": 1,
       "requires_driver": true,
       "self_running_after_start": false,
-      "inputs": ["lemon"],
+      "inputs": [
+        "lemon"
+      ],
       "outputs": [],
       "equipment": [],
       "edges": [
@@ -395,7 +450,9 @@
       "self_running_after_start": false,
       "inputs": [],
       "outputs": [],
-      "equipment": ["plates"],
+      "equipment": [
+        "plates"
+      ],
       "edges": [
         {
           "from": "chain_7/step_2",
@@ -411,7 +468,9 @@
       "planned_min": 1,
       "requires_driver": true,
       "self_running_after_start": false,
-      "inputs": ["cilantro"],
+      "inputs": [
+        "cilantro"
+      ],
       "outputs": [],
       "equipment": [],
       "edges": [
@@ -427,37 +486,103 @@
     {
       "id": "chain_1",
       "name": "Preheat Oven",
-      "tasks": ["chain_1/step_1"]
+      "tasks": [
+        "chain_1/step_1"
+      ]
     },
     {
       "id": "chain_2",
       "name": "Make Spice Blend",
-      "tasks": ["chain_2/step_1"]
+      "tasks": [
+        "chain_2/step_1"
+      ]
     },
     {
       "id": "chain_3",
       "name": "Prepare Vegetables",
-      "tasks": ["chain_3/step_0", "chain_3/step_1", "chain_3/step_2", "chain_3/step_3", "chain_3/step_4", "chain_3/step_5", "chain_3/step_6"]
+      "tasks": [
+        "chain_3/step_0",
+        "chain_3/step_1",
+        "chain_3/step_2",
+        "chain_3/step_3",
+        "chain_3/step_4",
+        "chain_3/step_5",
+        "chain_3/step_6"
+      ]
     },
     {
       "id": "chain_4",
       "name": "Roast Vegetables",
-      "tasks": ["chain_4/step_1"]
+      "tasks": [
+        "chain_4/step_1"
+      ]
     },
     {
       "id": "chain_5",
       "name": "Prepare Salmon",
-      "tasks": ["chain_5/step_1", "chain_5/step_2"]
+      "tasks": [
+        "chain_5/step_1",
+        "chain_5/step_2"
+      ]
     },
     {
       "id": "chain_6",
       "name": "Combine and Finish Roasting",
-      "tasks": ["chain_6/step_1", "chain_6/step_2", "chain_6/step_3", "chain_6/step_4", "chain_6/step_5"]
+      "tasks": [
+        "chain_6/step_1",
+        "chain_6/step_2",
+        "chain_6/step_3",
+        "chain_6/step_4",
+        "chain_6/step_5"
+      ]
     },
     {
       "id": "chain_7",
       "name": "Finish and Serve",
-      "tasks": ["chain_7/step_1", "chain_7/step_2", "chain_7/step_3", "chain_7/step_4"]
+      "tasks": [
+        "chain_7/step_1",
+        "chain_7/step_2",
+        "chain_7/step_3",
+        "chain_7/step_4"
+      ]
+    }
+  ],
+  "shopping": [
+    {
+      "name": "Olive oil",
+      "quantity": "2",
+      "unit": "tbsp",
+      "department": "OTHER"
+    },
+    {
+      "name": "Salt",
+      "quantity": "1",
+      "unit": "tsp",
+      "department": "SPICES"
+    },
+    {
+      "name": "Black pepper",
+      "quantity": "1/2",
+      "unit": "tsp",
+      "department": "SPICES"
+    },
+    {
+      "name": "Garlic",
+      "quantity": "4",
+      "unit": "cloves",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Onion",
+      "quantity": "1",
+      "unit": "medium",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Butter",
+      "quantity": "2",
+      "unit": "tbsp",
+      "department": "DAIRY"
     }
   ]
 }
