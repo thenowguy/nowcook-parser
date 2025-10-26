@@ -1,14 +1,17 @@
+// Original recipes (still in src/meals/ - hidden for presentation)
 import MEAL_GARLIC_PASTA from "../meals/garlic_butter_pasta.json";
 import MEAL_MAC_CHEESE from "../meals/mac_and_cheese.json";
 import MEAL_CHICKEN_RICE from "../meals/chicken_and_rice.json";
 import MEAL_SALMON from "../meals/salmon_asparagus_couscous.json";
 import MEAL_STEAK from "../meals/steak_potatoes_beans.json";
-import MEAL_STEAK_SONNET from "../meals/sonnet-steak-dinner.json";
+
+// Sonnet recipes - Synced from public/meals/ (edit via /editor.html, then copy back)
+// Workflow: Edit in /editor.html → Download JSON → Replace in both public/meals/ AND src/meals/
 import MEAL_BOLOGNESE_SONNET from "../meals/sonnet-bolognese-v2.json";
 import MEAL_STIR_FRY_SONNET from "../meals/sonnet-chicken-stir-fry-v2.json";
 import MEAL_SALMON_SONNET from "../meals/sonnet-sheet-pan-salmon-v2.json";
 import MEAL_COOKIES_SONNET_V2 from "../meals/sonnet-chocolate-chip-cookies-v2.json";
-import MEAL_COOKIES_SONNET from "../meals/chocolate_chip_cookies_sonnet.json";
+import MEAL_STEAK_SONNET from "../meals/sonnet-steak-dinner.json";
 
 export const MEALS = [
   // ORIGINAL 5 RECIPES - HIDDEN FOR PRESENTATION (no chain data yet)

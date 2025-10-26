@@ -64,11 +64,20 @@
   <div>
     <label for="mealSelect">Select Meal: </label>
     <select id="mealSelect">
-      <option value="0">Garlic Butter Pasta</option>
-      <option value="1">Mac & Cheese</option>
-      <option value="2">Chicken & Rice</option>
-      <option value="3">Salmon, Asparagus & Couscous</option>
-      <option value="4">Steak, Potatoes & Green Beans</option>
+      <optgroup label="Original Recipes">
+        <option value="0">Garlic Butter Pasta</option>
+        <option value="1">Mac & Cheese</option>
+        <option value="2">Chicken & Rice</option>
+        <option value="3">Salmon, Asparagus & Couscous</option>
+        <option value="4">Steak, Potatoes & Green Beans</option>
+      </optgroup>
+      <optgroup label="Sonnet-Parsed Recipes (with Chains)">
+        <option value="5">Spaghetti Bolognese</option>
+        <option value="6">Chicken & Veg Stir-Fry</option>
+        <option value="7">Sheet Pan Salmon</option>
+        <option value="8">Chocolate Chip Cookies</option>
+        <option value="9">Seared Steak Dinner</option>
+      </optgroup>
     </select>
     <button onclick="loadMeal()">Load Meal</button>
   </div>
@@ -92,11 +101,18 @@
     let mealData = null;
 
     const MEALS = [
+      // Original recipes
       'garlic_butter_pasta.json',
       'mac_and_cheese.json',
       'chicken_and_rice.json',
       'salmon_asparagus_couscous.json',
-      'steak_potatoes_beans.json'
+      'steak_potatoes_beans.json',
+      // Sonnet-parsed recipes (with chains)
+      '01-spaghetti-bolognese.json',
+      '02-chicken-veg-stir-fry.json',
+      '03-sheet-pan-salmon.json',
+      '05-chocolate-chip-cookies.json',
+      '06-seared-steak-dinner.json'
     ];
 
     async function loadMeal() {

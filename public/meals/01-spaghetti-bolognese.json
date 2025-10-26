@@ -1,452 +1,433 @@
 {
   "title": "Spaghetti Bolognese",
-  "author": {
-    "name": "RecipeTin Eats"
-  },
+  "author": { "name": "RecipeTin Eats" },
   "tasks": [
     {
-      "id": "chain_1/step_1",
-      "name": "Begin by heating oil in a large pot over medium-high heat",
-      "canonical_verb": "heat_oil",
-      "duration_min": null,
+      "id": "chain_0/step_1",
+      "name": "Dice the onion",
+      "canonical_verb": "dice",
       "planned_min": 3,
       "requires_driver": true,
       "self_running_after_start": false,
-      "hold_window_minutes": 10,
-      "temporal_flexibility": "hold_minutes",
-      "inputs": [
-        "oil"
-      ],
-      "outputs": [],
-      "equipment": [
-        "pot"
-      ],
-      "edges": [],
-      "_meta": {
-        "verb_confidence": "high",
-        "verb_source": "verb_pattern",
-        "duration_source": null,
-        "duration_approx": false
-      }
-    },
-    {
-      "id": "chain_1/step_2",
-      "name": "Add the onion and garlic, cooking until they become light golden and softened, approximately three minutes.",
-      "canonical_verb": "sauté",
-      "duration_min": null,
-      "planned_min": 8,
-      "requires_driver": true,
-      "self_running_after_start": false,
-      "hold_window_minutes": 1440,
-      "temporal_flexibility": "hold_hours",
-      "inputs": [
-        "onion",
-        "garlic"
-      ],
-      "outputs": [],
-      "equipment": [],
-      "edges": [
+      "inputs": ["onion"],
+      "outputs": [
         {
-          "from": "chain_1/step_1",
-          "to": "chain_1/step_2",
-          "type": "FS",
-          "constraint": "FLEXIBLE",
-          "hold_window_minutes": 10,
-          "temporal_flexibility": "hold_minutes"
+          "ingredient": "onion",
+          "state": "diced",
+          "emergent": true
         }
       ],
-      "_meta": {
-        "verb_confidence": "high",
-        "verb_source": "verb_pattern",
-        "duration_source": null,
-        "duration_approx": false
-      }
+      "equipment": ["knife", "cutting_board"],
+      "edges": []
+    },
+    {
+      "id": "chain_0/step_2",
+      "name": "Mince the garlic",
+      "canonical_verb": "mince",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": ["garlic"],
+      "outputs": [
+        {
+          "ingredient": "garlic",
+          "state": "minced",
+          "emergent": true
+        }
+      ],
+      "equipment": ["knife", "cutting_board"],
+      "edges": []
     },
     {
       "id": "chain_2/step_1",
-      "name": "Increase the heat to high and add the beef mince",
-      "canonical_verb": "mince",
-      "duration_min": null,
-      "planned_min": 3,
+      "name": "Heat oil in a large pot over medium-high heat",
+      "canonical_verb": "heat_oil",
+      "planned_min": 2,
       "requires_driver": true,
       "self_running_after_start": false,
-      "hold_window_minutes": 10080,
-      "temporal_flexibility": "hold_days",
-      "inputs": [
-        "beef"
-      ],
+      "inputs": ["olive_oil"],
       "outputs": [],
-      "equipment": [],
-      "edges": [],
-      "_meta": {
-        "verb_confidence": "high",
-        "verb_source": "verb_pattern",
-        "duration_source": null,
-        "duration_approx": false
-      }
+      "equipment": ["pot"],
+      "edges": []
     },
     {
       "id": "chain_2/step_2",
-      "name": "Break it up as it cooks until it reaches a browned state",
-      "canonical_verb": "free_text",
-      "duration_min": null,
-      "planned_min": null,
+      "name": "Add the diced onion and minced garlic to the pot",
+      "canonical_verb": "add",
+      "planned_min": 1,
       "requires_driver": true,
       "self_running_after_start": false,
-      "hold_window_minutes": null,
-      "temporal_flexibility": "serve_immediate",
       "inputs": [],
       "outputs": [],
-      "equipment": [],
+      "equipment": ["pot"],
       "edges": [
         {
           "from": "chain_2/step_1",
           "to": "chain_2/step_2",
-          "type": "FS",
-          "constraint": "FLEXIBLE",
-          "hold_window_minutes": 10080,
-          "temporal_flexibility": "hold_days"
+          "type": "FS"
+        },
+        {
+          "from": "chain_0/step_1",
+          "to": "chain_2/step_2",
+          "type": "FS"
+        },
+        {
+          "from": "chain_0/step_2",
+          "to": "chain_2/step_2",
+          "type": "FS"
         }
-      ],
-      "_meta": {
-        "verb_confidence": "low",
-        "verb_source": "default",
-        "duration_source": null,
-        "duration_approx": false
-      }
+      ]
     },
     {
       "id": "chain_2/step_3",
-      "name": "Pour in the red wine, bringing it to a simmer and cooking for one minute while scraping the pot's bottom until the alcohol aroma dissipates.",
-      "canonical_verb": "simmer",
-      "duration_min": null,
-      "planned_min": 20,
-      "requires_driver": false,
-      "self_running_after_start": true,
-      "hold_window_minutes": 60,
-      "temporal_flexibility": "hold_hours",
-      "inputs": [
-        "wine"
+      "name": "Cook until light golden and softened",
+      "canonical_verb": "sauté",
+      "planned_min": 3,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "ingredient": "aromatics",
+          "state": "softened",
+          "emergent": true
+        }
       ],
-      "outputs": [],
-      "equipment": [
-        "pot"
-      ],
+      "equipment": ["pot"],
       "edges": [
         {
           "from": "chain_2/step_2",
           "to": "chain_2/step_3",
-          "type": "FS",
-          "constraint": "RIGID"
+          "type": "FS"
         }
-      ],
-      "_meta": {
-        "verb_confidence": "high",
-        "verb_source": "verb_pattern",
-        "duration_source": null,
-        "duration_approx": false
-      }
+      ]
     },
     {
-      "id": "chain_3/step_1",
-      "name": "Combine the remaining ingredients into the pot",
-      "canonical_verb": "combine",
-      "duration_min": null,
+      "id": "chain_2/step_4",
+      "name": "Increase heat to high",
+      "canonical_verb": "increase_heat",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": [],
+      "outputs": [],
+      "equipment": ["pot"],
+      "edges": [
+        {
+          "from": "chain_2/step_3",
+          "to": "chain_2/step_4",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_2/step_5",
+      "name": "Add the beef mince and break it up as it cooks",
+      "canonical_verb": "add",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": ["beef_mince"],
+      "outputs": [],
+      "equipment": ["pot"],
+      "edges": [
+        {
+          "from": "chain_2/step_4",
+          "to": "chain_2/step_5",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_2/step_6",
+      "name": "Cook until browned",
+      "canonical_verb": "sauté",
+      "planned_min": 8,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "ingredient": "beef",
+          "state": "browned",
+          "emergent": true
+        }
+      ],
+      "equipment": ["pot"],
+      "edges": [
+        {
+          "from": "chain_2/step_5",
+          "to": "chain_2/step_6",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_2/step_7",
+      "name": "Pour in the red wine",
+      "canonical_verb": "add",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": ["red_wine"],
+      "outputs": [],
+      "equipment": ["pot"],
+      "edges": [
+        {
+          "from": "chain_2/step_6",
+          "to": "chain_2/step_7",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_2/step_8",
+      "name": "Bring to a simmer and cook for one minute, scraping the pot bottom",
+      "canonical_verb": "deglaze",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": [],
+      "outputs": [],
+      "equipment": ["pot"],
+      "edges": [
+        {
+          "from": "chain_2/step_7",
+          "to": "chain_2/step_8",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_2/step_9",
+      "name": "Add crushed tomato, tomato paste, bouillon cubes, sugar, Worcestershire sauce, bay leaves, thyme, salt, and pepper",
+      "canonical_verb": "add",
       "planned_min": 2,
       "requires_driver": true,
       "self_running_after_start": false,
-      "hold_window_minutes": 60,
-      "temporal_flexibility": "hold_hours",
+      "inputs": ["crushed_tomato", "tomato_paste", "bouillon_cubes", "sugar", "worcestershire_sauce", "bay_leaves", "thyme", "salt", "pepper"],
+      "outputs": [],
+      "equipment": ["pot"],
+      "edges": [
+        {
+          "from": "chain_2/step_8",
+          "to": "chain_2/step_9",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_2/step_10",
+      "name": "Stir everything together",
+      "canonical_verb": "stir",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
       "inputs": [],
       "outputs": [],
-      "equipment": [
-        "pot"
+      "equipment": ["pot"],
+      "edges": [
+        {
+          "from": "chain_2/step_9",
+          "to": "chain_2/step_10",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_2/step_11",
+      "name": "Bring to a simmer",
+      "canonical_verb": "bring_to_simmer",
+      "planned_min": 3,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "inputs": [],
+      "outputs": [],
+      "equipment": ["pot"],
+      "edges": [
+        {
+          "from": "chain_2/step_10",
+          "to": "chain_2/step_11",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_2/step_12",
+      "name": "Reduce heat to medium for gentle bubbling",
+      "canonical_verb": "reduce_heat",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": [],
+      "outputs": [],
+      "equipment": ["pot"],
+      "edges": [
+        {
+          "from": "chain_2/step_11",
+          "to": "chain_2/step_12",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_2/step_13",
+      "name": "Cook uncovered for twenty to thirty minutes, stirring occasionally",
+      "canonical_verb": "simmer",
+      "planned_min": 25,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "inputs": [],
+      "outputs": [
+        {
+          "ingredient": "bolognese_sauce",
+          "state": "simmered",
+          "emergent": true
+        }
       ],
-      "edges": [],
-      "_meta": {
-        "verb_confidence": "high",
-        "verb_source": "verb_pattern",
-        "duration_source": null,
-        "duration_approx": false
-      }
+      "equipment": ["pot"],
+      "edges": [
+        {
+          "from": "chain_2/step_12",
+          "to": "chain_2/step_13",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_3/step_1",
+      "name": "Bring a large pot of salted water to a boil",
+      "canonical_verb": "bring_to_boil",
+      "planned_min": 10,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "inputs": ["water", "salt"],
+      "outputs": [],
+      "equipment": ["pot"],
+      "edges": []
     },
     {
       "id": "chain_3/step_2",
-      "name": "Stir everything together, bring to a simmer, then reduce heat to medium so the sauce bubbles gently",
-      "canonical_verb": "simmer",
-      "duration_min": null,
-      "planned_min": 20,
-      "requires_driver": false,
-      "self_running_after_start": true,
-      "hold_window_minutes": 60,
-      "temporal_flexibility": "hold_hours",
-      "inputs": [],
+      "name": "Add the spaghetti to the boiling water",
+      "canonical_verb": "add",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": ["spaghetti"],
       "outputs": [],
-      "equipment": [],
+      "equipment": ["pot"],
       "edges": [
         {
           "from": "chain_3/step_1",
           "to": "chain_3/step_2",
-          "type": "FS",
-          "constraint": "FLEXIBLE",
-          "hold_window_minutes": 60,
-          "temporal_flexibility": "hold_hours"
+          "type": "FS"
         }
-      ],
-      "_meta": {
-        "verb_confidence": "high",
-        "verb_source": "verb_pattern",
-        "duration_source": null,
-        "duration_approx": false
-      }
+      ]
     },
     {
       "id": "chain_3/step_3",
-      "name": "Cook uncovered for twenty to thirty minutes, stirring occasionally and adding water if the sauce becomes too thick.",
-      "canonical_verb": "stir",
-      "duration_min": null,
-      "planned_min": 1,
-      "requires_driver": true,
-      "self_running_after_start": false,
-      "hold_window_minutes": 30,
-      "temporal_flexibility": "hold_minutes",
-      "inputs": [
-        "water"
-      ],
+      "name": "Cook the spaghetti according to package directions until al dente",
+      "canonical_verb": "boil",
+      "planned_min": 10,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "inputs": [],
       "outputs": [],
-      "equipment": [],
+      "equipment": ["pot"],
       "edges": [
         {
           "from": "chain_3/step_2",
           "to": "chain_3/step_3",
-          "type": "FS",
-          "constraint": "FLEXIBLE",
-          "hold_window_minutes": 60,
-          "temporal_flexibility": "hold_hours"
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_3/step_4",
+      "name": "Drain the spaghetti",
+      "canonical_verb": "drain",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "ingredient": "spaghetti",
+          "state": "cooked",
+          "emergent": true
         }
       ],
-      "_meta": {
-        "verb_confidence": "high",
-        "verb_source": "pattern",
-        "duration_source": null,
-        "duration_approx": false
-      }
+      "equipment": ["colander"],
+      "edges": [
+        {
+          "from": "chain_3/step_3",
+          "to": "chain_3/step_4",
+          "type": "FS"
+        }
+      ]
     },
     {
       "id": "chain_4/step_1",
-      "name": "For enhanced flavor, cover with a lid and simmer on very low heat for two to two and a half hours, stirring every thirty minutes",
-      "canonical_verb": "simmer",
-      "duration_min": null,
-      "planned_min": 20,
-      "requires_driver": false,
-      "self_running_after_start": true,
-      "hold_window_minutes": 60,
-      "temporal_flexibility": "hold_hours",
-      "inputs": [],
+      "name": "Taste the sauce and adjust salt as desired",
+      "canonical_verb": "season",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": ["salt"],
       "outputs": [],
-      "equipment": [],
-      "edges": [],
-      "_meta": {
-        "verb_confidence": "high",
-        "verb_source": "pattern",
-        "duration_source": null,
-        "duration_approx": false
-      }
+      "equipment": ["spoon"],
+      "edges": [
+        {
+          "from": "chain_2/step_13",
+          "to": "chain_4/step_1",
+          "type": "FS"
+        }
+      ]
     },
     {
       "id": "chain_4/step_2",
-      "name": "Then uncover and simmer for an additional twenty minutes to thicken.",
-      "canonical_verb": "simmer",
-      "duration_min": null,
-      "planned_min": 20,
-      "requires_driver": false,
-      "self_running_after_start": true,
-      "hold_window_minutes": 60,
-      "temporal_flexibility": "hold_hours",
+      "name": "Serve the sauce over the cooked spaghetti",
+      "canonical_verb": "plate",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
       "inputs": [],
       "outputs": [],
-      "equipment": [],
+      "equipment": ["plates"],
       "edges": [
         {
           "from": "chain_4/step_1",
           "to": "chain_4/step_2",
-          "type": "FS",
-          "constraint": "FLEXIBLE",
-          "hold_window_minutes": 60,
-          "temporal_flexibility": "hold_hours"
-        }
-      ],
-      "_meta": {
-        "verb_confidence": "high",
-        "verb_source": "verb_pattern",
-        "duration_source": null,
-        "duration_approx": false
-      }
-    },
-    {
-      "id": "chain_5/step_1",
-      "name": "Taste and adjust salt as desired",
-      "canonical_verb": "free_text",
-      "duration_min": null,
-      "planned_min": null,
-      "requires_driver": true,
-      "self_running_after_start": false,
-      "hold_window_minutes": null,
-      "temporal_flexibility": "serve_immediate",
-      "inputs": [
-        "salt"
-      ],
-      "outputs": [],
-      "equipment": [],
-      "edges": [],
-      "_meta": {
-        "verb_confidence": "low",
-        "verb_source": "default",
-        "duration_source": null,
-        "duration_approx": false
-      }
-    },
-    {
-      "id": "chain_5/step_2",
-      "name": "Serve over cooked spaghetti, optionally tossing the sauce and pasta together",
-      "canonical_verb": "plate",
-      "duration_min": null,
-      "planned_min": 2,
-      "requires_driver": true,
-      "self_running_after_start": false,
-      "hold_window_minutes": 0,
-      "temporal_flexibility": "serve_immediate",
-      "inputs": [
-        "pasta"
-      ],
-      "outputs": [],
-      "equipment": [],
-      "edges": [
+          "type": "FS"
+        },
         {
-          "from": "chain_5/step_1",
-          "to": "chain_5/step_2",
-          "type": "FS",
-          "constraint": "RIGID"
+          "from": "chain_3/step_4",
+          "to": "chain_4/step_2",
+          "type": "FS"
         }
-      ],
-      "_meta": {
-        "verb_confidence": "high",
-        "verb_source": "verb_pattern",
-        "duration_source": null,
-        "duration_approx": false
-      }
+      ]
     }
   ],
   "chains": [
     {
-      "id": "chain_1",
-      "name": "Phase 4",
-      "purpose": "Complete cooking phase 4",
-      "tasks": [
-        "chain_1/step_1",
-        "chain_1/step_2"
-      ],
-      "outputs": [],
-      "inputs": [],
-      "temporal_marker": null,
-      "parallel_with": null,
-      "metadata": {
-        "detected_by": "semantic_understanding",
-        "confidence": "low",
-        "section_index": 3
-      }
+      "id": "chain_0",
+      "name": "Prep Work",
+      "tasks": ["chain_0/step_1", "chain_0/step_2"]
     },
     {
       "id": "chain_2",
-      "name": "Phase 5",
-      "purpose": "Complete cooking phase 5",
-      "tasks": [
-        "chain_2/step_1",
-        "chain_2/step_2",
-        "chain_2/step_3"
-      ],
-      "outputs": [],
-      "inputs": [],
-      "temporal_marker": null,
-      "parallel_with": null,
-      "metadata": {
-        "detected_by": "semantic_understanding",
-        "confidence": "low",
-        "section_index": 4
-      }
+      "name": "Make the Bolognese Sauce",
+      "tasks": ["chain_2/step_1", "chain_2/step_2", "chain_2/step_3", "chain_2/step_4", "chain_2/step_5", "chain_2/step_6", "chain_2/step_7", "chain_2/step_8", "chain_2/step_9", "chain_2/step_10", "chain_2/step_11", "chain_2/step_12", "chain_2/step_13"]
     },
     {
       "id": "chain_3",
-      "name": "Phase 6",
-      "purpose": "Complete cooking phase 6",
-      "tasks": [
-        "chain_3/step_1",
-        "chain_3/step_2",
-        "chain_3/step_3"
-      ],
-      "outputs": [],
-      "inputs": [],
-      "temporal_marker": null,
-      "parallel_with": null,
-      "metadata": {
-        "detected_by": "semantic_understanding",
-        "confidence": "low",
-        "section_index": 5
-      }
+      "name": "Cook the Spaghetti",
+      "tasks": ["chain_3/step_1", "chain_3/step_2", "chain_3/step_3", "chain_3/step_4"]
     },
     {
       "id": "chain_4",
-      "name": "Phase 7",
-      "purpose": "Complete cooking phase 7",
-      "tasks": [
-        "chain_4/step_1",
-        "chain_4/step_2"
-      ],
-      "outputs": [],
-      "inputs": [],
-      "temporal_marker": null,
-      "parallel_with": null,
-      "metadata": {
-        "detected_by": "semantic_understanding",
-        "confidence": "low",
-        "section_index": 6
-      }
-    },
-    {
-      "id": "chain_5",
-      "name": "Serve",
-      "purpose": "Plate and serve the dish",
-      "tasks": [
-        "chain_5/step_1",
-        "chain_5/step_2"
-      ],
-      "outputs": [
-        {
-          "emergent_id": "e_pasta_001",
-          "ingredient": "pasta",
-          "state": "cooked",
-          "description": "cooked pasta"
-        }
-      ],
-      "inputs": [],
-      "temporal_marker": null,
-      "parallel_with": null,
-      "metadata": {
-        "detected_by": "semantic_understanding",
-        "confidence": "high",
-        "section_index": 7
-      }
+      "name": "Assemble and Serve",
+      "tasks": ["chain_4/step_1", "chain_4/step_2"]
     }
-  ],
-  "packs_meta": {
-    "parser_version": "2.0.0",
-    "parsed_at": "2025-10-25T05:19:46.042Z",
-    "source": "local",
-    "options": {
-      "autoDependencies": false,
-      "smartDependencies": false,
-      "roundAboutUp": true,
-      "detectTaskChains": true
-    }
-  }
+  ]
 }

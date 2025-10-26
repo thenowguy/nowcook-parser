@@ -1,727 +1,463 @@
 {
   "title": "Sheet Pan Salmon with Vegetables",
-  "author": {
-    "name": "The Mediterranean Dish"
-  },
+  "author": { "name": "The Mediterranean Dish" },
   "tasks": [
     {
       "id": "chain_1/step_1",
-      "name": "Prepare",
-      "canonical_verb": "free_text",
-      "duration_min": null,
-      "planned_min": null,
-      "requires_driver": true,
-      "self_running_after_start": false,
-      "hold_window_minutes": null,
-      "temporal_flexibility": "serve_immediate",
-      "inputs": [],
-      "outputs": [],
-      "equipment": [],
-      "edges": [],
-      "_meta": {
-        "verb_confidence": "low",
-        "verb_source": "default",
-        "duration_source": null,
-        "duration_approx": false
-      }
-    },
-    {
-      "id": "chain_1/step_2",
-      "name": "Heat your oven to 450°F.",
+      "name": "Preheat the oven to 450°F",
       "canonical_verb": "preheat_oven",
-      "duration_min": null,
       "planned_min": 12,
       "requires_driver": false,
       "self_running_after_start": true,
-      "hold_window_minutes": 0,
-      "temporal_flexibility": "serve_immediate",
       "inputs": [],
       "outputs": [],
-      "equipment": [
-        "oven"
-      ],
-      "edges": [
-        {
-          "from": "chain_1/step_1",
-          "to": "chain_1/step_2",
-          "type": "FS",
-          "constraint": "RIGID"
-        }
-      ],
-      "_meta": {
-        "verb_confidence": "high",
-        "verb_source": "verb_pattern",
-        "duration_source": null,
-        "duration_approx": false
-      },
-      "temperature": {
-        "value": 450,
-        "unit": "F"
-      }
+      "equipment": ["oven"],
+      "edges": []
     },
     {
       "id": "chain_2/step_1",
-      "name": "Make the spice blend",
-      "canonical_verb": "free_text",
-      "duration_min": null,
-      "planned_min": null,
-      "requires_driver": true,
-      "self_running_after_start": false,
-      "hold_window_minutes": null,
-      "temporal_flexibility": "serve_immediate",
-      "inputs": [],
-      "outputs": [],
-      "equipment": [],
-      "edges": [],
-      "_meta": {
-        "verb_confidence": "low",
-        "verb_source": "default",
-        "duration_source": null,
-        "duration_approx": false
-      }
-    },
-    {
-      "id": "chain_2/step_2",
-      "name": "Combine paprika, baharat, 1¼ teaspoon salt, and generous pepper in a small bowl.",
-      "canonical_verb": "season",
-      "duration_min": null,
-      "planned_min": 1,
-      "requires_driver": true,
-      "self_running_after_start": false,
-      "hold_window_minutes": 0,
-      "temporal_flexibility": "serve_immediate",
-      "inputs": [
-        "salt",
-        "pepper"
-      ],
-      "outputs": [],
-      "equipment": [
-        "bowl"
-      ],
-      "edges": [
-        {
-          "from": "chain_2/step_1",
-          "to": "chain_2/step_2",
-          "type": "FS",
-          "constraint": "RIGID"
-        }
-      ],
-      "_meta": {
-        "verb_confidence": "high",
-        "verb_source": "verb_pattern",
-        "duration_source": null,
-        "duration_approx": false
-      }
-    },
-    {
-      "id": "chain_3/step_1",
-      "name": "Ready the vegetables",
-      "canonical_verb": "free_text",
-      "duration_min": null,
-      "planned_min": null,
-      "requires_driver": true,
-      "self_running_after_start": false,
-      "hold_window_minutes": null,
-      "temporal_flexibility": "serve_immediate",
-      "inputs": [],
-      "outputs": [],
-      "equipment": [],
-      "edges": [],
-      "_meta": {
-        "verb_confidence": "low",
-        "verb_source": "default",
-        "duration_source": null,
-        "duration_approx": false
-      }
-    },
-    {
-      "id": "chain_3/step_2",
-      "name": "Remove cauliflower leaves and core, then cut florets into bite-sized pieces (about 6 cups total)",
-      "canonical_verb": "chop",
-      "duration_min": null,
+      "name": "Combine paprika, baharat, salt, and pepper in a small bowl",
+      "canonical_verb": "combine",
       "planned_min": 2,
       "requires_driver": true,
       "self_running_after_start": false,
-      "hold_window_minutes": 10080,
-      "temporal_flexibility": "hold_days",
-      "inputs": [],
+      "inputs": ["paprika", "baharat", "salt", "pepper"],
+      "outputs": [
+        {
+          "ingredient": "spice_blend",
+          "state": "mixed",
+          "emergent": true
+        }
+      ],
+      "equipment": ["bowl"],
+      "edges": []
+    },
+    {
+      "id": "chain_3/step_0",
+      "name": "Mince the garlic cloves",
+      "canonical_verb": "mince",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": ["garlic"],
+      "outputs": [
+        {
+          "ingredient": "garlic",
+          "state": "minced",
+          "emergent": true
+        }
+      ],
+      "equipment": ["knife", "cutting_board"],
+      "edges": []
+    },
+    {
+      "id": "chain_3/step_1",
+      "name": "Remove cauliflower leaves and core",
+      "canonical_verb": "chop",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": ["cauliflower"],
       "outputs": [],
-      "equipment": [],
+      "equipment": ["knife", "cutting_board"],
+      "edges": []
+    },
+    {
+      "id": "chain_3/step_2",
+      "name": "Cut cauliflower florets into bite-sized pieces",
+      "canonical_verb": "chop",
+      "planned_min": 3,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "ingredient": "cauliflower",
+          "state": "chopped",
+          "emergent": true
+        }
+      ],
+      "equipment": ["knife", "cutting_board"],
       "edges": [
         {
           "from": "chain_3/step_1",
           "to": "chain_3/step_2",
-          "type": "FS",
-          "constraint": "RIGID"
+          "type": "FS"
         }
-      ],
-      "_meta": {
-        "verb_confidence": "high",
-        "verb_source": "verb_pattern",
-        "duration_source": null,
-        "duration_approx": false
-      }
+      ]
     },
     {
       "id": "chain_3/step_3",
-      "name": "Slice carrots lengthwise if needed, then cut diagonally into ½-inch pieces",
+      "name": "Slice carrots lengthwise if needed",
       "canonical_verb": "slice",
-      "duration_min": null,
-      "planned_min": 3,
+      "planned_min": 2,
       "requires_driver": true,
       "self_running_after_start": false,
-      "hold_window_minutes": 10080,
-      "temporal_flexibility": "hold_days",
-      "inputs": [
-        "carrot"
-      ],
+      "inputs": ["carrots"],
       "outputs": [],
-      "equipment": [],
-      "edges": [
-        {
-          "from": "chain_3/step_2",
-          "to": "chain_3/step_3",
-          "type": "FS",
-          "constraint": "FLEXIBLE",
-          "hold_window_minutes": 10080,
-          "temporal_flexibility": "hold_days"
-        }
-      ],
-      "_meta": {
-        "verb_confidence": "high",
-        "verb_source": "verb_pattern",
-        "duration_source": null,
-        "duration_approx": false
-      }
+      "equipment": ["knife", "cutting_board"],
+      "edges": []
     },
     {
       "id": "chain_3/step_4",
-      "name": "Toss vegetables with garlic, 2 tablespoons oil, and ¾ of the spice mixture in a large bowl",
-      "canonical_verb": "toss",
-      "duration_min": null,
-      "planned_min": 1,
+      "name": "Cut carrots diagonally into 1/2-inch pieces",
+      "canonical_verb": "slice",
+      "planned_min": 2,
       "requires_driver": true,
       "self_running_after_start": false,
-      "hold_window_minutes": 30,
-      "temporal_flexibility": "hold_minutes",
-      "inputs": [
-        "garlic",
-        "oil"
+      "inputs": [],
+      "outputs": [
+        {
+          "ingredient": "carrots",
+          "state": "sliced",
+          "emergent": true
+        }
       ],
-      "outputs": [],
-      "equipment": [
-        "bowl"
-      ],
+      "equipment": ["knife", "cutting_board"],
       "edges": [
         {
           "from": "chain_3/step_3",
           "to": "chain_3/step_4",
-          "type": "FS",
-          "constraint": "FLEXIBLE",
-          "hold_window_minutes": 10080,
-          "temporal_flexibility": "hold_days",
-          "emergent_ingredient": "sliced_carrot"
+          "type": "FS"
         }
-      ],
-      "_meta": {
-        "verb_confidence": "medium",
-        "verb_source": "pattern",
-        "duration_source": null,
-        "duration_approx": false
-      }
+      ]
     },
     {
       "id": "chain_3/step_5",
-      "name": "Spread on a rimmed baking sheet in a single layer.",
-      "canonical_verb": "free_text",
-      "duration_min": null,
-      "planned_min": null,
+      "name": "Toss vegetables with minced garlic, 2 tablespoons oil, and 3/4 of the spice mixture",
+      "canonical_verb": "toss",
+      "planned_min": 2,
       "requires_driver": true,
       "self_running_after_start": false,
-      "hold_window_minutes": null,
-      "temporal_flexibility": "serve_immediate",
-      "inputs": [],
-      "outputs": [],
-      "equipment": [],
+      "inputs": ["olive_oil"],
+      "outputs": [
+        {
+          "ingredient": "vegetables",
+          "state": "seasoned",
+          "emergent": true
+        }
+      ],
+      "equipment": ["bowl"],
       "edges": [
+        {
+          "from": "chain_3/step_2",
+          "to": "chain_3/step_5",
+          "type": "FS"
+        },
         {
           "from": "chain_3/step_4",
           "to": "chain_3/step_5",
-          "type": "FS",
-          "constraint": "FLEXIBLE",
-          "hold_window_minutes": 30,
-          "temporal_flexibility": "hold_minutes"
+          "type": "FS"
+        },
+        {
+          "from": "chain_2/step_1",
+          "to": "chain_3/step_5",
+          "type": "FS"
+        },
+        {
+          "from": "chain_3/step_0",
+          "to": "chain_3/step_5",
+          "type": "FS"
         }
-      ],
-      "_meta": {
-        "verb_confidence": "low",
-        "verb_source": "default",
-        "duration_source": null,
-        "duration_approx": false
-      }
+      ]
+    },
+    {
+      "id": "chain_3/step_6",
+      "name": "Spread vegetables on a rimmed baking sheet in a single layer",
+      "canonical_verb": "arrange",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": [],
+      "outputs": [],
+      "equipment": ["baking_sheet"],
+      "edges": [
+        {
+          "from": "chain_3/step_5",
+          "to": "chain_3/step_6",
+          "type": "FS"
+        }
+      ]
     },
     {
       "id": "chain_4/step_1",
-      "name": "Roast vegetables",
+      "name": "Bake vegetables for 15 minutes until cauliflower starts to brown",
       "canonical_verb": "roast",
-      "duration_min": null,
-      "planned_min": 45,
-      "requires_driver": false,
-      "self_running_after_start": true,
-      "hold_window_minutes": 120,
-      "temporal_flexibility": "hold_hours",
-      "inputs": [],
-      "outputs": [],
-      "equipment": [],
-      "edges": [],
-      "_meta": {
-        "verb_confidence": "high",
-        "verb_source": "verb_pattern",
-        "duration_source": null,
-        "duration_approx": false
-      }
-    },
-    {
-      "id": "chain_4/step_2",
-      "name": "Bake about 15 minutes until cauliflower starts to brown.",
-      "canonical_verb": "bake",
-      "duration_min": {
-        "value": 15
-      },
       "planned_min": 15,
       "requires_driver": false,
       "self_running_after_start": true,
-      "hold_window_minutes": 60,
-      "temporal_flexibility": "hold_hours",
       "inputs": [],
-      "outputs": [],
-      "equipment": [],
-      "edges": [
+      "outputs": [
         {
-          "from": "chain_4/step_1",
-          "to": "chain_4/step_2",
-          "type": "FS",
-          "constraint": "FLEXIBLE",
-          "hold_window_minutes": 120,
-          "temporal_flexibility": "hold_hours"
+          "ingredient": "vegetables",
+          "state": "roasted",
+          "emergent": true
         }
       ],
-      "_meta": {
-        "verb_confidence": "high",
-        "verb_source": "verb_pattern",
-        "duration_source": "single",
-        "duration_approx": true
-      }
+      "equipment": ["oven"],
+      "edges": [
+        {
+          "from": "chain_1/step_1",
+          "to": "chain_4/step_1",
+          "type": "FS"
+        },
+        {
+          "from": "chain_3/step_6",
+          "to": "chain_4/step_1",
+          "type": "FS"
+        }
+      ]
     },
     {
       "id": "chain_5/step_1",
-      "name": "Prepare fish",
-      "canonical_verb": "free_text",
-      "duration_min": null,
-      "planned_min": null,
+      "name": "Brush salmon fillets with remaining oil",
+      "canonical_verb": "drizzle",
+      "planned_min": 1,
       "requires_driver": true,
       "self_running_after_start": false,
-      "hold_window_minutes": null,
-      "temporal_flexibility": "serve_immediate",
-      "inputs": [
-        "fish"
-      ],
+      "inputs": ["salmon", "olive_oil"],
       "outputs": [],
-      "equipment": [],
-      "edges": [],
-      "_meta": {
-        "verb_confidence": "low",
-        "verb_source": "default",
-        "duration_source": null,
-        "duration_approx": false
-      }
+      "equipment": ["brush"],
+      "edges": []
     },
     {
       "id": "chain_5/step_2",
-      "name": "While vegetables roast, brush salmon fillets with remaining oil and sprinkle with remaining spice mixture.",
-      "canonical_verb": "roast",
-      "duration_min": null,
-      "planned_min": 45,
-      "requires_driver": false,
-      "self_running_after_start": true,
-      "hold_window_minutes": 120,
-      "temporal_flexibility": "hold_hours",
-      "inputs": [
-        "salmon",
-        "oil"
+      "name": "Sprinkle salmon with remaining spice mixture",
+      "canonical_verb": "season",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "ingredient": "salmon",
+          "state": "seasoned",
+          "emergent": true
+        }
       ],
-      "outputs": [],
       "equipment": [],
       "edges": [
         {
           "from": "chain_5/step_1",
           "to": "chain_5/step_2",
-          "type": "FS",
-          "constraint": "RIGID"
+          "type": "FS"
+        },
+        {
+          "from": "chain_2/step_1",
+          "to": "chain_5/step_2",
+          "type": "FS"
         }
-      ],
-      "_meta": {
-        "verb_confidence": "high",
-        "verb_source": "verb_pattern",
-        "duration_source": null,
-        "duration_approx": false
-      }
+      ]
     },
     {
       "id": "chain_6/step_1",
-      "name": "Combine and finish roasting",
-      "canonical_verb": "combine",
-      "duration_min": null,
-      "planned_min": 2,
+      "name": "Remove the pan from the oven",
+      "canonical_verb": "remove",
+      "planned_min": 1,
       "requires_driver": true,
       "self_running_after_start": false,
-      "hold_window_minutes": 60,
-      "temporal_flexibility": "hold_hours",
       "inputs": [],
       "outputs": [],
-      "equipment": [],
-      "edges": [],
-      "_meta": {
-        "verb_confidence": "high",
-        "verb_source": "verb_pattern",
-        "duration_source": null,
-        "duration_approx": false
-      }
+      "equipment": ["oven_mitts"],
+      "edges": [
+        {
+          "from": "chain_4/step_1",
+          "to": "chain_6/step_1",
+          "type": "FS"
+        }
+      ]
     },
     {
       "id": "chain_6/step_2",
-      "name": "Remove the pan from the oven",
-      "canonical_verb": "free_text",
-      "duration_min": null,
-      "planned_min": null,
+      "name": "Toss in olives with vegetables",
+      "canonical_verb": "add",
+      "planned_min": 1,
       "requires_driver": true,
       "self_running_after_start": false,
-      "hold_window_minutes": null,
-      "temporal_flexibility": "serve_immediate",
-      "inputs": [],
+      "inputs": ["olives"],
       "outputs": [],
-      "equipment": [
-        "pan",
-        "oven"
-      ],
+      "equipment": [],
       "edges": [
         {
           "from": "chain_6/step_1",
           "to": "chain_6/step_2",
-          "type": "FS",
-          "constraint": "FLEXIBLE",
-          "hold_window_minutes": 60,
-          "temporal_flexibility": "hold_hours"
+          "type": "FS"
         }
-      ],
-      "_meta": {
-        "verb_confidence": "low",
-        "verb_source": "default",
-        "duration_source": null,
-        "duration_approx": false
-      }
+      ]
     },
     {
       "id": "chain_6/step_3",
-      "name": "Toss in olives with vegetables, move them to pan sides, and place salmon in the center",
-      "canonical_verb": "toss",
-      "duration_min": null,
+      "name": "Move vegetables to pan sides",
+      "canonical_verb": "arrange",
       "planned_min": 1,
       "requires_driver": true,
       "self_running_after_start": false,
-      "hold_window_minutes": 30,
-      "temporal_flexibility": "hold_minutes",
-      "inputs": [
-        "salmon"
-      ],
+      "inputs": [],
       "outputs": [],
-      "equipment": [
-        "pan"
-      ],
+      "equipment": [],
       "edges": [
         {
           "from": "chain_6/step_2",
           "to": "chain_6/step_3",
-          "type": "FS",
-          "constraint": "RIGID"
+          "type": "FS"
         }
-      ],
-      "_meta": {
-        "verb_confidence": "high",
-        "verb_source": "verb_pattern",
-        "duration_source": null,
-        "duration_approx": false
-      }
+      ]
     },
     {
       "id": "chain_6/step_4",
-      "name": "Bake 5-8 minutes until fish is opaque but still moist.",
-      "canonical_verb": "bake",
-      "duration_min": {
-        "value": 8
-      },
-      "planned_min": 8,
-      "requires_driver": false,
-      "self_running_after_start": true,
-      "hold_window_minutes": 60,
-      "temporal_flexibility": "hold_hours",
-      "inputs": [
-        "fish"
-      ],
+      "name": "Place salmon in the center of the pan",
+      "canonical_verb": "arrange",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": [],
       "outputs": [],
       "equipment": [],
       "edges": [
         {
           "from": "chain_6/step_3",
           "to": "chain_6/step_4",
-          "type": "FS",
-          "constraint": "FLEXIBLE",
-          "hold_window_minutes": 30,
-          "temporal_flexibility": "hold_minutes"
+          "type": "FS"
+        },
+        {
+          "from": "chain_5/step_2",
+          "to": "chain_6/step_4",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_6/step_5",
+      "name": "Bake for 5-8 minutes until fish is opaque but still moist",
+      "canonical_verb": "bake",
+      "planned_min": 7,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "inputs": [],
+      "outputs": [
+        {
+          "ingredient": "salmon",
+          "state": "baked",
+          "emergent": true
         }
       ],
-      "_meta": {
-        "verb_confidence": "high",
-        "verb_source": "verb_pattern",
-        "duration_source": "range",
-        "duration_approx": true
-      }
+      "equipment": ["oven"],
+      "edges": [
+        {
+          "from": "chain_6/step_4",
+          "to": "chain_6/step_5",
+          "type": "FS"
+        }
+      ]
     },
     {
       "id": "chain_7/step_1",
-      "name": "Serve",
-      "canonical_verb": "plate",
-      "duration_min": null,
-      "planned_min": 2,
+      "name": "Remove pan from oven",
+      "canonical_verb": "remove",
+      "planned_min": 1,
       "requires_driver": true,
       "self_running_after_start": false,
-      "hold_window_minutes": 0,
-      "temporal_flexibility": "serve_immediate",
       "inputs": [],
       "outputs": [],
-      "equipment": [],
-      "edges": [],
-      "_meta": {
-        "verb_confidence": "high",
-        "verb_source": "verb_pattern",
-        "duration_source": null,
-        "duration_approx": false
-      }
+      "equipment": ["oven_mitts"],
+      "edges": [
+        {
+          "from": "chain_6/step_5",
+          "to": "chain_7/step_1",
+          "type": "FS"
+        }
+      ]
     },
     {
       "id": "chain_7/step_2",
       "name": "Squeeze half the lemon over everything",
-      "canonical_verb": "free_text",
-      "duration_min": null,
-      "planned_min": null,
+      "canonical_verb": "drizzle",
+      "planned_min": 1,
       "requires_driver": true,
       "self_running_after_start": false,
-      "hold_window_minutes": null,
-      "temporal_flexibility": "serve_immediate",
-      "inputs": [],
+      "inputs": ["lemon"],
       "outputs": [],
       "equipment": [],
       "edges": [
         {
           "from": "chain_7/step_1",
           "to": "chain_7/step_2",
-          "type": "FS",
-          "constraint": "RIGID"
+          "type": "FS"
         }
-      ],
-      "_meta": {
-        "verb_confidence": "low",
-        "verb_source": "default",
-        "duration_source": null,
-        "duration_approx": false
-      }
+      ]
     },
     {
       "id": "chain_7/step_3",
-      "name": "Divide among plates, garnish with cilantro, and serve with remaining lemon wedges",
+      "name": "Divide among plates",
       "canonical_verb": "plate",
-      "duration_min": null,
       "planned_min": 2,
       "requires_driver": true,
       "self_running_after_start": false,
-      "hold_window_minutes": 0,
-      "temporal_flexibility": "serve_immediate",
       "inputs": [],
       "outputs": [],
-      "equipment": [],
+      "equipment": ["plates"],
       "edges": [
         {
           "from": "chain_7/step_2",
           "to": "chain_7/step_3",
-          "type": "FS",
-          "constraint": "RIGID"
+          "type": "FS"
         }
-      ],
-      "_meta": {
-        "verb_confidence": "high",
-        "verb_source": "verb_pattern",
-        "duration_source": null,
-        "duration_approx": false
-      }
+      ]
+    },
+    {
+      "id": "chain_7/step_4",
+      "name": "Garnish with cilantro",
+      "canonical_verb": "drizzle",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "inputs": ["cilantro"],
+      "outputs": [],
+      "equipment": [],
+      "edges": [
+        {
+          "from": "chain_7/step_3",
+          "to": "chain_7/step_4",
+          "type": "FS"
+        }
+      ]
     }
   ],
   "chains": [
     {
       "id": "chain_1",
-      "name": "Phase 4",
-      "purpose": "Complete cooking phase 4",
-      "tasks": [
-        "chain_1/step_1",
-        "chain_1/step_2"
-      ],
-      "outputs": [],
-      "inputs": [],
-      "temporal_marker": null,
-      "parallel_with": null,
-      "metadata": {
-        "detected_by": "semantic_understanding",
-        "confidence": "low",
-        "section_index": 3
-      }
+      "name": "Preheat Oven",
+      "tasks": ["chain_1/step_1"]
     },
     {
       "id": "chain_2",
-      "name": "Phase 5",
-      "purpose": "Complete cooking phase 5",
-      "tasks": [
-        "chain_2/step_1",
-        "chain_2/step_2"
-      ],
-      "outputs": [],
-      "inputs": [],
-      "temporal_marker": null,
-      "parallel_with": null,
-      "metadata": {
-        "detected_by": "semantic_understanding",
-        "confidence": "low",
-        "section_index": 4
-      }
+      "name": "Make Spice Blend",
+      "tasks": ["chain_2/step_1"]
     },
     {
       "id": "chain_3",
-      "name": "Phase 6",
-      "purpose": "Complete cooking phase 6",
-      "tasks": [
-        "chain_3/step_1",
-        "chain_3/step_2",
-        "chain_3/step_3",
-        "chain_3/step_4",
-        "chain_3/step_5"
-      ],
-      "outputs": [],
-      "inputs": [],
-      "temporal_marker": null,
-      "parallel_with": null,
-      "metadata": {
-        "detected_by": "semantic_understanding",
-        "confidence": "low",
-        "section_index": 5
-      }
+      "name": "Prepare Vegetables",
+      "tasks": ["chain_3/step_0", "chain_3/step_1", "chain_3/step_2", "chain_3/step_3", "chain_3/step_4", "chain_3/step_5", "chain_3/step_6"]
     },
     {
       "id": "chain_4",
-      "name": "Prepare baked dish",
-      "purpose": "Create baked baked dish",
-      "tasks": [
-        "chain_4/step_1",
-        "chain_4/step_2"
-      ],
-      "outputs": [
-        {
-          "emergent_id": "e_baked_dish_001",
-          "ingredient": "baked_dish",
-          "state": "baked",
-          "description": "baked baked dish"
-        }
-      ],
-      "inputs": [],
-      "temporal_marker": null,
-      "parallel_with": null,
-      "metadata": {
-        "detected_by": "semantic_understanding",
-        "confidence": "medium",
-        "section_index": 6
-      }
+      "name": "Roast Vegetables",
+      "tasks": ["chain_4/step_1"]
     },
     {
       "id": "chain_5",
-      "name": "Phase 8",
-      "purpose": "Complete cooking phase 8",
-      "tasks": [
-        "chain_5/step_1",
-        "chain_5/step_2"
-      ],
-      "outputs": [],
-      "inputs": [],
-      "temporal_marker": null,
-      "parallel_with": null,
-      "metadata": {
-        "detected_by": "semantic_understanding",
-        "confidence": "low",
-        "section_index": 7
-      }
+      "name": "Prepare Salmon",
+      "tasks": ["chain_5/step_1", "chain_5/step_2"]
     },
     {
       "id": "chain_6",
-      "name": "Bake the Dish",
-      "purpose": "Bake until hot and bubbly",
-      "tasks": [
-        "chain_6/step_1",
-        "chain_6/step_2",
-        "chain_6/step_3",
-        "chain_6/step_4"
-      ],
-      "outputs": [
-        {
-          "emergent_id": "e_baked_dish_002",
-          "ingredient": "baked_dish",
-          "state": "baked",
-          "description": "baked baked dish"
-        }
-      ],
-      "inputs": [],
-      "temporal_marker": null,
-      "parallel_with": null,
-      "metadata": {
-        "detected_by": "semantic_understanding",
-        "confidence": "high",
-        "section_index": 8
-      }
+      "name": "Combine and Finish Roasting",
+      "tasks": ["chain_6/step_1", "chain_6/step_2", "chain_6/step_3", "chain_6/step_4", "chain_6/step_5"]
     },
     {
       "id": "chain_7",
-      "name": "Serve",
-      "purpose": "Plate and serve the dish",
-      "tasks": [
-        "chain_7/step_1",
-        "chain_7/step_2",
-        "chain_7/step_3"
-      ],
-      "outputs": [],
-      "inputs": [],
-      "temporal_marker": null,
-      "parallel_with": null,
-      "metadata": {
-        "detected_by": "semantic_understanding",
-        "confidence": "high",
-        "section_index": 9
-      }
+      "name": "Finish and Serve",
+      "tasks": ["chain_7/step_1", "chain_7/step_2", "chain_7/step_3", "chain_7/step_4"]
     }
-  ],
-  "packs_meta": {
-    "parser_version": "2.0.0",
-    "parsed_at": "2025-10-25T05:19:46.056Z",
-    "source": "local",
-    "options": {
-      "autoDependencies": false,
-      "smartDependencies": false,
-      "roundAboutUp": true,
-      "detectTaskChains": true
-    }
-  }
+  ]
 }
