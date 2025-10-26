@@ -67,6 +67,16 @@ export default function Runtime() {
   };
 
   const handleStart = () => {
+    // Unlock audio on mobile browsers (requires user gesture)
+    // Play a silent sound to enable future audio playback
+    try {
+      const silentAudio = new Audio('/SFX/arrive.wav');
+      silentAudio.volume = 0.01; // Nearly silent
+      silentAudio.play().catch(() => {}); // Ignore errors
+    } catch (err) {
+      // Ignore audio unlock errors
+    }
+
     rt.setStarted(true);
   };
 
