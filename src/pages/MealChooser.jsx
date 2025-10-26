@@ -39,18 +39,19 @@ export default function MealChooser() {
             }}
           />
           <p style={{
-            fontSize: '16px',
-            margin: 0,
-            opacity: 0.9
+            fontSize: '14px',
+            letterSpacing: '3px',
+            marginTop: 10,
+            opacity: 0.7
           }}>
-            What are we cooking today?
+            BECAUSE NOW YOU CAN
           </p>
         </header>
 
         <div style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: '16px'
+          gap: '30px'
         }}>
           {MEALS.map((meal) => {
             console.log('Rendering meal:', meal.title, meal);
@@ -71,8 +72,8 @@ export default function MealChooser() {
                   boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
                   display: 'flex',
                   flexDirection: 'column',
-                  borderTop: '2px solid #d0d0d0', // Neutral light grey top accent (subtle)
-                  backgroundImage: 'linear-gradient(to bottom, rgba(208, 208, 208, 0.15) 0%, transparent 60px)' // Subtle gradient fade
+                  borderTop: '2px solid #929292ff', // Neutral light grey top accent (subtle)
+                  backgroundImage: 'linear-gradient(to bottom, rgba(165, 165, 165, 0.15) 0%, transparent 60px)' // Subtle gradient fade
                 }}
               >
                 {/* Hero Image */}
