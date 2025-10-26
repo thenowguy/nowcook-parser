@@ -62,7 +62,7 @@ export default function MealChooser() {
             });
 
             return (
-              <div 
+              <div
                 key={meal.idx}
                 style={{
                   background: 'white',
@@ -70,7 +70,9 @@ export default function MealChooser() {
                   overflow: 'hidden',
                   boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
                   display: 'flex',
-                  flexDirection: 'column'
+                  flexDirection: 'column',
+                  borderTop: '4px solid #d0d0d0', // Neutral light grey top accent
+                  backgroundImage: 'linear-gradient(to bottom, rgba(208, 208, 208, 0.15) 0%, transparent 60px)' // Subtle gradient fade
                 }}
               >
                 {/* Hero Image */}
