@@ -186,7 +186,7 @@ export default function Runtime() {
                 left: '20px',
                 top: '20px',
                 background: 'transparent',
-                border: 'none',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
                 cursor: 'pointer',
                 padding: 0,
                 display: 'flex',
