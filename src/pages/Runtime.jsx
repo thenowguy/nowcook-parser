@@ -186,7 +186,7 @@ export default function Runtime() {
                 left: '20px',
                 top: '20px',
                 background: 'transparent',
-                border: '2px solid rgba(255, 255, 255, 0.3)',
+                border: '2px solid rgba(255, 255, 255, 0.5)',
                 borderRadius: '15px',
                 cursor: 'pointer',
                 padding: 0,
@@ -272,16 +272,16 @@ export default function Runtime() {
                 hour: '2-digit', 
                 minute: '2-digit',
                 second: '2-digit',
-                hour12: false
+                hour12: true
               })}
             </div>
             
-            {/* Eye toggle button - 40px from right edge */}
+            {/* Eye toggle button - 60px from right edge */}
             <button
               onClick={() => setShowBlocked(!showBlocked)}
               style={{
                 position: 'absolute',
-                right: '40px',
+                right: '60px',
                 top: '50%',
                 transform: 'translateY(-50%)',
                 background: 'transparent',
