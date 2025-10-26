@@ -826,10 +826,12 @@ export default function TimelineFlow({ tasks, chains = [], ingredients = [], tex
               justifyContent: 'flex-end',
               paddingRight: `${TEXT_PADDING + 10}px`,
               paddingLeft: '10px',
-              fontFamily: textMode === 'time' ? 'monospace' : 'Verdana, sans-serif',
+              fontFamily: textMode === 'time'
+                ? '-apple-system, BlinkMacSystemFont, "SF Mono", Menlo, Consolas, "Courier New", monospace' // Clean zeros, no slash
+                : 'Verdana, sans-serif',
               fontSize: textMode === 'time' ? '22px' : '18px',
               color: 'rgba(255, 255, 255, 0.8)', // 80% white - softer for mobile
-              opacity: (track.status === 'blocked' || track.status === 'driver-busy') ? 0.5 : 1.0,
+              opacity: (track.status === 'blocked' || track.status === 'driver-busy') ? 0.5 : 0.8, // 80% for normal time display
               textAlign: 'right',
               zIndex: 2,
               pointerEvents: 'none',
