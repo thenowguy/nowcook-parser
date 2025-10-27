@@ -1,0 +1,751 @@
+{
+  "title": "Sheet Pan Salmon with Vegetables",
+  "author": {
+    "name": "The Mediterranean Dish"
+  },
+  "ingredients": [
+    {
+      "name": "paprika",
+      "quantity": "1",
+      "unit": "teaspoon",
+      "prep_state": ""
+    },
+    {
+      "name": "baharat",
+      "quantity": "1",
+      "unit": "teaspoon",
+      "prep_state": ""
+    },
+    {
+      "name": "salt",
+      "quantity": "1 1/4",
+      "unit": "teaspoon",
+      "prep_state": "kosher"
+    },
+    {
+      "name": "black pepper",
+      "quantity": "",
+      "unit": "",
+      "prep_state": "freshly ground"
+    },
+    {
+      "name": "cauliflower",
+      "quantity": "1",
+      "unit": "head",
+      "prep_state": ""
+    },
+    {
+      "name": "carrots",
+      "quantity": "3",
+      "unit": "",
+      "prep_state": "peeled"
+    },
+    {
+      "name": "garlic",
+      "quantity": "3",
+      "unit": "cloves",
+      "prep_state": "minced"
+    },
+    {
+      "name": "olive oil",
+      "quantity": "3",
+      "unit": "tablespoons",
+      "prep_state": "extra virgin, divided"
+    },
+    {
+      "name": "salmon fillets",
+      "quantity": "4",
+      "unit": "(4-5 ounces each)",
+      "prep_state": "skinless"
+    },
+    {
+      "name": "olives",
+      "quantity": "8",
+      "unit": "",
+      "prep_state": "Castelvetrano, pitted and slivered"
+    },
+    {
+      "name": "lemon",
+      "quantity": "1",
+      "unit": "",
+      "prep_state": "halved"
+    },
+    {
+      "name": "cilantro",
+      "quantity": "1/3",
+      "unit": "cup",
+      "prep_state": "chopped"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "chain_1/step_1",
+      "name": "Preheat the oven to 450°F",
+      "canonical_verb": "preheat_oven",
+      "planned_min": 12,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "hold_window_minutes": 0,
+      "temporal_flexibility": "serve_immediate",
+      "inputs": [],
+      "outputs": [],
+      "equipment": [
+        "oven"
+      ],
+      "edges": []
+    },
+    {
+      "id": "chain_2/step_1",
+      "name": "Combine paprika, baharat, salt, and pepper in a small bowl",
+      "canonical_verb": "combine",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [
+        "paprika",
+        "baharat",
+        "salt",
+        "pepper"
+      ],
+      "outputs": [
+        {
+          "ingredient": "spice_blend",
+          "state": "mixed",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "bowl"
+      ],
+      "edges": []
+    },
+    {
+      "id": "chain_3/step_1",
+      "name": "Mince the garlic cloves",
+      "canonical_verb": "mince",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "inputs": [
+        "garlic"
+      ],
+      "outputs": [
+        {
+          "ingredient": "garlic",
+          "state": "minced",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "knife",
+        "cutting_board"
+      ],
+      "edges": []
+    },
+    {
+      "id": "chain_3/step_2",
+      "name": "Remove cauliflower leaves and core",
+      "canonical_verb": "chop",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "inputs": [
+        "cauliflower"
+      ],
+      "outputs": [],
+      "equipment": [
+        "knife",
+        "cutting_board"
+      ],
+      "edges": []
+    },
+    {
+      "id": "chain_3/step_3",
+      "name": "Cut cauliflower florets into bite-sized pieces",
+      "canonical_verb": "chop",
+      "planned_min": 3,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "inputs": [
+        "cauliflower"
+      ],
+      "outputs": [
+        {
+          "ingredient": "cauliflower",
+          "state": "chopped",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "knife",
+        "cutting_board"
+      ],
+      "edges": [
+        {
+          "from": "chain_3/step_2",
+          "to": "chain_3/step_3",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_3/step_4",
+      "name": "Slice carrots lengthwise if needed",
+      "canonical_verb": "slice",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "inputs": [
+        "carrots"
+      ],
+      "outputs": [],
+      "equipment": [
+        "knife",
+        "cutting_board"
+      ],
+      "edges": []
+    },
+    {
+      "id": "chain_3/step_5",
+      "name": "Cut carrots diagonally into 1/2-inch pieces",
+      "canonical_verb": "slice",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "inputs": [
+        "carrots"
+      ],
+      "outputs": [
+        {
+          "ingredient": "carrots",
+          "state": "sliced",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "knife",
+        "cutting_board"
+      ],
+      "edges": [
+        {
+          "from": "chain_3/step_4",
+          "to": "chain_3/step_5",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_3/step_6",
+      "name": "Toss vegetables with minced garlic, 2 tablespoons oil, and 3/4 of the spice mixture",
+      "canonical_verb": "toss",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [
+        "garlic",
+        "olive_oil",
+        "spice_blend"
+      ],
+      "outputs": [
+        {
+          "ingredient": "vegetables",
+          "state": "seasoned",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "bowl"
+      ],
+      "edges": [
+        {
+          "from": "chain_3/step_3",
+          "to": "chain_3/step_6",
+          "type": "FS"
+        },
+        {
+          "from": "chain_3/step_5",
+          "to": "chain_3/step_6",
+          "type": "FS"
+        },
+        {
+          "from": "chain_2/step_1",
+          "to": "chain_3/step_6",
+          "type": "FS"
+        },
+        {
+          "from": "chain_3/step_1",
+          "to": "chain_3/step_6",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_3/step_7",
+      "name": "Spread vegetables on a rimmed baking sheet in a single layer",
+      "canonical_verb": "arrange",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 60,
+      "temporal_flexibility": "hold_hours",
+      "inputs": [],
+      "outputs": [],
+      "equipment": [
+        "baking_sheet"
+      ],
+      "edges": [
+        {
+          "from": "chain_3/step_6",
+          "to": "chain_3/step_7",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_4/step_1",
+      "name": "Bake vegetables for 15 minutes until cauliflower starts to brown",
+      "canonical_verb": "roast",
+      "planned_min": 15,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "hold_window_minutes": 120,
+      "temporal_flexibility": "hold_hours",
+      "inputs": [],
+      "outputs": [
+        {
+          "ingredient": "vegetables",
+          "state": "roasted",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "oven"
+      ],
+      "edges": [
+        {
+          "from": "chain_1/step_1",
+          "to": "chain_4/step_1",
+          "type": "FS"
+        },
+        {
+          "from": "chain_3/step_7",
+          "to": "chain_4/step_1",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_5/step_1",
+      "name": "Brush salmon fillets with remaining oil",
+      "canonical_verb": "brush",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 20,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [
+        "salmon",
+        "olive_oil"
+      ],
+      "outputs": [],
+      "equipment": [
+        "brush"
+      ],
+      "edges": []
+    },
+    {
+      "id": "chain_5/step_2",
+      "name": "Sprinkle salmon with remaining spice mixture",
+      "canonical_verb": "sprinkle",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 15,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [
+        "spice_blend"
+      ],
+      "outputs": [
+        {
+          "ingredient": "salmon",
+          "state": "seasoned",
+          "emergent": true
+        }
+      ],
+      "equipment": [],
+      "edges": [
+        {
+          "from": "chain_5/step_1",
+          "to": "chain_5/step_2",
+          "type": "FS"
+        },
+        {
+          "from": "chain_2/step_1",
+          "to": "chain_5/step_2",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_6/step_1",
+      "name": "Remove the pan from the oven",
+      "canonical_verb": "remove",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 5,
+      "temporal_flexibility": "serve_immediate",
+      "inputs": [],
+      "outputs": [],
+      "equipment": [
+        "oven_mitts"
+      ],
+      "edges": [
+        {
+          "from": "chain_4/step_1",
+          "to": "chain_6/step_1",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_6/step_2",
+      "name": "Toss in olives with vegetables",
+      "canonical_verb": "toss",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [
+        "olives",
+        "vegetables"
+      ],
+      "outputs": [],
+      "equipment": [],
+      "edges": [
+        {
+          "from": "chain_6/step_1",
+          "to": "chain_6/step_2",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_6/step_3",
+      "name": "Move vegetables to pan sides",
+      "canonical_verb": "arrange",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 60,
+      "temporal_flexibility": "hold_hours",
+      "inputs": [],
+      "outputs": [],
+      "equipment": [],
+      "edges": [
+        {
+          "from": "chain_6/step_2",
+          "to": "chain_6/step_3",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_6/step_4",
+      "name": "Place salmon in the center of the pan",
+      "canonical_verb": "arrange",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 60,
+      "temporal_flexibility": "hold_hours",
+      "inputs": [
+        "salmon"
+      ],
+      "outputs": [],
+      "equipment": [],
+      "edges": [
+        {
+          "from": "chain_6/step_3",
+          "to": "chain_6/step_4",
+          "type": "FS"
+        },
+        {
+          "from": "chain_5/step_2",
+          "to": "chain_6/step_4",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_6/step_5",
+      "name": "Bake for 5-8 minutes until fish is opaque but still moist",
+      "canonical_verb": "bake",
+      "planned_min": 7,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "hold_window_minutes": 60,
+      "temporal_flexibility": "hold_hours",
+      "inputs": [],
+      "outputs": [
+        {
+          "ingredient": "salmon",
+          "state": "baked",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "oven"
+      ],
+      "edges": [
+        {
+          "from": "chain_6/step_4",
+          "to": "chain_6/step_5",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_7/step_1",
+      "name": "Remove pan from oven",
+      "canonical_verb": "remove",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 5,
+      "temporal_flexibility": "serve_immediate",
+      "inputs": [],
+      "outputs": [],
+      "equipment": [
+        "oven_mitts"
+      ],
+      "edges": [
+        {
+          "from": "chain_6/step_5",
+          "to": "chain_7/step_1",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_7/step_2",
+      "name": "Squeeze half the lemon over everything",
+      "canonical_verb": "drizzle",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 60,
+      "temporal_flexibility": "hold_hours",
+      "inputs": [
+        "lemon"
+      ],
+      "outputs": [],
+      "equipment": [],
+      "edges": [
+        {
+          "from": "chain_7/step_1",
+          "to": "chain_7/step_2",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_7/step_3",
+      "name": "Divide among plates",
+      "canonical_verb": "plate",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 0,
+      "temporal_flexibility": "serve_immediate",
+      "inputs": [],
+      "outputs": [],
+      "equipment": [
+        "plates"
+      ],
+      "edges": [
+        {
+          "from": "chain_7/step_2",
+          "to": "chain_7/step_3",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_7/step_4",
+      "name": "Garnish with cilantro",
+      "canonical_verb": "sprinkle",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 15,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [
+        "cilantro"
+      ],
+      "outputs": [],
+      "equipment": [],
+      "edges": [
+        {
+          "from": "chain_7/step_3",
+          "to": "chain_7/step_4",
+          "type": "FS"
+        }
+      ]
+    }
+  ],
+  "chains": [
+    {
+      "id": "chain_1",
+      "name": "Preheat Oven",
+      "tasks": [
+        "chain_1/step_1"
+      ]
+    },
+    {
+      "id": "chain_2",
+      "name": "Make Spice Blend",
+      "tasks": [
+        "chain_2/step_1"
+      ]
+    },
+    {
+      "id": "chain_3",
+      "name": "Prepare Vegetables",
+      "tasks": [
+        "chain_3/step_1",
+        "chain_3/step_2",
+        "chain_3/step_3",
+        "chain_3/step_4",
+        "chain_3/step_5",
+        "chain_3/step_6",
+        "chain_3/step_7"
+      ]
+    },
+    {
+      "id": "chain_4",
+      "name": "Roast Vegetables",
+      "tasks": [
+        "chain_4/step_1"
+      ]
+    },
+    {
+      "id": "chain_5",
+      "name": "Prepare Salmon",
+      "tasks": [
+        "chain_5/step_1",
+        "chain_5/step_2"
+      ]
+    },
+    {
+      "id": "chain_6",
+      "name": "Combine and Finish Roasting",
+      "tasks": [
+        "chain_6/step_1",
+        "chain_6/step_2",
+        "chain_6/step_3",
+        "chain_6/step_4",
+        "chain_6/step_5"
+      ]
+    },
+    {
+      "id": "chain_7",
+      "name": "Finish and Serve",
+      "tasks": [
+        "chain_7/step_1",
+        "chain_7/step_2",
+        "chain_7/step_3",
+        "chain_7/step_4"
+      ]
+    }
+  ],
+  "shopping_list": [
+    {
+      "name": "Paprika",
+      "quantity": "1",
+      "unit": "tsp",
+      "department": "SPICES"
+    },
+    {
+      "name": "Baharat spice blend",
+      "quantity": "1",
+      "unit": "tsp",
+      "department": "SPICES"
+    },
+    {
+      "name": "Salt",
+      "quantity": "1 1/4",
+      "unit": "tsp, kosher",
+      "department": "SPICES"
+    },
+    {
+      "name": "Black pepper",
+      "quantity": "",
+      "unit": "Freshly ground, to taste",
+      "department": "SPICES"
+    },
+    {
+      "name": "Cauliflower",
+      "quantity": "1",
+      "unit": "head",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Carrots",
+      "quantity": "3",
+      "unit": ", peeled",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Garlic",
+      "quantity": "3",
+      "unit": "cloves",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Olive oil",
+      "quantity": "3",
+      "unit": "tbsp, extra virgin",
+      "department": "OTHER"
+    },
+    {
+      "name": "Salmon fillets",
+      "quantity": "4",
+      "unit": "(4-5 oz each), skinless",
+      "department": "FISH"
+    },
+    {
+      "name": "Castelvetrano olives",
+      "quantity": "8",
+      "unit": ", pitted",
+      "department": "OTHER"
+    },
+    {
+      "name": "Lemon",
+      "quantity": "1",
+      "unit": "",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Cilantro",
+      "quantity": "1/3",
+      "unit": "cup, fresh",
+      "department": "PRODUCE"
+    }
+  ]
+}

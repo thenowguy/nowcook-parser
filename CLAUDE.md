@@ -19,7 +19,37 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
    - Production codebase in `src/`
    - **Version**: 2.0.0 (Mobile-first multi-page refactor)
 
-## Recent Updates (Oct 26, 2024 - Presentation Polish)
+## Recent Updates
+
+### Oct 27, 2024 - Hold Windows & Shopping List Polish
+
+**Hold Window Visualization Improvements**:
+- Hold window striped extensions now render UNDERNEATH lozenges (starting at NowLine)
+- Changed `left` position from `track.lozengeX + track.lozengeWidth` to `NOWLINE_X`
+- Width now includes full lozenge width + hold window extension
+- `zIndex: 0` (behind lozenge) instead of `zIndex: 1` (in front)
+- Makes temporal flexibility clearer - single continuous element, not separate objects
+- Border radius fully rounded on both ends to match lozenge
+
+**Shopping List Fixes & Enhancements**:
+- ✅ All 5 v3 recipes now have complete shopping lists with department grouping
+- Fixed data structure: `item`/`amount` → `name`/`quantity`/`unit`/`department`
+- Department headers: 18px, 80% white (`rgba(255, 255, 255, 0.8)`)
+- Quantity text: 20px, 80% white for better readability at arm's length
+- Departments grouped: MEAT, FISH, PRODUCE, DAIRY, BAKED, SPICES, OTHER
+- Individual item toggle behavior restored (was toggling entire page)
+
+**Lozenge Corner Radius**:
+- All task lozenges now maintain full rounded corners (`${LOZENGE_RADIUS}px`)
+- Previously: conditional radius removed right corners when hold window present
+- Now: Always fully rounded, hold window renders behind with own border radius
+
+**Files Modified**:
+- [src/components/TimelineFlow.jsx](src/components/TimelineFlow.jsx:708-732) - Hold window positioning
+- [src/pages/ShoppingList.jsx](src/pages/ShoppingList.jsx:239-309) - Department/quantity styling
+- [src/meals/sonnet-*-v3.json](src/meals/) - All 5 recipes with shopping_list arrays
+
+### Oct 26, 2024 - Presentation Polish
 
 **Visual & UX Improvements**:
 - Instruction text reduced to 80% opacity for softer mobile appearance

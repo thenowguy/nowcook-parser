@@ -1,0 +1,1002 @@
+{
+  "title": "Chicken & Veg Stir-Fry",
+  "author": {
+    "name": "Jamie Oliver"
+  },
+  "ingredients": [
+    {
+      "name": "garlic",
+      "quantity": "1",
+      "unit": "clove",
+      "prep_state": ""
+    },
+    {
+      "name": "ginger",
+      "quantity": "4cm",
+      "unit": "piece",
+      "prep_state": ""
+    },
+    {
+      "name": "red chilli",
+      "quantity": "1",
+      "unit": "",
+      "prep_state": "fresh"
+    },
+    {
+      "name": "carrots",
+      "quantity": "2",
+      "unit": "",
+      "prep_state": ""
+    },
+    {
+      "name": "red onion",
+      "quantity": "1/2",
+      "unit": "",
+      "prep_state": ""
+    },
+    {
+      "name": "red pepper",
+      "quantity": "1",
+      "unit": "",
+      "prep_state": ""
+    },
+    {
+      "name": "broccoli",
+      "quantity": "80g",
+      "unit": "",
+      "prep_state": "purple sprouting or tenderstem"
+    },
+    {
+      "name": "mushrooms",
+      "quantity": "80g",
+      "unit": "",
+      "prep_state": "mixed"
+    },
+    {
+      "name": "chicken breast",
+      "quantity": "1",
+      "unit": "",
+      "prep_state": "free-range"
+    },
+    {
+      "name": "Chinese five-spice",
+      "quantity": "1",
+      "unit": "teaspoon",
+      "prep_state": ""
+    },
+    {
+      "name": "sesame oil",
+      "quantity": "1",
+      "unit": "tablespoon",
+      "prep_state": ""
+    },
+    {
+      "name": "vegetable oil",
+      "quantity": "1",
+      "unit": "teaspoon",
+      "prep_state": ""
+    },
+    {
+      "name": "baby corn",
+      "quantity": "130g",
+      "unit": "",
+      "prep_state": ""
+    },
+    {
+      "name": "mangetout or sugar snap peas",
+      "quantity": "80g",
+      "unit": "",
+      "prep_state": ""
+    },
+    {
+      "name": "noodle nests",
+      "quantity": "2",
+      "unit": "(130g)",
+      "prep_state": "wholewheat"
+    },
+    {
+      "name": "soy sauce",
+      "quantity": "1",
+      "unit": "tablespoon",
+      "prep_state": "reduced-salt"
+    },
+    {
+      "name": "black bean sauce",
+      "quantity": "1",
+      "unit": "tablespoon",
+      "prep_state": ""
+    },
+    {
+      "name": "sesame seeds",
+      "quantity": "1",
+      "unit": "teaspoon",
+      "prep_state": ""
+    },
+    {
+      "name": "coriander",
+      "quantity": "",
+      "unit": "sprigs",
+      "prep_state": "fresh, optional"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "chain_1/step_1",
+      "name": "Peel and finely chop the garlic",
+      "canonical_verb": "mince",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "inputs": [
+        "garlic"
+      ],
+      "outputs": [
+        {
+          "ingredient": "garlic",
+          "state": "minced",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "knife",
+        "cutting_board"
+      ],
+      "edges": []
+    },
+    {
+      "id": "chain_1/step_2",
+      "name": "Peel and finely chop the ginger",
+      "canonical_verb": "mince",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "inputs": [
+        "ginger"
+      ],
+      "outputs": [
+        {
+          "ingredient": "ginger",
+          "state": "minced",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "knife",
+        "cutting_board"
+      ],
+      "edges": []
+    },
+    {
+      "id": "chain_1/step_3",
+      "name": "Deseed and finely chop the chilli",
+      "canonical_verb": "mince",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "inputs": [
+        "chilli"
+      ],
+      "outputs": [
+        {
+          "ingredient": "chilli",
+          "state": "minced",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "knife",
+        "cutting_board"
+      ],
+      "edges": []
+    },
+    {
+      "id": "chain_1/step_4",
+      "name": "Peel the carrots",
+      "canonical_verb": "peel",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "inputs": [
+        "carrots"
+      ],
+      "outputs": [],
+      "equipment": [
+        "peeler"
+      ],
+      "edges": []
+    },
+    {
+      "id": "chain_1/step_5",
+      "name": "Halve the carrots lengthways and slice finely",
+      "canonical_verb": "slice",
+      "planned_min": 3,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "inputs": [
+        "carrots"
+      ],
+      "outputs": [
+        {
+          "ingredient": "carrots",
+          "state": "sliced",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "knife",
+        "cutting_board"
+      ],
+      "edges": [
+        {
+          "from": "chain_1/step_4",
+          "to": "chain_1/step_5",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_1/step_6",
+      "name": "Peel the onion and slice thinly",
+      "canonical_verb": "slice",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "inputs": [
+        "onion"
+      ],
+      "outputs": [
+        {
+          "ingredient": "onion",
+          "state": "sliced",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "knife",
+        "cutting_board"
+      ],
+      "edges": []
+    },
+    {
+      "id": "chain_1/step_7",
+      "name": "Deseed the pepper and slice thinly",
+      "canonical_verb": "slice",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "inputs": [
+        "pepper"
+      ],
+      "outputs": [
+        {
+          "ingredient": "pepper",
+          "state": "sliced",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "knife",
+        "cutting_board"
+      ],
+      "edges": []
+    },
+    {
+      "id": "chain_1/step_8",
+      "name": "Trim the broccoli and halve any thick stalks lengthways",
+      "canonical_verb": "chop",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "inputs": [
+        "broccoli"
+      ],
+      "outputs": [
+        {
+          "ingredient": "broccoli",
+          "state": "trimmed",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "knife",
+        "cutting_board"
+      ],
+      "edges": []
+    },
+    {
+      "id": "chain_1/step_9",
+      "name": "Wipe the mushrooms clean and trim stalks",
+      "canonical_verb": "chop",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "inputs": [
+        "mushrooms"
+      ],
+      "outputs": [],
+      "equipment": [
+        "knife",
+        "cutting_board"
+      ],
+      "edges": []
+    },
+    {
+      "id": "chain_1/step_10",
+      "name": "Halve any larger mushroom pieces",
+      "canonical_verb": "chop",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "inputs": [
+        "mushrooms"
+      ],
+      "outputs": [
+        {
+          "ingredient": "mushrooms",
+          "state": "trimmed",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "knife",
+        "cutting_board"
+      ],
+      "edges": [
+        {
+          "from": "chain_1/step_9",
+          "to": "chain_1/step_10",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_1/step_11",
+      "name": "Cut the chicken into 1cm strips",
+      "canonical_verb": "slice",
+      "planned_min": 3,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "inputs": [
+        "chicken_breast"
+      ],
+      "outputs": [
+        {
+          "ingredient": "chicken",
+          "state": "sliced",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "knife",
+        "cutting_board"
+      ],
+      "edges": []
+    },
+    {
+      "id": "chain_1/step_12",
+      "name": "Coat the chicken strips with Chinese five-spice and sesame oil",
+      "canonical_verb": "toss",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [
+        "chicken",
+        "chinese_five_spice",
+        "sesame_oil"
+      ],
+      "outputs": [
+        {
+          "ingredient": "chicken",
+          "state": "marinated",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "bowl"
+      ],
+      "edges": [
+        {
+          "from": "chain_1/step_11",
+          "to": "chain_1/step_12",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_2/step_1",
+      "name": "Heat a wok or large non-stick frying pan on medium-high heat with vegetable oil",
+      "canonical_verb": "heat_oil",
+      "planned_min": 3,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 60,
+      "temporal_flexibility": "hold_hours",
+      "inputs": [
+        "vegetable_oil"
+      ],
+      "outputs": [],
+      "equipment": [
+        "wok"
+      ],
+      "edges": [
+        {
+          "from": "chain_1/step_1",
+          "to": "chain_2/step_1",
+          "type": "FS"
+        },
+        {
+          "from": "chain_1/step_2",
+          "to": "chain_2/step_1",
+          "type": "FS"
+        },
+        {
+          "from": "chain_1/step_3",
+          "to": "chain_2/step_1",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_2/step_2",
+      "name": "Add the garlic, ginger, and chilli to the wok",
+      "canonical_verb": "add",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [
+        "garlic",
+        "ginger",
+        "chilli"
+      ],
+      "outputs": [],
+      "equipment": [
+        "wok"
+      ],
+      "edges": [
+        {
+          "from": "chain_2/step_1",
+          "to": "chain_2/step_2",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_2/step_3",
+      "name": "Toss for 30 seconds",
+      "canonical_verb": "toss",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [],
+      "outputs": [],
+      "equipment": [
+        "wok"
+      ],
+      "edges": [
+        {
+          "from": "chain_2/step_2",
+          "to": "chain_2/step_3",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_2/step_4",
+      "name": "Add the chicken to the wok",
+      "canonical_verb": "add",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [
+        "chicken"
+      ],
+      "outputs": [],
+      "equipment": [
+        "wok"
+      ],
+      "edges": [
+        {
+          "from": "chain_2/step_3",
+          "to": "chain_2/step_4",
+          "type": "FS"
+        },
+        {
+          "from": "chain_1/step_12",
+          "to": "chain_2/step_4",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_2/step_5",
+      "name": "Stir-fry for 1-2 minutes until golden",
+      "canonical_verb": "sauté",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 1440,
+      "temporal_flexibility": "hold_hours",
+      "inputs": [],
+      "outputs": [
+        {
+          "ingredient": "chicken",
+          "state": "seared",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "wok"
+      ],
+      "edges": [
+        {
+          "from": "chain_2/step_4",
+          "to": "chain_2/step_5",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_2/step_6",
+      "name": "Add all vegetables to the wok",
+      "canonical_verb": "add",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [
+        "carrots",
+        "onion",
+        "pepper",
+        "broccoli",
+        "mushrooms",
+        "baby_corn",
+        "mangetout"
+      ],
+      "outputs": [],
+      "equipment": [
+        "wok"
+      ],
+      "edges": [
+        {
+          "from": "chain_2/step_5",
+          "to": "chain_2/step_6",
+          "type": "FS"
+        },
+        {
+          "from": "chain_1/step_5",
+          "to": "chain_2/step_6",
+          "type": "FS"
+        },
+        {
+          "from": "chain_1/step_6",
+          "to": "chain_2/step_6",
+          "type": "FS"
+        },
+        {
+          "from": "chain_1/step_7",
+          "to": "chain_2/step_6",
+          "type": "FS"
+        },
+        {
+          "from": "chain_1/step_8",
+          "to": "chain_2/step_6",
+          "type": "FS"
+        },
+        {
+          "from": "chain_1/step_10",
+          "to": "chain_2/step_6",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_2/step_7",
+      "name": "Stir-fry for 3-4 minutes until chicken is cooked through and vegetables are tender",
+      "canonical_verb": "sauté",
+      "planned_min": 4,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 1440,
+      "temporal_flexibility": "hold_hours",
+      "inputs": [],
+      "outputs": [
+        {
+          "ingredient": "stir_fry",
+          "state": "cooked",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "wok"
+      ],
+      "edges": [
+        {
+          "from": "chain_2/step_6",
+          "to": "chain_2/step_7",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_3/step_1",
+      "name": "Bring a large pot of salted water to a boil",
+      "canonical_verb": "bring_to_boil",
+      "planned_min": 10,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "hold_window_minutes": 60,
+      "temporal_flexibility": "hold_hours",
+      "inputs": [
+        "water",
+        "salt"
+      ],
+      "outputs": [],
+      "equipment": [
+        "pot"
+      ],
+      "edges": []
+    },
+    {
+      "id": "chain_3/step_2",
+      "name": "Add the noodles to the boiling water",
+      "canonical_verb": "add",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [
+        "noodles"
+      ],
+      "outputs": [],
+      "equipment": [
+        "pot"
+      ],
+      "edges": [
+        {
+          "from": "chain_3/step_1",
+          "to": "chain_3/step_2",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_3/step_3",
+      "name": "Cook the noodles according to packet instructions",
+      "canonical_verb": "boil",
+      "planned_min": 4,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "hold_window_minutes": 5,
+      "temporal_flexibility": "serve_immediate",
+      "inputs": [],
+      "outputs": [
+        {
+          "ingredient": "noodles",
+          "state": "cooked",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "pot"
+      ],
+      "edges": [
+        {
+          "from": "chain_3/step_2",
+          "to": "chain_3/step_3",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_4/step_1",
+      "name": "Transfer the noodles directly into the wok using tongs",
+      "canonical_verb": "transfer",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [
+        "noodles",
+        "stir_fry"
+      ],
+      "outputs": [],
+      "equipment": [
+        "tongs"
+      ],
+      "edges": [
+        {
+          "from": "chain_2/step_7",
+          "to": "chain_4/step_1",
+          "type": "FS"
+        },
+        {
+          "from": "chain_3/step_3",
+          "to": "chain_4/step_1",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_4/step_2",
+      "name": "Add soy sauce and black bean sauce",
+      "canonical_verb": "add",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [
+        "soy_sauce",
+        "black_bean_sauce"
+      ],
+      "outputs": [],
+      "equipment": [
+        "wok"
+      ],
+      "edges": [
+        {
+          "from": "chain_4/step_1",
+          "to": "chain_4/step_2",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_4/step_3",
+      "name": "Toss everything to coat",
+      "canonical_verb": "toss",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [],
+      "outputs": [],
+      "equipment": [
+        "wok"
+      ],
+      "edges": [
+        {
+          "from": "chain_4/step_2",
+          "to": "chain_4/step_3",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_4/step_4",
+      "name": "Divide between plates",
+      "canonical_verb": "plate",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 0,
+      "temporal_flexibility": "serve_immediate",
+      "inputs": [],
+      "outputs": [],
+      "equipment": [
+        "plates"
+      ],
+      "edges": [
+        {
+          "from": "chain_4/step_3",
+          "to": "chain_4/step_4",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_4/step_5",
+      "name": "Scatter sesame seeds and coriander on top",
+      "canonical_verb": "sprinkle",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 15,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [
+        "sesame_seeds",
+        "coriander"
+      ],
+      "outputs": [],
+      "equipment": [],
+      "edges": [
+        {
+          "from": "chain_4/step_4",
+          "to": "chain_4/step_5",
+          "type": "FS"
+        }
+      ]
+    }
+  ],
+  "chains": [
+    {
+      "id": "chain_1",
+      "name": "Prepare Ingredients",
+      "tasks": [
+        "chain_1/step_1",
+        "chain_1/step_2",
+        "chain_1/step_3",
+        "chain_1/step_4",
+        "chain_1/step_5",
+        "chain_1/step_6",
+        "chain_1/step_7",
+        "chain_1/step_8",
+        "chain_1/step_9",
+        "chain_1/step_10",
+        "chain_1/step_11",
+        "chain_1/step_12"
+      ]
+    },
+    {
+      "id": "chain_2",
+      "name": "Stir-Fry the Chicken and Vegetables",
+      "tasks": [
+        "chain_2/step_1",
+        "chain_2/step_2",
+        "chain_2/step_3",
+        "chain_2/step_4",
+        "chain_2/step_5",
+        "chain_2/step_6",
+        "chain_2/step_7"
+      ]
+    },
+    {
+      "id": "chain_3",
+      "name": "Cook the Noodles",
+      "tasks": [
+        "chain_3/step_1",
+        "chain_3/step_2",
+        "chain_3/step_3"
+      ]
+    },
+    {
+      "id": "chain_4",
+      "name": "Combine and Serve",
+      "tasks": [
+        "chain_4/step_1",
+        "chain_4/step_2",
+        "chain_4/step_3",
+        "chain_4/step_4",
+        "chain_4/step_5"
+      ]
+    }
+  ],
+  "shopping_list": [
+    {
+      "name": "Garlic",
+      "quantity": "1",
+      "unit": "clove",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Ginger",
+      "quantity": "4",
+      "unit": "cm piece",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Red chilli",
+      "quantity": "1",
+      "unit": ", fresh",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Carrots",
+      "quantity": "2",
+      "unit": "",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Red onion",
+      "quantity": "1/2",
+      "unit": "",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Red pepper",
+      "quantity": "1",
+      "unit": "",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Broccoli",
+      "quantity": "80",
+      "unit": "g, purple sprouting or tenderstem",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Mushrooms",
+      "quantity": "80",
+      "unit": "g, mixed",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Chicken breast",
+      "quantity": "1",
+      "unit": ", free-range",
+      "department": "MEAT"
+    },
+    {
+      "name": "Chinese five-spice",
+      "quantity": "1",
+      "unit": "tsp",
+      "department": "SPICES"
+    },
+    {
+      "name": "Sesame oil",
+      "quantity": "1",
+      "unit": "tbsp",
+      "department": "OTHER"
+    },
+    {
+      "name": "Vegetable oil",
+      "quantity": "1",
+      "unit": "tsp",
+      "department": "OTHER"
+    },
+    {
+      "name": "Baby corn",
+      "quantity": "130",
+      "unit": "g",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Mangetout or sugar snap peas",
+      "quantity": "80",
+      "unit": "g",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Noodle nests",
+      "quantity": "2",
+      "unit": "(130g), wholewheat",
+      "department": "OTHER"
+    },
+    {
+      "name": "Soy sauce",
+      "quantity": "1",
+      "unit": "tbsp, reduced-salt",
+      "department": "OTHER"
+    },
+    {
+      "name": "Lime",
+      "quantity": "1/2",
+      "unit": ", juice",
+      "department": "PRODUCE"
+    }
+  ]
+}

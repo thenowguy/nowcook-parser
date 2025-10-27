@@ -239,9 +239,9 @@ export default function ShoppingList() {
             <div style={{
               padding: '12px 20px',
               background: '#1a1a1a',
-              fontSize: '16px',
+              fontSize: '18px',
               fontWeight: '600',
-              color: '#d4af37',
+              color: 'rgba(255, 255, 255, 0.8)',
               letterSpacing: '1px',
               borderTop: '1px solid #444',
               borderBottom: '1px solid #444'
@@ -300,8 +300,8 @@ export default function ShoppingList() {
                       {item.name}
                     </div>
                     <div style={{
-                      fontSize: '18px',
-                      color: '#ffffff',
+                      fontSize: '20px',
+                      color: 'rgba(255, 255, 255, 0.8)',
                       textAlign: 'right',
                       textDecoration: isChecked ? 'line-through' : 'none',
                       opacity: isChecked ? 0.5 : 1

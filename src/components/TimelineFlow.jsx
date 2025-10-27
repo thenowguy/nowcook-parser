@@ -49,17 +49,92 @@ export default function TimelineFlow({ tasks, chains = [], ingredients = [], tex
     return chain || { id: chainId, name: 'Unknown Chain' };
   };
 
+  // Smart progressive abbreviation - applies rules only when needed to meet character limit
+  const abbreviate = (text, maxChars = 60) => {
+    // If already short enough, return as-is
+    if (text.length <= maxChars) {
+      return text;
+    }
+
+    // Tier 1: Always apply (standard cooking abbreviations - universally recognized)
+    const tier1 = {
+      'tablespoons': 'tbsp',
+      'tablespoon': 'tbsp',
+      'teaspoons': 'tsp',
+      'teaspoon': 'tsp',
+      'ounces': 'oz',
+      'pounds': 'lb'
+    };
+
+    let result = text;
+    for (const [full, abbr] of Object.entries(tier1)) {
+      const regex = new RegExp(full, 'gi');
+      result = result.replace(regex, abbr);
+    }
+
+    // If short enough after tier 1, stop here
+    if (result.length <= maxChars) {
+      return result;
+    }
+
+    // Tier 2: Apply if still too long (common words)
+    const tier2 = {
+      ' and ': ' & ',
+      'minutes': 'min',
+      'mixture': 'mix',
+      'remaining': 'rem',
+      'ingredients': 'ingr'
+    };
+
+    for (const [full, abbr] of Object.entries(tier2)) {
+      const regex = new RegExp(full, 'gi');
+      result = result.replace(regex, abbr);
+
+      // Stop early if we've reached target
+      if (result.length <= maxChars) {
+        return result;
+      }
+    }
+
+    // Tier 3: Aggressive abbreviations (only if desperately needed)
+    const tier3 = {
+      'vegetables': 'veg',
+      'cauliflower': 'cauli',
+      'temperature': 'temp',
+      'degrees': '°'
+    };
+
+    for (const [full, abbr] of Object.entries(tier3)) {
+      const regex = new RegExp(full, 'gi');
+      result = result.replace(regex, abbr);
+
+      if (result.length <= maxChars) {
+        return result;
+      }
+    }
+
+    // If still too long after all tiers, truncate with ellipsis
+    if (result.length > maxChars) {
+      return result.substring(0, maxChars - 3) + '...';
+    }
+
+    return result;
+  };
+
   // Helper to get display text based on mode
   const getDisplayText = (task, mode, remainingMs = null) => {
     if (mode === 'instructions') {
-      return task.name;
+      return abbreviate(task.name); // Apply abbreviations to instructions too
     }
-    
+
     if (mode === 'ingredients') {
       // Get ingredients from task inputs
       if (!task.inputs || task.inputs.length === 0) {
+        console.log('[ingredients mode] No inputs for task:', task.name);
         return task.name; // Fallback to instruction if no ingredients
       }
+
+      console.log('[ingredients mode] Processing task:', task.name, 'inputs:', task.inputs);
 
       // Map ingredient IDs to full ingredient info
       const ingredientTexts = task.inputs.map(input => {
@@ -68,7 +143,7 @@ export default function TimelineFlow({ tasks, chains = [], ingredients = [], tex
 
         // Try to find ingredient with quantity from ingredients array
         const fullIngredient = ingredients?.find(ing => {
-          const normalizedItem = ing.item.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+          const normalizedItem = ing.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
           const normalizedId = ingredientId.toLowerCase();
 
           // Direct match or ID contains item name
@@ -77,9 +152,11 @@ export default function TimelineFlow({ tasks, chains = [], ingredients = [], tex
                  normalizedId.includes(normalizedItem);
         });
 
-        if (fullIngredient && fullIngredient.amount) {
-          // Show quantity + ingredient name
-          return `${fullIngredient.amount} ${fullIngredient.item}`;
+        if (fullIngredient && fullIngredient.quantity) {
+          // Show quantity + unit + ingredient name (v3 format: name, quantity, unit, prep_state)
+          const quantityText = fullIngredient.quantity;
+          const unitText = fullIngredient.unit ? ` ${fullIngredient.unit}` : '';
+          return `${quantityText}${unitText} ${fullIngredient.name}`;
         }
 
         // Fallback: format ingredient name nicely (replace underscores, capitalize)
@@ -92,7 +169,10 @@ export default function TimelineFlow({ tasks, chains = [], ingredients = [], tex
         return formattedName;
       });
 
-      return ingredientTexts.join(', ') || task.name;
+      const result = ingredientTexts.join(', ') || task.name;
+      const abbreviated = abbreviate(result); // Apply abbreviations for compact display
+      console.log('[ingredients mode] Result for task:', task.name, '→', result, '→ abbreviated:', abbreviated);
+      return abbreviated;
     }
     
     if (mode === 'time') {
@@ -593,6 +673,11 @@ export default function TimelineFlow({ tasks, chains = [], ingredients = [], tex
     const lozengeRunning = '#365236'; // Dark green when task is started
     const lozengeColor = track.status === 'running' ? lozengeRunning : lozengeGrey;
 
+    // HOLD WINDOW CALCULATION (if task has hold_window_minutes)
+    const hasHoldWindow = track.task?.hold_window_minutes > 0;
+    const holdWindowMinutes = track.task?.hold_window_minutes || 0;
+    const holdWindowWidth = hasHoldWindow ? holdWindowMinutes * 200 : 0; // Same scale as lozenge: 1min = 200px
+
     const lozengeElement = (
       <div
         style={{
@@ -602,7 +687,7 @@ export default function TimelineFlow({ tasks, chains = [], ingredients = [], tex
           width: `${track.lozengeWidth}px`,
           height: `${LOZENGE_HEIGHT}px`,
           background: lozengeColor, // Grey normally, dark green when running
-          borderRadius: `${LOZENGE_RADIUS}px`,
+          borderRadius: `${LOZENGE_RADIUS}px`, // Always fully rounded
           borderLeft: `4px solid ${chainAccent}`, // Only chain color is the left stripe
           zIndex: 1,
           transition: 'left 1s linear',
@@ -620,19 +705,51 @@ export default function TimelineFlow({ tasks, chains = [], ingredients = [], tex
       ></div>
     );
 
-    // For READY and RUNNING tasks, return both lozenge AND circle
+    // HOLD WINDOW EXTENSION (striped channel showing temporal flexibility)
+    // Extends from NowLine to end of hold window (goes UNDERNEATH lozenge)
+    const holdWindowElement = hasHoldWindow ? (
+      <div
+        style={{
+          position: 'absolute',
+          left: `${NOWLINE_X}px`, // Starts at NowLine (underneath lozenge)
+          top: `${(TRACK_HEIGHT - LOZENGE_HEIGHT) / 2}px`,
+          width: `${track.lozengeWidth + holdWindowWidth}px`, // Lozenge width + hold window
+          height: `${LOZENGE_HEIGHT}px`,
+          background: `repeating-linear-gradient(
+            45deg,
+            rgba(109, 173, 89, 0.15),
+            rgba(109, 173, 89, 0.15) 4px,
+            rgba(109, 173, 89, 0.05) 4px,
+            rgba(109, 173, 89, 0.05) 8px
+          )`, // Striped pattern in green
+          border: `1px dashed rgba(109, 173, 89, 0.3)`,
+          borderRadius: `${LOZENGE_RADIUS}px`, // Fully rounded
+          zIndex: 0, // Behind lozenge (was 1)
+          transition: 'width 1s linear',
+          pointerEvents: 'none'
+        }}
+      />
+    ) : null;
+
+    // For READY and RUNNING tasks, return lozenge + hold window + circle
     // (Ready: grey lozenge + solid green circle, Running: grey lozenge + depleting timer circle)
     if (isCircleTimer) {
       return (
         <>
           {lozengeElement}
+          {holdWindowElement}
           {circleElement}
         </>
       );
     }
 
-    // For all other tasks (stopped-waiting, driver-busy), return just the lozenge
-    return lozengeElement;
+    // For all other tasks (stopped-waiting, driver-busy), return lozenge + hold window
+    return (
+      <>
+        {lozengeElement}
+        {holdWindowElement}
+      </>
+    );
   };
   
   return (
@@ -662,14 +779,14 @@ export default function TimelineFlow({ tasks, chains = [], ingredients = [], tex
           
           @keyframes collapseTrack {
             0% {
-              height: 115px;
+              height: 120px;
               opacity: 1;
               margin-top: 0;
             }
             100% {
               height: 0;
               opacity: 0;
-              margin-top: -115px;
+              margin-top: -120px;
               padding: 0;
             }
           }
@@ -681,7 +798,7 @@ export default function TimelineFlow({ tasks, chains = [], ingredients = [], tex
         position: 'relative',
         width: '100%', // Full width of viewport
         background: 'transparent', // Allow background image from parent to show through
-        overflow: 'hidden',
+        overflow: 'auto', // Enable both vertical and horizontal scrolling
         paddingTop: '20px'
       }}>
         {/* Z-Layer 5: Right edge shadow panel */}
@@ -838,7 +955,8 @@ export default function TimelineFlow({ tasks, chains = [], ingredients = [], tex
               lineHeight: '1.3',
               wordWrap: 'break-word',
               overflowWrap: 'break-word',
-              letterSpacing: textMode === 'time' ? '1px' : 'normal'
+              letterSpacing: textMode === 'time' ? '1px' : 'normal',
+              overflow: 'hidden' // Clip text that exceeds track height
             }}>
               {track.taskName}
             </div>
