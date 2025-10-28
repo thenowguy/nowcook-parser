@@ -116,7 +116,7 @@ export default function Runtime() {
       <style>{`
         @media (max-width: 768px) {
           .timeline-background {
-            background-image: url('/TimelineBG.jpg') !important;
+            background-image: url('/TimelineBG.png') !important;
             background-size: cover !important;
             background-position: top left !important;
             background-repeat: no-repeat !important;
