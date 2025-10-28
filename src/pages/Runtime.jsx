@@ -279,8 +279,10 @@ export default function Runtime() {
               borderRadius: '10px',
               fontSize: '20px',
               fontWeight: 'bold',
-              fontFamily: '-apple-system, BlinkMacSystemFont, "SF Mono", Menlo, Consolas, "Courier New", monospace', // Clean zeros, no slash
-              whiteSpace: 'nowrap'
+              fontFamily: '"SF Mono", Menlo, Consolas, "Courier New", monospace', // Monospace first for consistent width
+              whiteSpace: 'nowrap',
+              fontFeatureSettings: '"tnum"', // Tabular numbers for consistent digit width
+              fontVariantNumeric: 'tabular-nums'
             }}>
               {new Date().toLocaleTimeString('en-US', {
                 hour: 'numeric', // No leading zero
