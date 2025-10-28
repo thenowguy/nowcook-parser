@@ -339,7 +339,7 @@
     },
     {
       "id": "chain_1/step_8",
-      "name": "Bring to a simmer and cook for one minute, scraping the pot bottom",
+      "name": "Bring to a simmer whilst stirring",
       "canonical_verb": "deglaze",
       "planned_min": 1,
       "requires_driver": true,
@@ -361,7 +361,7 @@
     },
     {
       "id": "chain_1/step_9",
-      "name": "Add crushed tomato, tomato paste, bouillon cubes, sugar, Worcestershire sauce, bay leaves, thyme, salt, and pepper",
+      "name": "Add tomatoes, tomato paste, bouillon, sugar, Worcestershire sauce, bay, thyme, salt & pepper",
       "canonical_verb": "add",
       "planned_min": 2,
       "requires_driver": true,
