@@ -1,3 +1,220 @@
+# Re-Parse Request: 5 Recipes with Ingredient Quantities & Hold Windows
+
+## What Changed
+
+This is a **RE-PARSE** of all 5 existing Sonnet recipes to add:
+
+1. **Ingredient Quantities** - New `ingredients` array at meal level with quantities, units, and prep states
+2. **Hold Window Data** - New `hold_window_minutes` and `temporal_flexibility` fields on every task
+
+## Instructions
+
+Please re-parse all 5 recipes below using the updated FOR_SONNET.md instructions (included at the end of this file). For each recipe:
+
+1. Parse using standard FOR_SONNET.md rules
+2. Add `ingredients` array with quantities (see section "NEW: Ingredient Quantities Extraction")
+3. Add hold window metadata to every task (see section "NEW: Hold Window Data")
+
+---
+
+# Recipe 1: Spaghetti Bolognese
+
+## Ingredients:
+- 1 1/2 tbsp olive oil
+- 2 garlic cloves, minced
+- 1 onion, finely chopped
+- 1 lb / 500g beef mince (ground beef)
+- 1/2 cup (125 ml) dry red wine
+- 2 beef bouillon cubes
+- 800g / 28 oz can crushed tomato
+- 2 tbsp tomato paste
+- 2 tsp white sugar (if needed)
+- 2 tsp Worcestershire sauce
+- 2 dried bay leaves
+- 2 sprigs fresh thyme
+- 3/4 tsp cooking salt
+- 1/2 tsp black pepper
+- 400 g / 13 oz spaghetti
+- Parmesan cheese and parsley (optional)
+
+## Instructions:
+
+Begin by heating oil in a large pot over medium-high heat. Add the onion and garlic, cooking until they become light golden and softened, approximately three minutes.
+
+Increase the heat to high and add the beef mince. Break it up as it cooks until it reaches a browned state. Pour in the red wine, bringing it to a simmer and cooking for one minute while scraping the pot's bottom until the alcohol aroma dissipates.
+
+Combine the remaining ingredients into the pot. Stir everything together, bring to a simmer, then reduce heat to medium so the sauce bubbles gently. Cook uncovered for twenty to thirty minutes, stirring occasionally and adding water if the sauce becomes too thick.
+
+For enhanced flavor, cover with a lid and simmer on very low heat for two to two and a half hours, stirring every thirty minutes. Then uncover and simmer for an additional twenty minutes to thicken.
+
+Taste and adjust salt as desired. Serve over cooked spaghetti, optionally tossing the sauce and pasta together.
+
+---
+
+# Recipe 2: Chicken & Veg Stir-Fry
+
+## Ingredients:
+- 1 clove garlic
+- 4cm piece ginger
+- 1 fresh red chilli
+- 2 carrots
+- 1/2 red onion
+- 1 red pepper
+- 80g purple sprouting or tenderstem broccoli
+- 80g mixed mushrooms
+- 1 free-range chicken breast
+- 1 teaspoon Chinese five-spice
+- 1 tablespoon sesame oil
+- 1 teaspoon vegetable oil
+- 130g baby corn
+- 80g mangetout or sugar snap peas
+- 2 wholewheat noodle nests (130g)
+- 1 tablespoon reduced-salt soy sauce
+- 1 tablespoon black bean sauce
+- 1 teaspoon sesame seeds
+- Optional: fresh coriander sprigs
+
+## Method:
+
+Begin by preparing your aromatics and vegetables. Peel and finely chop the garlic and ginger, then deseed and finely chop the chilli. Peel the carrots, halve lengthways, and slice finely. Peel the onion and deseed the pepper, slicing both thinly. Trim the broccoli, halving any thick stalks lengthways. Wipe the mushrooms clean, trim their stalks, and halve any larger pieces.
+
+Cut the chicken into 1cm strips and coat them with the Chinese five-spice and sesame oil. Heat a wok or large non-stick frying pan on medium-high heat with vegetable oil. Add the garlic, ginger, and chilli, tossing for 30 seconds before adding the chicken. Stir-fry for 1-2 minutes until golden. Add all vegetables and continue stir-frying for 3-4 minutes until the chicken is cooked through and vegetables are tender yet retain some crunch.
+
+While cooking, boil the noodles in salted water according to packet instructions. Transfer the noodles directly into the wok using tongs, then add soy and black bean sauce, tossing everything to coat. Divide between plates, scatter sesame seeds and coriander on top, and serve immediately.
+
+---
+
+# Recipe 3: Sheet Pan Salmon with Vegetables
+
+## Ingredients:
+- 1 teaspoon paprika
+- 1 teaspoon baharat
+- Kosher salt
+- Freshly ground black pepper
+- 1 head cauliflower
+- 3 carrots (peeled)
+- 3 garlic cloves (minced)
+- 3 tablespoons extra virgin olive oil (divided)
+- 4 skinless salmon fillets (4-5 ounces each)
+- 8 Castelvetrano olives (pitted and slivered)
+- 1 lemon (halved)
+- 1/3 cup chopped cilantro
+
+## Instructions:
+
+Prepare. Heat your oven to 450°F.
+
+Make the spice blend. Combine paprika, baharat, 1¼ teaspoon salt, and generous pepper in a small bowl.
+
+Ready the vegetables. Remove cauliflower leaves and core, then cut florets into bite-sized pieces (about 6 cups total). Slice carrots lengthwise if needed, then cut diagonally into ½-inch pieces. Toss vegetables with garlic, 2 tablespoons oil, and ¾ of the spice mixture in a large bowl. Spread on a rimmed baking sheet in a single layer.
+
+Roast vegetables. Bake about 15 minutes until cauliflower starts to brown.
+
+Prepare fish. While vegetables roast, brush salmon fillets with remaining oil and sprinkle with remaining spice mixture.
+
+Combine and finish roasting. Remove the pan from the oven. Toss in olives with vegetables, move them to pan sides, and place salmon in the center. Bake 5-8 minutes until fish is opaque but still moist.
+
+Serve. Squeeze half the lemon over everything. Divide among plates, garnish with cilantro, and serve with remaining lemon wedges.
+
+---
+
+# Recipe 4: Chocolate Chip Cookies
+
+## Ingredients:
+- 2 cups all-purpose flour (spooned and leveled)
+- 1 teaspoon baking soda
+- 1 teaspoon sea salt
+- 3/4 cup unsalted butter (1½ sticks, melted and cooled slightly)
+- 1/2 cup packed brown sugar
+- 1/2 cup granulated sugar
+- 1 large egg
+- 1 large egg yolk
+- 2 teaspoons vanilla extract
+- 1 heaping cup dark chocolate chips
+
+## Instructions:
+
+In a medium bowl, whisk together the flour, baking soda, and salt.
+
+Combine melted butter with both sugars in a large bowl. Add egg and yolk, whisking until well combined with no egg white streaks remaining. Mix in vanilla.
+
+Fold dry ingredients into wet ingredients using a spatula. When mostly combined, add chocolate chips and mix until no dry flour remains.
+
+Cover and refrigerate for at least 30 minutes and up to 2 days. Brief chilling (30 minutes) yields flatter, more spread-out cookies; longer chilling (2+ hours) produces thicker cookies.
+
+Preheat oven to 350°F and line two baking sheets with parchment paper.
+
+Use a 2-tablespoon cookie scoop to scoop the dough onto the baking sheets, leaving at least 2 inches between cookies. Bake one sheet at a time for 9-11 minutes until edges are golden but tops remain pale.
+
+Let cool on baking sheets for 10 minutes before transferring to a wire rack.
+
+---
+
+# Recipe 5: Seared Steak with Garlic Mashed Potatoes & Green Beans
+
+## Ingredients:
+- 2 large russet potatoes
+- 1 lb green beans
+- 1 lb ribeye or strip steak
+- 4 cloves garlic (divided: 2 for potatoes, 2 for beans)
+- 4 tbsp butter (divided)
+- 1/2 cup heavy cream
+- Kosher salt
+- Black pepper
+- 2 tbsp olive oil
+
+## Instructions:
+
+Peel and cube potatoes.
+Boil potatoes in salted water until tender.
+Trim green beans.
+Bring pot of salted water to a boil for beans.
+Blanch green beans until bright green.
+Shock beans in ice water.
+Take steak out to reach room temperature.
+Season steak generously with salt and pepper.
+Mince garlic for potatoes.
+Mince garlic for beans.
+Drain potatoes.
+Mash potatoes with butter, cream, and garlic.
+Heat cast iron skillet until smoking.
+Sear steak until crusty crust forms.
+Flip and cook to desired doneness.
+Rest steak.
+Heat butter in sauté pan.
+Sauté green beans with garlic.
+Slice steak against the grain.
+Plate steak, mashed potatoes, and green beans.
+
+**Note**: This is a re-parse to fix semantic issues. Please refer to FOR_SONNET_STEAK_REQUEST.md for detailed chain structure (Chain 1: Potatoes, Chain 2: Beans, Chain 3: Steak, Chain 4: Plating).
+
+---
+
+# Output Format
+
+For each recipe, provide:
+
+```json
+{
+  "title": "Recipe Name",
+  "author": { "name": "Author Name" },
+  "tasks": [/* ... tasks with hold_window_minutes and temporal_flexibility ... */],
+  "chains": [/* ... */],
+  "ingredients": [
+    {
+      "name": "ingredient_name",
+      "quantity": "amount",
+      "unit": "unit_if_applicable",
+      "prep_state": "minced / chopped / etc"
+    }
+  ]
+}
+```
+
+---
+
+# FOR_SONNET.md (Updated Instructions)
+
 # Instructions for Claude Sonnet - NowCook Recipe Parser
 
 ## Your Role
@@ -48,14 +265,7 @@ Parse narrative recipes into JSON with:
 
 ### Task Fields (all required):
 - **id**: `"chain_X/step_Y"` format (chain-aware IDs)
-- **name**: Human-readable task description (imperative form)
-  - **CRITICAL**: Keep task names under 40 characters - text must be readable at arm's length in a kitchen!
-  - **Be atomic & concise**: "Sauté garlic" NOT "Sauté the minced garlic in 2 tablespoons of olive oil"
-  - **Split compound tasks**: Multiple actions = multiple tasks
-  - **Omit quantities**: Put quantities in inputs/ingredients arrays, not task names
-  - **Use abbreviations**: tbsp, tsp, oz, min, &
-  - **Good examples**: "Sauté garlic" (13 chars), "Add tomatoes" (12 chars), "Simmer 20min" (12 chars)
-  - **Bad examples**: "Combine paprika, baharat, salt, and pepper in a small bowl" (58 chars - TOO LONG!)
+- **name**: Human-readable task description (imperative form: "Chop the onions")
 - **canonical_verb**: Choose from verbs.json (see below) - use exact `canon` value
 - **planned_min**: Duration in minutes (plain number, NOT object or null)
 - **requires_driver**: `true` if task needs active attention, `false` otherwise

@@ -5,13 +5,13 @@ import MEAL_CHICKEN_RICE from "../meals/chicken_and_rice.json";
 import MEAL_SALMON from "../meals/salmon_asparagus_couscous.json";
 import MEAL_STEAK from "../meals/steak_potatoes_beans.json";
 
-// Sonnet recipes - Synced from public/meals/ (edit via /editor.html, then copy back)
-// Workflow: Edit in /editor.html → Download JSON → Replace in both public/meals/ AND src/meals/
-import MEAL_BOLOGNESE_SONNET from "../meals/sonnet-bolognese-v2.json";
-import MEAL_STIR_FRY_SONNET from "../meals/sonnet-chicken-stir-fry-v2.json";
-import MEAL_SALMON_SONNET from "../meals/sonnet-sheet-pan-salmon-v2.json";
-import MEAL_COOKIES_SONNET_V2 from "../meals/sonnet-chocolate-chip-cookies-v2.json";
-import MEAL_STEAK_SONNET from "../meals/sonnet-steak-dinner.json";
+// Sonnet recipes v3 - WITH INGREDIENT QUANTITIES & HOLD WINDOWS
+// Re-parsed with updated FOR_SONNET.md instructions (Oct 2024)
+import MEAL_BOLOGNESE_SONNET from "../meals/sonnet-bolognese-v3.json";
+import MEAL_STIR_FRY_SONNET from "../meals/sonnet-chicken-stir-fry-v3.json";
+import MEAL_SALMON_SONNET from "../meals/sonnet-sheet-pan-salmon-v3.json";
+import MEAL_COOKIES_SONNET_V2 from "../meals/sonnet-chocolate-chip-cookies-v3.json";
+import MEAL_STEAK_SONNET from "../meals/sonnet-steak-dinner-v3.json";
 
 export const MEALS = [
   // ORIGINAL 5 RECIPES - HIDDEN FOR PRESENTATION (no chain data yet)

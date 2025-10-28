@@ -5,7 +5,7 @@
  */
 
 import { splitIntoSteps, cleanInstructionText, normalizeText } from "./splitter.js";
-import { extractDuration, extractTemperature } from "./extractors.js";
+import { extractDuration, extractTemperature, extractIngredientsList } from "./extractors.js";
 import { findCanonicalVerb, getDefaultDuration, getAttentionMode, getHoldWindow, getTemporalFlexibility } from "./verbMatcher.js";
 import { inferDependencies, inferSequentialDependencies } from "./dependencies.js";
 import { detectChains } from "./chains.js";
@@ -184,12 +184,16 @@ export async function parseRecipe(rawText, title = "Untitled Recipe", options = 
     }
   }
 
-  // Step 7: Build meal object
+  // Step 7: Extract ingredients list with quantities
+  const ingredientsList = extractIngredientsList(rawText);
+
+  // Step 8: Build meal object
   const meal = {
     title,
     author: { name: "Local Parser v2.0" },
     tasks: finalTasks,
     chains: chains.length > 0 ? chains : undefined, // Only include if chains detected
+    ingredients: ingredientsList.length > 0 ? ingredientsList : undefined, // Ingredients with quantities
     packs_meta: {
       parser_version: "2.0.0",
       parsed_at: new Date().toISOString(),

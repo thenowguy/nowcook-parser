@@ -147,3 +147,89 @@ function roundUpToPreset(min) {
 function clamp(n, lo, hi) {
   return Math.max(lo, Math.min(hi, n));
 }
+
+/**
+ * Extract ingredients with quantities from recipe text
+ * Looks for "Ingredients:" section and parses each line
+ * @param {string} text - Full recipe text
+ * @returns {Array<{name: string, quantity: string, unit: string}>}
+ */
+export function extractIngredientsList(text) {
+  if (!text) return [];
+
+  const lines = text.split('\n');
+  const ingredients = [];
+  let inIngredientsSection = false;
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+
+    // Start of ingredients section
+    if (/^Ingredients:?$/i.test(trimmed)) {
+      inIngredientsSection = true;
+      continue;
+    }
+
+    // End of ingredients section (when we hit Instructions or empty line followed by paragraph)
+    if (inIngredientsSection && (/^Instructions:?$/i.test(trimmed) || /^Method:?$/i.test(trimmed))) {
+      break;
+    }
+
+    // Parse ingredient line (starts with - or •)
+    if (inIngredientsSection && /^[-•]\s+/.test(trimmed)) {
+      const ingredientText = trimmed.replace(/^[-•]\s+/, '');
+      const parsed = parseIngredientLine(ingredientText);
+      if (parsed) {
+        ingredients.push(parsed);
+      }
+    }
+  }
+
+  return ingredients;
+}
+
+/**
+ * Parse a single ingredient line
+ * Examples:
+ *   "1 1/2 tbsp olive oil" → {quantity: "1 1/2", unit: "tbsp", name: "olive oil"}
+ *   "2 garlic cloves, minced" → {quantity: "2", unit: "cloves", name: "garlic"}
+ *   "1 lb / 500g beef mince (ground beef)" → {quantity: "1 lb / 500g", unit: "", name: "beef mince"}
+ * @param {string} line - Ingredient line text
+ * @returns {{name: string, quantity: string, unit: string}|null}
+ */
+function parseIngredientLine(line) {
+  if (!line) return null;
+
+  // Pattern: quantity (fractions, decimals, ranges) + optional unit + ingredient name
+  // Matches: "1 1/2 tbsp", "2", "1 lb / 500g", "1/2 cup"
+  const pattern = /^([\d\s\/\.]+(?:\s*(?:lb|oz|g|kg|ml|cup|tbsp|tsp|cloves?|sprigs?|cans?|slices?|pieces?))?(?:\s*\/\s*[\d\s]+[a-z]+)?)\s+(.+)$/i;
+
+  const match = line.match(pattern);
+  if (!match) {
+    // No quantity found, treat whole line as ingredient name
+    return {
+      name: line.split(',')[0].trim(), // Take part before comma if present
+      quantity: '',
+      unit: ''
+    };
+  }
+
+  const quantityPart = match[1].trim();
+  const namePart = match[2].trim();
+
+  // Extract unit from quantity part
+  const unitMatch = quantityPart.match(/\b(lb|oz|g|kg|ml|cup|cups|tbsp|tsp|cloves?|sprigs?|cans?|slices?|pieces?)\b/i);
+  const unit = unitMatch ? unitMatch[1] : '';
+
+  // Remove unit from quantity to get just the number
+  const quantity = unit ? quantityPart.replace(new RegExp(`\\b${unit}\\b`, 'i'), '').trim() : quantityPart;
+
+  // Clean up name (remove prep instructions in parentheses or after comma)
+  const name = namePart.split(',')[0].split('(')[0].trim();
+
+  return {
+    name,
+    quantity,
+    unit
+  };
+}
