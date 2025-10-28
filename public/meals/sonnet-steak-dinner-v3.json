@@ -1,0 +1,714 @@
+{
+  "title": "Seared Steak with Garlic Mashed Potatoes & Green Beans",
+  "author": {
+    "name": "NowCook"
+  },
+  "ingredients": [
+    {
+      "name": "potatoes",
+      "quantity": "2",
+      "unit": "",
+      "prep_state": "large russet"
+    },
+    {
+      "name": "green beans",
+      "quantity": "1",
+      "unit": "lb",
+      "prep_state": ""
+    },
+    {
+      "name": "steak",
+      "quantity": "1",
+      "unit": "lb",
+      "prep_state": "ribeye or strip"
+    },
+    {
+      "name": "garlic",
+      "quantity": "4",
+      "unit": "cloves",
+      "prep_state": "divided: 2 for potatoes, 2 for beans"
+    },
+    {
+      "name": "butter",
+      "quantity": "4",
+      "unit": "tbsp",
+      "prep_state": "divided"
+    },
+    {
+      "name": "heavy cream",
+      "quantity": "1/2",
+      "unit": "cup",
+      "prep_state": ""
+    },
+    {
+      "name": "salt",
+      "quantity": "",
+      "unit": "",
+      "prep_state": "kosher"
+    },
+    {
+      "name": "black pepper",
+      "quantity": "",
+      "unit": "",
+      "prep_state": ""
+    },
+    {
+      "name": "olive oil",
+      "quantity": "2",
+      "unit": "tbsp",
+      "prep_state": ""
+    }
+  ],
+  "tasks": [
+    {
+      "id": "chain_1/step_1",
+      "name": "Peel and cube the potatoes",
+      "canonical_verb": "peel",
+      "planned_min": 5,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "inputs": [
+        "potatoes"
+      ],
+      "outputs": [
+        {
+          "ingredient": "potatoes",
+          "state": "cubed",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "peeler",
+        "knife",
+        "cutting_board"
+      ],
+      "edges": []
+    },
+    {
+      "id": "chain_1/step_2",
+      "name": "Boil potatoes in salted water until tender",
+      "canonical_verb": "boil",
+      "planned_min": 15,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "hold_window_minutes": 5,
+      "temporal_flexibility": "serve_immediate",
+      "inputs": [
+        "potatoes",
+        "water",
+        "salt"
+      ],
+      "outputs": [],
+      "equipment": [
+        "pot"
+      ],
+      "edges": [
+        {
+          "from": "chain_1/step_1",
+          "to": "chain_1/step_2",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_1/step_3",
+      "name": "Mince garlic for mashed potatoes",
+      "canonical_verb": "mince",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "inputs": [
+        "garlic"
+      ],
+      "outputs": [
+        {
+          "ingredient": "garlic",
+          "state": "minced",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "knife",
+        "cutting_board"
+      ],
+      "edges": []
+    },
+    {
+      "id": "chain_1/step_4",
+      "name": "Drain the potatoes",
+      "canonical_verb": "drain",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 5,
+      "temporal_flexibility": "serve_immediate",
+      "inputs": [],
+      "outputs": [],
+      "equipment": [
+        "colander"
+      ],
+      "edges": [
+        {
+          "from": "chain_1/step_2",
+          "to": "chain_1/step_4",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_1/step_5",
+      "name": "Mash potatoes with butter, cream, and minced garlic",
+      "canonical_verb": "combine",
+      "planned_min": 3,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [
+        "potatoes",
+        "butter",
+        "cream",
+        "garlic"
+      ],
+      "outputs": [
+        {
+          "ingredient": "potatoes",
+          "state": "mashed",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "masher",
+        "bowl"
+      ],
+      "edges": [
+        {
+          "from": "chain_1/step_4",
+          "to": "chain_1/step_5",
+          "type": "FS"
+        },
+        {
+          "from": "chain_1/step_3",
+          "to": "chain_1/step_5",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_2/step_1",
+      "name": "Trim the green beans",
+      "canonical_verb": "chop",
+      "planned_min": 4,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "inputs": [
+        "green_beans"
+      ],
+      "outputs": [
+        {
+          "ingredient": "green_beans",
+          "state": "trimmed",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "knife",
+        "cutting_board"
+      ],
+      "edges": []
+    },
+    {
+      "id": "chain_2/step_2",
+      "name": "Bring pot of salted water to a boil",
+      "canonical_verb": "bring_to_boil",
+      "planned_min": 8,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "hold_window_minutes": 60,
+      "temporal_flexibility": "hold_hours",
+      "inputs": [
+        "water",
+        "salt"
+      ],
+      "outputs": [],
+      "equipment": [
+        "pot"
+      ],
+      "edges": []
+    },
+    {
+      "id": "chain_2/step_3",
+      "name": "Blanch green beans until bright green",
+      "canonical_verb": "blanch",
+      "planned_min": 3,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 60,
+      "temporal_flexibility": "hold_hours",
+      "inputs": [
+        "green_beans"
+      ],
+      "outputs": [
+        {
+          "ingredient": "green_beans",
+          "state": "blanched",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "pot"
+      ],
+      "edges": [
+        {
+          "from": "chain_2/step_1",
+          "to": "chain_2/step_3",
+          "type": "FS"
+        },
+        {
+          "from": "chain_2/step_2",
+          "to": "chain_2/step_3",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_2/step_4",
+      "name": "Shock beans in ice water to stop cooking",
+      "canonical_verb": "shock",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 60,
+      "temporal_flexibility": "hold_hours",
+      "inputs": [
+        "green_beans",
+        "ice_water"
+      ],
+      "outputs": [
+        {
+          "ingredient": "green_beans",
+          "state": "shocked",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "bowl"
+      ],
+      "edges": [
+        {
+          "from": "chain_2/step_3",
+          "to": "chain_2/step_4",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_2/step_5",
+      "name": "Mince garlic for sautéed beans",
+      "canonical_verb": "mince",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "inputs": [
+        "garlic"
+      ],
+      "outputs": [
+        {
+          "ingredient": "garlic",
+          "state": "minced",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "knife",
+        "cutting_board"
+      ],
+      "edges": []
+    },
+    {
+      "id": "chain_2/step_6",
+      "name": "Heat butter in sauté pan",
+      "canonical_verb": "heat_oil",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 60,
+      "temporal_flexibility": "hold_hours",
+      "inputs": [
+        "butter"
+      ],
+      "outputs": [],
+      "equipment": [
+        "saute_pan"
+      ],
+      "edges": []
+    },
+    {
+      "id": "chain_2/step_7",
+      "name": "Sauté beans with minced garlic",
+      "canonical_verb": "sauté",
+      "planned_min": 5,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 1440,
+      "temporal_flexibility": "hold_hours",
+      "inputs": [
+        "green_beans",
+        "garlic"
+      ],
+      "outputs": [
+        {
+          "ingredient": "green_beans",
+          "state": "sautéed",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "saute_pan"
+      ],
+      "edges": [
+        {
+          "from": "chain_2/step_4",
+          "to": "chain_2/step_7",
+          "type": "FS"
+        },
+        {
+          "from": "chain_2/step_5",
+          "to": "chain_2/step_7",
+          "type": "FS"
+        },
+        {
+          "from": "chain_2/step_6",
+          "to": "chain_2/step_7",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_3/step_1",
+      "name": "Remove steak from refrigerator and let come to room temperature",
+      "canonical_verb": "rest",
+      "planned_min": 20,
+      "requires_driver": false,
+      "self_running_after_start": false,
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [
+        "steak"
+      ],
+      "outputs": [
+        {
+          "ingredient": "steak",
+          "state": "tempered",
+          "emergent": true
+        }
+      ],
+      "equipment": [],
+      "edges": []
+    },
+    {
+      "id": "chain_3/step_2",
+      "name": "Season tempered steak generously with salt and pepper",
+      "canonical_verb": "season",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "inputs": [
+        "steak",
+        "salt",
+        "pepper"
+      ],
+      "outputs": [
+        {
+          "ingredient": "steak",
+          "state": "seasoned",
+          "emergent": true
+        }
+      ],
+      "equipment": [],
+      "edges": [
+        {
+          "from": "chain_3/step_1",
+          "to": "chain_3/step_2",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_3/step_3",
+      "name": "Heat cast iron skillet until smoking",
+      "canonical_verb": "heat_oil",
+      "planned_min": 3,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 60,
+      "temporal_flexibility": "hold_hours",
+      "inputs": [
+        "olive_oil"
+      ],
+      "outputs": [],
+      "equipment": [
+        "cast_iron_skillet"
+      ],
+      "edges": []
+    },
+    {
+      "id": "chain_3/step_4",
+      "name": "Sear seasoned steak until crusty crust forms",
+      "canonical_verb": "sear",
+      "planned_min": 5,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 120,
+      "temporal_flexibility": "hold_hours",
+      "inputs": [
+        "steak"
+      ],
+      "outputs": [],
+      "equipment": [
+        "cast_iron_skillet"
+      ],
+      "edges": [
+        {
+          "from": "chain_3/step_2",
+          "to": "chain_3/step_4",
+          "type": "FS"
+        },
+        {
+          "from": "chain_3/step_3",
+          "to": "chain_3/step_4",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_3/step_5",
+      "name": "Flip steak and cook to desired doneness",
+      "canonical_verb": "flip",
+      "planned_min": 4,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 20,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [],
+      "outputs": [
+        {
+          "ingredient": "steak",
+          "state": "seared",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "cast_iron_skillet"
+      ],
+      "edges": [
+        {
+          "from": "chain_3/step_4",
+          "to": "chain_3/step_5",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_3/step_6",
+      "name": "Transfer steak to cutting board and let rest",
+      "canonical_verb": "rest_meat",
+      "planned_min": 10,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "hold_window_minutes": 60,
+      "temporal_flexibility": "hold_hours",
+      "inputs": [],
+      "outputs": [
+        {
+          "ingredient": "steak",
+          "state": "rested",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "cutting_board"
+      ],
+      "edges": [
+        {
+          "from": "chain_3/step_5",
+          "to": "chain_3/step_6",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_3/step_7",
+      "name": "Slice rested steak against the grain",
+      "canonical_verb": "slice",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "inputs": [
+        "steak"
+      ],
+      "outputs": [],
+      "equipment": [
+        "knife",
+        "cutting_board"
+      ],
+      "edges": [
+        {
+          "from": "chain_3/step_6",
+          "to": "chain_3/step_7",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_4/step_1",
+      "name": "Arrange sliced steak, mashed potatoes, and sautéed beans on plates",
+      "canonical_verb": "plate",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 0,
+      "temporal_flexibility": "serve_immediate",
+      "inputs": [
+        "steak",
+        "potatoes",
+        "green_beans"
+      ],
+      "outputs": [],
+      "equipment": [
+        "plates"
+      ],
+      "edges": [
+        {
+          "from": "chain_1/step_5",
+          "to": "chain_4/step_1",
+          "type": "FS"
+        },
+        {
+          "from": "chain_2/step_7",
+          "to": "chain_4/step_1",
+          "type": "FS"
+        },
+        {
+          "from": "chain_3/step_7",
+          "to": "chain_4/step_1",
+          "type": "FS"
+        }
+      ]
+    }
+  ],
+  "chains": [
+    {
+      "id": "chain_1",
+      "name": "Prepare Garlic Mashed Potatoes",
+      "tasks": [
+        "chain_1/step_1",
+        "chain_1/step_2",
+        "chain_1/step_3",
+        "chain_1/step_4",
+        "chain_1/step_5"
+      ]
+    },
+    {
+      "id": "chain_2",
+      "name": "Prepare Sautéed Green Beans",
+      "tasks": [
+        "chain_2/step_1",
+        "chain_2/step_2",
+        "chain_2/step_3",
+        "chain_2/step_4",
+        "chain_2/step_5",
+        "chain_2/step_6",
+        "chain_2/step_7"
+      ]
+    },
+    {
+      "id": "chain_3",
+      "name": "Prepare Seared Steak",
+      "tasks": [
+        "chain_3/step_1",
+        "chain_3/step_2",
+        "chain_3/step_3",
+        "chain_3/step_4",
+        "chain_3/step_5",
+        "chain_3/step_6",
+        "chain_3/step_7"
+      ]
+    },
+    {
+      "id": "chain_4",
+      "name": "Plate and Serve",
+      "tasks": [
+        "chain_4/step_1"
+      ]
+    }
+  ],
+  "shopping_list": [
+    {
+      "name": "Russet potatoes",
+      "quantity": "2",
+      "unit": "large",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Green beans",
+      "quantity": "1",
+      "unit": "lb",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Ribeye or strip steak",
+      "quantity": "1",
+      "unit": "lb",
+      "department": "MEAT"
+    },
+    {
+      "name": "Garlic",
+      "quantity": "4",
+      "unit": "cloves, divided",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Butter",
+      "quantity": "4",
+      "unit": "tbsp, divided",
+      "department": "DAIRY"
+    },
+    {
+      "name": "Heavy cream",
+      "quantity": "1/2",
+      "unit": "cup",
+      "department": "DAIRY"
+    },
+    {
+      "name": "Kosher salt",
+      "quantity": "",
+      "unit": "To taste",
+      "department": "SPICES"
+    },
+    {
+      "name": "Black pepper",
+      "quantity": "",
+      "unit": "To taste",
+      "department": "SPICES"
+    },
+    {
+      "name": "Olive oil",
+      "quantity": "2",
+      "unit": "tbsp",
+      "department": "OTHER"
+    }
+  ]
+}

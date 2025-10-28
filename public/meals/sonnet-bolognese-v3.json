@@ -1,0 +1,787 @@
+{
+  "title": "Spaghetti Bolognese",
+  "author": {
+    "name": "RecipeTin Eats"
+  },
+  "ingredients": [
+    {
+      "name": "olive oil",
+      "quantity": "1 1/2",
+      "unit": "tbsp",
+      "prep_state": ""
+    },
+    {
+      "name": "garlic",
+      "quantity": "2",
+      "unit": "cloves",
+      "prep_state": "minced"
+    },
+    {
+      "name": "onion",
+      "quantity": "1",
+      "unit": "",
+      "prep_state": "finely chopped"
+    },
+    {
+      "name": "beef mince",
+      "quantity": "1 lb / 500g",
+      "unit": "",
+      "prep_state": ""
+    },
+    {
+      "name": "dry red wine",
+      "quantity": "1/2",
+      "unit": "cup (125 ml)",
+      "prep_state": ""
+    },
+    {
+      "name": "beef bouillon cubes",
+      "quantity": "2",
+      "unit": "",
+      "prep_state": ""
+    },
+    {
+      "name": "crushed tomato",
+      "quantity": "800g / 28 oz",
+      "unit": "can",
+      "prep_state": ""
+    },
+    {
+      "name": "tomato paste",
+      "quantity": "2",
+      "unit": "tbsp",
+      "prep_state": ""
+    },
+    {
+      "name": "white sugar",
+      "quantity": "2",
+      "unit": "tsp",
+      "prep_state": ""
+    },
+    {
+      "name": "Worcestershire sauce",
+      "quantity": "2",
+      "unit": "tsp",
+      "prep_state": ""
+    },
+    {
+      "name": "bay leaves",
+      "quantity": "2",
+      "unit": "",
+      "prep_state": "dried"
+    },
+    {
+      "name": "thyme",
+      "quantity": "2",
+      "unit": "sprigs",
+      "prep_state": "fresh"
+    },
+    {
+      "name": "salt",
+      "quantity": "3/4",
+      "unit": "tsp",
+      "prep_state": ""
+    },
+    {
+      "name": "black pepper",
+      "quantity": "1/2",
+      "unit": "tsp",
+      "prep_state": ""
+    },
+    {
+      "name": "spaghetti",
+      "quantity": "400 g / 13 oz",
+      "unit": "",
+      "prep_state": ""
+    },
+    {
+      "name": "Parmesan cheese",
+      "quantity": "",
+      "unit": "",
+      "prep_state": "optional"
+    },
+    {
+      "name": "parsley",
+      "quantity": "",
+      "unit": "",
+      "prep_state": "optional"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "chain_0/step_1",
+      "name": "Dice the onion",
+      "canonical_verb": "dice",
+      "planned_min": 3,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "inputs": [
+        "onion"
+      ],
+      "outputs": [
+        {
+          "ingredient": "onion",
+          "state": "diced",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "knife",
+        "cutting_board"
+      ],
+      "edges": []
+    },
+    {
+      "id": "chain_0/step_2",
+      "name": "Mince the garlic",
+      "canonical_verb": "mince",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 10080,
+      "temporal_flexibility": "hold_days",
+      "inputs": [
+        "garlic"
+      ],
+      "outputs": [
+        {
+          "ingredient": "garlic",
+          "state": "minced",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "knife",
+        "cutting_board"
+      ],
+      "edges": []
+    },
+    {
+      "id": "chain_1/step_1",
+      "name": "Heat oil in a large pot over medium-high heat",
+      "canonical_verb": "heat_oil",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 60,
+      "temporal_flexibility": "hold_hours",
+      "inputs": [
+        "olive_oil"
+      ],
+      "outputs": [],
+      "equipment": [
+        "pot"
+      ],
+      "edges": []
+    },
+    {
+      "id": "chain_1/step_2",
+      "name": "Add the diced onion and minced garlic to the pot",
+      "canonical_verb": "add",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [
+        "onion",
+        "garlic"
+      ],
+      "outputs": [],
+      "equipment": [
+        "pot"
+      ],
+      "edges": [
+        {
+          "from": "chain_1/step_1",
+          "to": "chain_1/step_2",
+          "type": "FS"
+        },
+        {
+          "from": "chain_0/step_1",
+          "to": "chain_1/step_2",
+          "type": "FS"
+        },
+        {
+          "from": "chain_0/step_2",
+          "to": "chain_1/step_2",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_1/step_3",
+      "name": "Cook until light golden and softened",
+      "canonical_verb": "sauté",
+      "planned_min": 3,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 1440,
+      "temporal_flexibility": "hold_hours",
+      "inputs": [],
+      "outputs": [
+        {
+          "ingredient": "aromatics",
+          "state": "softened",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "pot"
+      ],
+      "edges": [
+        {
+          "from": "chain_1/step_2",
+          "to": "chain_1/step_3",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_1/step_4",
+      "name": "Increase heat to high",
+      "canonical_verb": "increase_heat",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 60,
+      "temporal_flexibility": "hold_hours",
+      "inputs": [],
+      "outputs": [],
+      "equipment": [
+        "pot"
+      ],
+      "edges": [
+        {
+          "from": "chain_1/step_3",
+          "to": "chain_1/step_4",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_1/step_5",
+      "name": "Add the beef mince and break it up as it cooks",
+      "canonical_verb": "add",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [
+        "beef_mince"
+      ],
+      "outputs": [],
+      "equipment": [
+        "pot"
+      ],
+      "edges": [
+        {
+          "from": "chain_1/step_4",
+          "to": "chain_1/step_5",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_1/step_6",
+      "name": "Cook until browned",
+      "canonical_verb": "sauté",
+      "planned_min": 8,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 1440,
+      "temporal_flexibility": "hold_hours",
+      "inputs": [],
+      "outputs": [
+        {
+          "ingredient": "beef",
+          "state": "browned",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "pot"
+      ],
+      "edges": [
+        {
+          "from": "chain_1/step_5",
+          "to": "chain_1/step_6",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_1/step_7",
+      "name": "Pour in the red wine",
+      "canonical_verb": "pour",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [
+        "red_wine"
+      ],
+      "outputs": [],
+      "equipment": [
+        "pot"
+      ],
+      "edges": [
+        {
+          "from": "chain_1/step_6",
+          "to": "chain_1/step_7",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_1/step_8",
+      "name": "Bring to a simmer and cook for one minute, scraping the pot bottom",
+      "canonical_verb": "deglaze",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 60,
+      "temporal_flexibility": "hold_hours",
+      "inputs": [],
+      "outputs": [],
+      "equipment": [
+        "pot"
+      ],
+      "edges": [
+        {
+          "from": "chain_1/step_7",
+          "to": "chain_1/step_8",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_1/step_9",
+      "name": "Add crushed tomato, tomato paste, bouillon cubes, sugar, Worcestershire sauce, bay leaves, thyme, salt, and pepper",
+      "canonical_verb": "add",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [
+        "crushed_tomato",
+        "tomato_paste",
+        "bouillon_cubes",
+        "sugar",
+        "worcestershire_sauce",
+        "bay_leaves",
+        "thyme",
+        "salt",
+        "pepper"
+      ],
+      "outputs": [],
+      "equipment": [
+        "pot"
+      ],
+      "edges": [
+        {
+          "from": "chain_1/step_8",
+          "to": "chain_1/step_9",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_1/step_10",
+      "name": "Stir everything together",
+      "canonical_verb": "stir",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [],
+      "outputs": [],
+      "equipment": [
+        "pot"
+      ],
+      "edges": [
+        {
+          "from": "chain_1/step_9",
+          "to": "chain_1/step_10",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_1/step_11",
+      "name": "Bring to a simmer",
+      "canonical_verb": "bring_to_simmer",
+      "planned_min": 3,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "hold_window_minutes": 60,
+      "temporal_flexibility": "hold_hours",
+      "inputs": [],
+      "outputs": [],
+      "equipment": [
+        "pot"
+      ],
+      "edges": [
+        {
+          "from": "chain_1/step_10",
+          "to": "chain_1/step_11",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_1/step_12",
+      "name": "Reduce heat to medium for gentle bubbling",
+      "canonical_verb": "reduce_heat",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 60,
+      "temporal_flexibility": "hold_hours",
+      "inputs": [],
+      "outputs": [],
+      "equipment": [
+        "pot"
+      ],
+      "edges": [
+        {
+          "from": "chain_1/step_11",
+          "to": "chain_1/step_12",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_1/step_13",
+      "name": "Cook uncovered for twenty to thirty minutes, stirring occasionally",
+      "canonical_verb": "simmer",
+      "planned_min": 25,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "hold_window_minutes": 60,
+      "temporal_flexibility": "hold_hours",
+      "inputs": [],
+      "outputs": [
+        {
+          "ingredient": "bolognese_sauce",
+          "state": "simmered",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "pot"
+      ],
+      "edges": [
+        {
+          "from": "chain_1/step_12",
+          "to": "chain_1/step_13",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_2/step_1",
+      "name": "Bring a large pot of salted water to a boil",
+      "canonical_verb": "bring_to_boil",
+      "planned_min": 10,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "hold_window_minutes": 60,
+      "temporal_flexibility": "hold_hours",
+      "inputs": [
+        "water",
+        "salt"
+      ],
+      "outputs": [],
+      "equipment": [
+        "pot"
+      ],
+      "edges": []
+    },
+    {
+      "id": "chain_2/step_2",
+      "name": "Add the spaghetti to the boiling water",
+      "canonical_verb": "add",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 30,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [
+        "spaghetti"
+      ],
+      "outputs": [],
+      "equipment": [
+        "pot"
+      ],
+      "edges": [
+        {
+          "from": "chain_2/step_1",
+          "to": "chain_2/step_2",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_2/step_3",
+      "name": "Cook the spaghetti until al dente",
+      "canonical_verb": "boil",
+      "planned_min": 10,
+      "requires_driver": false,
+      "self_running_after_start": true,
+      "hold_window_minutes": 5,
+      "temporal_flexibility": "serve_immediate",
+      "inputs": [],
+      "outputs": [],
+      "equipment": [
+        "pot"
+      ],
+      "edges": [
+        {
+          "from": "chain_2/step_2",
+          "to": "chain_2/step_3",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_2/step_4",
+      "name": "Drain the spaghetti",
+      "canonical_verb": "drain",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 5,
+      "temporal_flexibility": "serve_immediate",
+      "inputs": [],
+      "outputs": [
+        {
+          "ingredient": "spaghetti",
+          "state": "cooked",
+          "emergent": true
+        }
+      ],
+      "equipment": [
+        "colander"
+      ],
+      "edges": [
+        {
+          "from": "chain_2/step_3",
+          "to": "chain_2/step_4",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_3/step_1",
+      "name": "Taste the sauce and adjust salt as desired",
+      "canonical_verb": "taste",
+      "planned_min": 1,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 15,
+      "temporal_flexibility": "hold_minutes",
+      "inputs": [
+        "salt"
+      ],
+      "outputs": [],
+      "equipment": [
+        "spoon"
+      ],
+      "edges": [
+        {
+          "from": "chain_1/step_13",
+          "to": "chain_3/step_1",
+          "type": "FS"
+        }
+      ]
+    },
+    {
+      "id": "chain_3/step_2",
+      "name": "Serve the sauce over the cooked spaghetti",
+      "canonical_verb": "plate",
+      "planned_min": 2,
+      "requires_driver": true,
+      "self_running_after_start": false,
+      "hold_window_minutes": 0,
+      "temporal_flexibility": "serve_immediate",
+      "inputs": [
+        "bolognese_sauce",
+        "spaghetti"
+      ],
+      "outputs": [],
+      "equipment": [
+        "plates"
+      ],
+      "edges": [
+        {
+          "from": "chain_3/step_1",
+          "to": "chain_3/step_2",
+          "type": "FS"
+        },
+        {
+          "from": "chain_2/step_4",
+          "to": "chain_3/step_2",
+          "type": "FS"
+        }
+      ]
+    }
+  ],
+  "chains": [
+    {
+      "id": "chain_0",
+      "name": "Prep Work",
+      "tasks": [
+        "chain_0/step_1",
+        "chain_0/step_2"
+      ]
+    },
+    {
+      "id": "chain_1",
+      "name": "Make the Bolognese Sauce",
+      "tasks": [
+        "chain_1/step_1",
+        "chain_1/step_2",
+        "chain_1/step_3",
+        "chain_1/step_4",
+        "chain_1/step_5",
+        "chain_1/step_6",
+        "chain_1/step_7",
+        "chain_1/step_8",
+        "chain_1/step_9",
+        "chain_1/step_10",
+        "chain_1/step_11",
+        "chain_1/step_12",
+        "chain_1/step_13"
+      ]
+    },
+    {
+      "id": "chain_2",
+      "name": "Cook the Spaghetti",
+      "tasks": [
+        "chain_2/step_1",
+        "chain_2/step_2",
+        "chain_2/step_3",
+        "chain_2/step_4"
+      ]
+    },
+    {
+      "id": "chain_3",
+      "name": "Assemble and Serve",
+      "tasks": [
+        "chain_3/step_1",
+        "chain_3/step_2"
+      ]
+    }
+  ],
+  "shopping_list": [
+    {
+      "name": "Olive oil",
+      "quantity": "1 1/2",
+      "unit": "tbsp",
+      "department": "OTHER"
+    },
+    {
+      "name": "Garlic",
+      "quantity": "2",
+      "unit": "cloves, minced",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Onion",
+      "quantity": "1",
+      "unit": ", finely chopped",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Beef mince",
+      "quantity": "1",
+      "unit": "lb / 500g",
+      "department": "MEAT"
+    },
+    {
+      "name": "Dry red wine",
+      "quantity": "1/2",
+      "unit": "cup (125 ml)",
+      "department": "OTHER"
+    },
+    {
+      "name": "Beef bouillon cubes",
+      "quantity": "2",
+      "unit": "",
+      "department": "OTHER"
+    },
+    {
+      "name": "Crushed tomato",
+      "quantity": "800",
+      "unit": "g / 28 oz can",
+      "department": "OTHER"
+    },
+    {
+      "name": "Tomato paste",
+      "quantity": "2",
+      "unit": "tbsp",
+      "department": "OTHER"
+    },
+    {
+      "name": "White sugar",
+      "quantity": "2",
+      "unit": "tsp",
+      "department": "BAKED"
+    },
+    {
+      "name": "Worcestershire sauce",
+      "quantity": "2",
+      "unit": "tsp",
+      "department": "OTHER"
+    },
+    {
+      "name": "Bay leaves",
+      "quantity": "2",
+      "unit": ", dried",
+      "department": "SPICES"
+    },
+    {
+      "name": "Thyme",
+      "quantity": "2",
+      "unit": "sprigs, fresh",
+      "department": "PRODUCE"
+    },
+    {
+      "name": "Salt",
+      "quantity": "3/4",
+      "unit": "tsp",
+      "department": "SPICES"
+    },
+    {
+      "name": "Black pepper",
+      "quantity": "",
+      "unit": "To taste",
+      "department": "SPICES"
+    },
+    {
+      "name": "Spaghetti",
+      "quantity": "400",
+      "unit": "g / 14 oz",
+      "department": "OTHER"
+    },
+    {
+      "name": "Parmesan cheese",
+      "quantity": "",
+      "unit": "For serving, grated",
+      "department": "DAIRY"
+    },
+    {
+      "name": "Parsley",
+      "quantity": "",
+      "unit": "For garnish, fresh",
+      "department": "PRODUCE"
+    }
+  ]
+}

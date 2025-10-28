@@ -71,12 +71,12 @@
         <option value="3">Salmon, Asparagus & Couscous</option>
         <option value="4">Steak, Potatoes & Green Beans</option>
       </optgroup>
-      <optgroup label="Sonnet-Parsed Recipes (with Chains)">
-        <option value="5">Spaghetti Bolognese</option>
-        <option value="6">Chicken & Veg Stir-Fry</option>
-        <option value="7">Sheet Pan Salmon</option>
-        <option value="8">Chocolate Chip Cookies</option>
-        <option value="9">Seared Steak Dinner</option>
+      <optgroup label="Sonnet-Parsed v3 (with Chains & Shopping Lists)">
+        <option value="5">Spaghetti Bolognese v3</option>
+        <option value="6">Chicken & Veg Stir-Fry v3</option>
+        <option value="7">Sheet Pan Salmon v3</option>
+        <option value="8">Chocolate Chip Cookies v3</option>
+        <option value="9">Seared Steak Dinner v3</option>
       </optgroup>
     </select>
     <button onclick="loadMeal()">Load Meal</button>
@@ -92,6 +92,7 @@
     
     <div class="section">
       <h2>Shopping List</h2>
+      <button onclick="addShoppingItem()">➕ Add Shopping Item</button>
       <div id="shoppingContainer"></div>
     </div>
   </div>
@@ -107,12 +108,12 @@
       'chicken_and_rice.json',
       'salmon_asparagus_couscous.json',
       'steak_potatoes_beans.json',
-      // Sonnet-parsed recipes (with chains)
-      '01-spaghetti-bolognese.json',
-      '02-chicken-veg-stir-fry.json',
-      '03-sheet-pan-salmon.json',
-      '05-chocolate-chip-cookies.json',
-      '06-seared-steak-dinner.json'
+      // Sonnet-parsed v3 recipes (with chains & shopping lists)
+      'sonnet-bolognese-v3.json',
+      'sonnet-chicken-stir-fry-v3.json',
+      'sonnet-sheet-pan-salmon-v3.json',
+      'sonnet-chocolate-chip-cookies-v3.json',
+      'sonnet-steak-dinner-v3.json'
     ];
 
     async function loadMeal() {
@@ -176,32 +177,71 @@
       });
       
       // Render shopping list
+      renderShoppingList();
+    }
+
+    function renderShoppingList() {
       const shoppingContainer = document.getElementById('shoppingContainer');
       shoppingContainer.innerHTML = '';
-      
-      if (mealData.shopping_list) {
-        mealData.shopping_list.forEach((item, index) => {
-          const itemDiv = document.createElement('div');
-          itemDiv.className = 'shopping-item';
-          itemDiv.innerHTML = `
-            <div class="field">
-              <label>Item:</label>
-              <input type="text" id="shop_${index}_name" value="${item.name}" />
-            </div>
-            
-            <div class="field">
-              <label>Quantity:</label>
-              <input type="text" id="shop_${index}_quantity" value="${item.quantity}" style="width: 100px;" />
-              
-              <label style="margin-left: 20px;">Unit:</label>
-              <input type="text" id="shop_${index}_unit" value="${item.unit}" style="width: 100px;" />
-              
-              <label style="margin-left: 20px;">Department:</label>
-              <input type="text" id="shop_${index}_dept" value="${item.department}" style="width: 100px;" />
-            </div>
-          `;
-          shoppingContainer.appendChild(itemDiv);
-        });
+
+      if (!mealData.shopping_list) {
+        mealData.shopping_list = [];
+      }
+
+      mealData.shopping_list.forEach((item, index) => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'shopping-item';
+        itemDiv.innerHTML = `
+          <div class="field">
+            <label>Item:</label>
+            <input type="text" id="shop_${index}_name" value="${item.name || ''}" />
+          </div>
+
+          <div class="field">
+            <label>Quantity:</label>
+            <input type="text" id="shop_${index}_quantity" value="${item.quantity || ''}" style="width: 100px;" />
+
+            <label style="margin-left: 20px;">Unit:</label>
+            <input type="text" id="shop_${index}_unit" value="${item.unit || ''}" style="width: 200px;" />
+
+            <label style="margin-left: 20px;">Department:</label>
+            <select id="shop_${index}_dept" style="width: 120px;">
+              <option value="MEAT" ${item.department === 'MEAT' ? 'selected' : ''}>MEAT</option>
+              <option value="FISH" ${item.department === 'FISH' ? 'selected' : ''}>FISH</option>
+              <option value="PRODUCE" ${item.department === 'PRODUCE' ? 'selected' : ''}>PRODUCE</option>
+              <option value="DAIRY" ${item.department === 'DAIRY' ? 'selected' : ''}>DAIRY</option>
+              <option value="BAKED" ${item.department === 'BAKED' ? 'selected' : ''}>BAKED</option>
+              <option value="SPICES" ${item.department === 'SPICES' ? 'selected' : ''}>SPICES</option>
+              <option value="FROZEN" ${item.department === 'FROZEN' ? 'selected' : ''}>FROZEN</option>
+              <option value="OTHER" ${item.department === 'OTHER' ? 'selected' : ''}>OTHER</option>
+            </select>
+
+            <button onclick="removeShoppingItem(${index})" style="margin-left: 20px; padding: 5px 10px;">🗑️ Remove</button>
+          </div>
+        `;
+        shoppingContainer.appendChild(itemDiv);
+      });
+    }
+
+    function addShoppingItem() {
+      if (!mealData.shopping_list) {
+        mealData.shopping_list = [];
+      }
+
+      mealData.shopping_list.push({
+        name: '',
+        quantity: '',
+        unit: '',
+        department: 'OTHER'
+      });
+
+      renderShoppingList();
+    }
+
+    function removeShoppingItem(index) {
+      if (confirm('Remove this shopping item?')) {
+        mealData.shopping_list.splice(index, 1);
+        renderShoppingList();
       }
     }
 
@@ -235,10 +275,15 @@
       // Update shopping list
       if (mealData.shopping_list) {
         mealData.shopping_list.forEach((item, index) => {
-          item.name = document.getElementById(`shop_${index}_name`).value;
-          item.quantity = document.getElementById(`shop_${index}_quantity`).value;
-          item.unit = document.getElementById(`shop_${index}_unit`).value;
-          item.department = document.getElementById(`shop_${index}_dept`).value;
+          const nameEl = document.getElementById(`shop_${index}_name`);
+          const quantityEl = document.getElementById(`shop_${index}_quantity`);
+          const unitEl = document.getElementById(`shop_${index}_unit`);
+          const deptEl = document.getElementById(`shop_${index}_dept`);
+
+          if (nameEl) item.name = nameEl.value;
+          if (quantityEl) item.quantity = quantityEl.value;
+          if (unitEl) item.unit = unitEl.value;
+          if (deptEl) item.department = deptEl.value;
         });
       }
       
